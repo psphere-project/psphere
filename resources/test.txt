@@ -1,0 +1,2152 @@
+
+Suds ( https://fedorahosted.org/suds/ )  version: 0.4 (beta)  build: R671-20100405
+
+Service ( VimService ) tns="urn:vim25Service"
+   Prefixes (1)
+      ns0 = "urn:vim25"
+   Ports (1):
+      (VimPort)
+         Methods (377):
+            AcquireCimServicesTicket(ns0:ManagedObjectReference _this, )
+            AcquireLocalTicket(ns0:ManagedObjectReference _this, xs:string userName, )
+            AcquireMksTicket(ns0:ManagedObjectReference _this, )
+            AddAuthorizationRole(ns0:ManagedObjectReference _this, xs:string name, xs:string[] privIds, )
+            AddCustomFieldDef(ns0:ManagedObjectReference _this, xs:string name, xs:string moType, ns0:PrivilegePolicyDef fieldDefPolicy, ns0:PrivilegePolicyDef fieldPolicy, )
+            AddHost(ns0:ManagedObjectReference _this, ns0:HostConnectSpec spec, xs:boolean asConnected, ns0:ManagedObjectReference resourcePool, )
+            AddHost_Task(ns0:ManagedObjectReference _this, ns0:HostConnectSpec spec, xs:boolean asConnected, ns0:ManagedObjectReference resourcePool, )
+            AddInternetScsiSendTargets(ns0:ManagedObjectReference _this, xs:string iScsiHbaDevice, ns0:HostInternetScsiHbaSendTarget[] targets, )
+            AddInternetScsiStaticTargets(ns0:ManagedObjectReference _this, xs:string iScsiHbaDevice, ns0:HostInternetScsiHbaStaticTarget[] targets, )
+            AddPortGroup(ns0:ManagedObjectReference _this, ns0:HostPortGroupSpec portgrp, )
+            AddServiceConsoleVirtualNic(ns0:ManagedObjectReference _this, xs:string portgroup, ns0:HostVirtualNicSpec nic, )
+            AddStandaloneHost(ns0:ManagedObjectReference _this, ns0:HostConnectSpec spec, ns0:ComputeResourceConfigSpec compResSpec, xs:boolean addConnected, )
+            AddStandaloneHost_Task(ns0:ManagedObjectReference _this, ns0:HostConnectSpec spec, ns0:ComputeResourceConfigSpec compResSpec, xs:boolean addConnected, )
+            AddVirtualNic(ns0:ManagedObjectReference _this, xs:string portgroup, ns0:HostVirtualNicSpec nic, )
+            AddVirtualSwitch(ns0:ManagedObjectReference _this, xs:string vswitchName, ns0:HostVirtualSwitchSpec spec, )
+            AnswerVM(ns0:ManagedObjectReference _this, xs:string questionId, xs:string answerChoice, )
+            ApplyRecommendation(ns0:ManagedObjectReference _this, xs:string key, )
+            AssignUserToGroup(ns0:ManagedObjectReference _this, xs:string user, xs:string group, )
+            AttachVmfsExtent(ns0:ManagedObjectReference _this, xs:string vmfsPath, ns0:HostScsiDiskPartition extent, )
+            AutoStartPowerOff(ns0:ManagedObjectReference _this, )
+            AutoStartPowerOn(ns0:ManagedObjectReference _this, )
+            BackupFirmwareConfiguration(ns0:ManagedObjectReference _this, )
+            BrowseDiagnosticLog(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference host, xs:string key, xs:int start, xs:int lines, )
+            CancelTask(ns0:ManagedObjectReference _this, )
+            CancelWaitForUpdates(ns0:ManagedObjectReference _this, )
+            CheckCustomizationResources(ns0:ManagedObjectReference _this, xs:string guestOs, )
+            CheckCustomizationSpec(ns0:ManagedObjectReference _this, ns0:CustomizationSpec spec, )
+            CheckForUpdates(ns0:ManagedObjectReference _this, xs:string version, )
+            CheckLicenseFeature(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference host, xs:string featureKey, )
+            CloneVM(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference folder, xs:string name, ns0:VirtualMachineCloneSpec spec, )
+            CloneVM_Task(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference folder, xs:string name, ns0:VirtualMachineCloneSpec spec, )
+            CloseInventoryViewFolder(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference[] entity, )
+            ComputeDiskPartitionInfo(ns0:ManagedObjectReference _this, xs:string devicePath, ns0:HostDiskPartitionLayout layout, )
+            ConfigureDatastorePrincipal(ns0:ManagedObjectReference _this, xs:string userName, xs:string password, )
+            ConfigureLicenseSource(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference host, ns0:LicenseSource licenseSource, )
+            CopyDatastoreFile(ns0:ManagedObjectReference _this, xs:string sourceName, ns0:ManagedObjectReference sourceDatacenter, xs:string destinationName, ns0:ManagedObjectReference destinationDatacenter, xs:boolean force, )
+            CopyDatastoreFile_Task(ns0:ManagedObjectReference _this, xs:string sourceName, ns0:ManagedObjectReference sourceDatacenter, xs:string destinationName, ns0:ManagedObjectReference destinationDatacenter, xs:boolean force, )
+            CopyVirtualDisk(ns0:ManagedObjectReference _this, xs:string sourceName, ns0:ManagedObjectReference sourceDatacenter, xs:string destName, ns0:ManagedObjectReference destDatacenter, ns0:VirtualDiskSpec destSpec, xs:boolean force, )
+            CopyVirtualDisk_Task(ns0:ManagedObjectReference _this, xs:string sourceName, ns0:ManagedObjectReference sourceDatacenter, xs:string destName, ns0:ManagedObjectReference destDatacenter, ns0:VirtualDiskSpec destSpec, xs:boolean force, )
+            CreateAlarm(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference entity, ns0:AlarmSpec spec, )
+            CreateCluster(ns0:ManagedObjectReference _this, xs:string name, ns0:ClusterConfigSpec spec, )
+            CreateClusterEx(ns0:ManagedObjectReference _this, xs:string name, ns0:ClusterConfigSpecEx spec, )
+            CreateCollectorForEvents(ns0:ManagedObjectReference _this, ns0:EventFilterSpec filter, )
+            CreateCollectorForTasks(ns0:ManagedObjectReference _this, ns0:TaskFilterSpec filter, )
+            CreateContainerView(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference container, xs:string[] type, xs:boolean recursive, )
+            CreateCustomizationSpec(ns0:ManagedObjectReference _this, ns0:CustomizationSpecItem item, )
+            CreateDatacenter(ns0:ManagedObjectReference _this, xs:string name, )
+            CreateDiagnosticPartition(ns0:ManagedObjectReference _this, ns0:HostDiagnosticPartitionCreateSpec spec, )
+            CreateFilter(ns0:ManagedObjectReference _this, ns0:PropertyFilterSpec spec, xs:boolean partialUpdates, )
+            CreateFolder(ns0:ManagedObjectReference _this, xs:string name, )
+            CreateGroup(ns0:ManagedObjectReference _this, ns0:HostAccountSpec group, )
+            CreateInventoryView(ns0:ManagedObjectReference _this, )
+            CreateListView(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference[] obj, )
+            CreateListViewFromView(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference view, )
+            CreateLocalDatastore(ns0:ManagedObjectReference _this, xs:string name, xs:string path, )
+            CreateNasDatastore(ns0:ManagedObjectReference _this, ns0:HostNasVolumeSpec spec, )
+            CreatePerfInterval(ns0:ManagedObjectReference _this, ns0:PerfInterval intervalId, )
+            CreateResourcePool(ns0:ManagedObjectReference _this, xs:string name, ns0:ResourceConfigSpec spec, )
+            CreateScheduledTask(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference entity, ns0:ScheduledTaskSpec spec, )
+            CreateSnapshot(ns0:ManagedObjectReference _this, xs:string name, xs:string description, xs:boolean memory, xs:boolean quiesce, )
+            CreateSnapshot_Task(ns0:ManagedObjectReference _this, xs:string name, xs:string description, xs:boolean memory, xs:boolean quiesce, )
+            CreateTask(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference obj, xs:string taskTypeId, xs:string initiatedBy, xs:boolean cancelable, )
+            CreateUser(ns0:ManagedObjectReference _this, ns0:HostAccountSpec user, )
+            CreateVM(ns0:ManagedObjectReference _this, ns0:VirtualMachineConfigSpec config, ns0:ManagedObjectReference pool, ns0:ManagedObjectReference host, )
+            CreateVM_Task(ns0:ManagedObjectReference _this, ns0:VirtualMachineConfigSpec config, ns0:ManagedObjectReference pool, ns0:ManagedObjectReference host, )
+            CreateVirtualDisk(ns0:ManagedObjectReference _this, xs:string name, ns0:ManagedObjectReference datacenter, ns0:VirtualDiskSpec spec, )
+            CreateVirtualDisk_Task(ns0:ManagedObjectReference _this, xs:string name, ns0:ManagedObjectReference datacenter, ns0:VirtualDiskSpec spec, )
+            CreateVmfsDatastore(ns0:ManagedObjectReference _this, ns0:VmfsDatastoreCreateSpec spec, )
+            CurrentTime(ns0:ManagedObjectReference _this, )
+            CustomizationSpecItemToXml(ns0:ManagedObjectReference _this, ns0:CustomizationSpecItem item, )
+            CustomizeVM(ns0:ManagedObjectReference _this, ns0:CustomizationSpec spec, )
+            CustomizeVM_Task(ns0:ManagedObjectReference _this, ns0:CustomizationSpec spec, )
+            DefragmentAllDisks(ns0:ManagedObjectReference _this, )
+            DefragmentVirtualDisk(ns0:ManagedObjectReference _this, xs:string name, ns0:ManagedObjectReference datacenter, )
+            DefragmentVirtualDisk_Task(ns0:ManagedObjectReference _this, xs:string name, ns0:ManagedObjectReference datacenter, )
+            DeleteCustomizationSpec(ns0:ManagedObjectReference _this, xs:string name, )
+            DeleteDatastoreFile(ns0:ManagedObjectReference _this, xs:string name, ns0:ManagedObjectReference datacenter, )
+            DeleteDatastoreFile_Task(ns0:ManagedObjectReference _this, xs:string name, ns0:ManagedObjectReference datacenter, )
+            DeleteFile(ns0:ManagedObjectReference _this, xs:string datastorePath, )
+            DeleteVirtualDisk(ns0:ManagedObjectReference _this, xs:string name, ns0:ManagedObjectReference datacenter, )
+            DeleteVirtualDisk_Task(ns0:ManagedObjectReference _this, xs:string name, ns0:ManagedObjectReference datacenter, )
+            DeselectVnic(ns0:ManagedObjectReference _this, )
+            Destroy(ns0:ManagedObjectReference _this, )
+            DestroyChildren(ns0:ManagedObjectReference _this, )
+            DestroyCollector(ns0:ManagedObjectReference _this, )
+            DestroyDatastore(ns0:ManagedObjectReference _this, )
+            DestroyNetwork(ns0:ManagedObjectReference _this, )
+            DestroyPropertyFilter(ns0:ManagedObjectReference _this, )
+            DestroyView(ns0:ManagedObjectReference _this, )
+            Destroy_Task(ns0:ManagedObjectReference _this, )
+            DisableFeature(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference host, xs:string featureKey, )
+            DisableHyperThreading(ns0:ManagedObjectReference _this, )
+            DisableMultipathPath(ns0:ManagedObjectReference _this, xs:string pathName, )
+            DisableRuleset(ns0:ManagedObjectReference _this, xs:string id, )
+            DisconnectHost(ns0:ManagedObjectReference _this, )
+            DisconnectHost_Task(ns0:ManagedObjectReference _this, )
+            DoesCustomizationSpecExist(ns0:ManagedObjectReference _this, xs:string name, )
+            DuplicateCustomizationSpec(ns0:ManagedObjectReference _this, xs:string name, xs:string newName, )
+            EnableFeature(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference host, xs:string featureKey, )
+            EnableHyperThreading(ns0:ManagedObjectReference _this, )
+            EnableMultipathPath(ns0:ManagedObjectReference _this, xs:string pathName, )
+            EnableRuleset(ns0:ManagedObjectReference _this, xs:string id, )
+            EnterMaintenanceMode(ns0:ManagedObjectReference _this, xs:int timeout, xs:boolean evacuatePoweredOffVms, )
+            EnterMaintenanceMode_Task(ns0:ManagedObjectReference _this, xs:int timeout, xs:boolean evacuatePoweredOffVms, )
+            ExitMaintenanceMode(ns0:ManagedObjectReference _this, xs:int timeout, )
+            ExitMaintenanceMode_Task(ns0:ManagedObjectReference _this, xs:int timeout, )
+            ExtendVirtualDisk(ns0:ManagedObjectReference _this, xs:string name, ns0:ManagedObjectReference datacenter, xs:long newCapacityKb, )
+            ExtendVirtualDisk_Task(ns0:ManagedObjectReference _this, xs:string name, ns0:ManagedObjectReference datacenter, xs:long newCapacityKb, )
+            ExtendVmfsDatastore(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference datastore, ns0:VmfsDatastoreExtendSpec spec, )
+            FindByDatastorePath(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference datacenter, xs:string path, )
+            FindByDnsName(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference datacenter, xs:string dnsName, xs:boolean vmSearch, )
+            FindByInventoryPath(ns0:ManagedObjectReference _this, xs:string inventoryPath, )
+            FindByIp(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference datacenter, xs:string ip, xs:boolean vmSearch, )
+            FindByUuid(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference datacenter, xs:string uuid, xs:boolean vmSearch, )
+            FindChild(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference entity, xs:string name, )
+            FindExtension(ns0:ManagedObjectReference _this, xs:string extensionKey, )
+            FormatVmfs(ns0:ManagedObjectReference _this, ns0:HostVmfsSpec createSpec, )
+            GenerateLogBundles(ns0:ManagedObjectReference _this, xs:boolean includeDefault, ns0:ManagedObjectReference[] host, )
+            GenerateLogBundles_Task(ns0:ManagedObjectReference _this, xs:boolean includeDefault, ns0:ManagedObjectReference[] host, )
+            GetAlarm(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference entity, )
+            GetAlarmState(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference entity, )
+            GetCustomizationSpec(ns0:ManagedObjectReference _this, xs:string name, )
+            GetPublicKey(ns0:ManagedObjectReference _this, )
+            ImpersonateUser(ns0:ManagedObjectReference _this, xs:string userName, xs:string locale, )
+            InflateVirtualDisk(ns0:ManagedObjectReference _this, xs:string name, ns0:ManagedObjectReference datacenter, )
+            InflateVirtualDisk_Task(ns0:ManagedObjectReference _this, xs:string name, ns0:ManagedObjectReference datacenter, )
+            InstallHostPatch(ns0:ManagedObjectReference _this, ns0:HostPatchManagerLocator repository, xs:string updateID, xs:boolean force, )
+            InstallHostPatch_Task(ns0:ManagedObjectReference _this, ns0:HostPatchManagerLocator repository, xs:string updateID, xs:boolean force, )
+            LogUserEvent(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference entity, xs:string msg, )
+            Login(ns0:ManagedObjectReference _this, xs:string userName, xs:string password, xs:string locale, )
+            LoginBySSPI(ns0:ManagedObjectReference _this, xs:string base64Token, xs:string locale, )
+            Logout(ns0:ManagedObjectReference _this, )
+            MakeDirectory(ns0:ManagedObjectReference _this, xs:string name, ns0:ManagedObjectReference datacenter, xs:boolean createParentDirectories, )
+            MarkAsTemplate(ns0:ManagedObjectReference _this, )
+            MarkAsVirtualMachine(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference pool, ns0:ManagedObjectReference host, )
+            MergePermissions(ns0:ManagedObjectReference _this, xs:int srcRoleId, xs:int dstRoleId, )
+            MigrateVM(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference pool, ns0:ManagedObjectReference host, ns0:VirtualMachineMovePriority priority, ns0:VirtualMachinePowerState state, )
+            MigrateVM_Task(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference pool, ns0:ManagedObjectReference host, ns0:VirtualMachineMovePriority priority, ns0:VirtualMachinePowerState state, )
+            ModifyListView(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference[] add, ns0:ManagedObjectReference[] remove, )
+            MountToolsInstaller(ns0:ManagedObjectReference _this, )
+            MoveDatastoreFile(ns0:ManagedObjectReference _this, xs:string sourceName, ns0:ManagedObjectReference sourceDatacenter, xs:string destinationName, ns0:ManagedObjectReference destinationDatacenter, xs:boolean force, )
+            MoveDatastoreFile_Task(ns0:ManagedObjectReference _this, xs:string sourceName, ns0:ManagedObjectReference sourceDatacenter, xs:string destinationName, ns0:ManagedObjectReference destinationDatacenter, xs:boolean force, )
+            MoveHostInto(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference host, ns0:ManagedObjectReference resourcePool, )
+            MoveHostInto_Task(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference host, ns0:ManagedObjectReference resourcePool, )
+            MoveInto(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference[] host, )
+            MoveIntoFolder(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference[] list, )
+            MoveIntoFolder_Task(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference[] list, )
+            MoveIntoResourcePool(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference[] list, )
+            MoveInto_Task(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference[] host, )
+            MoveVirtualDisk(ns0:ManagedObjectReference _this, xs:string sourceName, ns0:ManagedObjectReference sourceDatacenter, xs:string destName, ns0:ManagedObjectReference destDatacenter, xs:boolean force, )
+            MoveVirtualDisk_Task(ns0:ManagedObjectReference _this, xs:string sourceName, ns0:ManagedObjectReference sourceDatacenter, xs:string destName, ns0:ManagedObjectReference destDatacenter, xs:boolean force, )
+            OpenInventoryViewFolder(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference[] entity, )
+            OverwriteCustomizationSpec(ns0:ManagedObjectReference _this, ns0:CustomizationSpecItem item, )
+            PostEvent(ns0:ManagedObjectReference _this, ns0:Event eventToPost, ns0:TaskInfo taskInfo, )
+            PowerDownHostToStandBy(ns0:ManagedObjectReference _this, xs:int timeoutSec, xs:boolean evacuatePoweredOffVms, )
+            PowerDownHostToStandBy_Task(ns0:ManagedObjectReference _this, xs:int timeoutSec, xs:boolean evacuatePoweredOffVms, )
+            PowerOffVM(ns0:ManagedObjectReference _this, )
+            PowerOffVM_Task(ns0:ManagedObjectReference _this, )
+            PowerOnMultiVM(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference[] vm, )
+            PowerOnMultiVM_Task(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference[] vm, )
+            PowerOnVM(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference host, )
+            PowerOnVM_Task(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference host, )
+            PowerUpHostFromStandBy(ns0:ManagedObjectReference _this, xs:int timeoutSec, )
+            PowerUpHostFromStandBy_Task(ns0:ManagedObjectReference _this, xs:int timeoutSec, )
+            QueryAvailableDisksForVmfs(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference datastore, )
+            QueryAvailablePartition(ns0:ManagedObjectReference _this, )
+            QueryAvailablePerfMetric(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference entity, xs:dateTime beginTime, xs:dateTime endTime, xs:int intervalId, )
+            QueryAvailableTimeZones(ns0:ManagedObjectReference _this, )
+            QueryBootDevices(ns0:ManagedObjectReference _this, )
+            QueryConfigOption(ns0:ManagedObjectReference _this, xs:string key, ns0:ManagedObjectReference host, )
+            QueryConfigOptionDescriptor(ns0:ManagedObjectReference _this, )
+            QueryConfigTarget(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference host, )
+            QueryConfiguredModuleOptionString(ns0:ManagedObjectReference _this, xs:string name, )
+            QueryConnectionInfo(ns0:ManagedObjectReference _this, xs:string hostname, xs:int port, xs:string username, xs:string password, xs:string sslThumbprint, )
+            QueryDateTime(ns0:ManagedObjectReference _this, )
+            QueryDescriptions(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference host, )
+            QueryEvents(ns0:ManagedObjectReference _this, ns0:EventFilterSpec filter, )
+            QueryFirmwareConfigUploadURL(ns0:ManagedObjectReference _this, )
+            QueryHostConnectionInfo(ns0:ManagedObjectReference _this, )
+            QueryLicenseSourceAvailability(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference host, )
+            QueryLicenseUsage(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference host, )
+            QueryMemoryOverhead(ns0:ManagedObjectReference _this, xs:long memorySize, xs:int videoRamSize, xs:int numVcpus, )
+            QueryMemoryOverheadEx(ns0:ManagedObjectReference _this, ns0:VirtualMachineConfigInfo vmConfigInfo, )
+            QueryNetworkHint(ns0:ManagedObjectReference _this, xs:string[] device, )
+            QueryOptions(ns0:ManagedObjectReference _this, xs:string name, )
+            QueryPartitionCreateDesc(ns0:ManagedObjectReference _this, xs:string diskUuid, xs:string diagnosticType, )
+            QueryPartitionCreateOptions(ns0:ManagedObjectReference _this, xs:string storageType, xs:string diagnosticType, )
+            QueryPerf(ns0:ManagedObjectReference _this, ns0:PerfQuerySpec[] querySpec, )
+            QueryPerfComposite(ns0:ManagedObjectReference _this, ns0:PerfQuerySpec querySpec, )
+            QueryPerfCounter(ns0:ManagedObjectReference _this, xs:int[] counterId, )
+            QueryPerfCounterByLevel(ns0:ManagedObjectReference _this, xs:int level, )
+            QueryPerfProviderSummary(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference entity, )
+            QuerySupportedFeatures(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference host, )
+            QueryVMotionCompatibility(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference vm, ns0:ManagedObjectReference[] host, xs:string[] compatibility, )
+            QueryVirtualDiskFragmentation(ns0:ManagedObjectReference _this, xs:string name, ns0:ManagedObjectReference datacenter, )
+            QueryVirtualDiskGeometry(ns0:ManagedObjectReference _this, xs:string name, ns0:ManagedObjectReference datacenter, )
+            QueryVirtualDiskUuid(ns0:ManagedObjectReference _this, xs:string name, ns0:ManagedObjectReference datacenter, )
+            QueryVmfsDatastoreCreateOptions(ns0:ManagedObjectReference _this, xs:string devicePath, )
+            QueryVmfsDatastoreExtendOptions(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference datastore, xs:string devicePath, )
+            ReadNextEvents(ns0:ManagedObjectReference _this, xs:int maxCount, )
+            ReadNextTasks(ns0:ManagedObjectReference _this, xs:int maxCount, )
+            ReadPreviousEvents(ns0:ManagedObjectReference _this, xs:int maxCount, )
+            ReadPreviousTasks(ns0:ManagedObjectReference _this, xs:int maxCount, )
+            RebootGuest(ns0:ManagedObjectReference _this, )
+            RebootHost(ns0:ManagedObjectReference _this, xs:boolean force, )
+            RebootHost_Task(ns0:ManagedObjectReference _this, xs:boolean force, )
+            RecommendHostsForVm(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference vm, ns0:ManagedObjectReference pool, )
+            ReconfigVM(ns0:ManagedObjectReference _this, ns0:VirtualMachineConfigSpec spec, )
+            ReconfigVM_Task(ns0:ManagedObjectReference _this, ns0:VirtualMachineConfigSpec spec, )
+            ReconfigureAlarm(ns0:ManagedObjectReference _this, ns0:AlarmSpec spec, )
+            ReconfigureAutostart(ns0:ManagedObjectReference _this, ns0:HostAutoStartManagerConfig spec, )
+            ReconfigureCluster(ns0:ManagedObjectReference _this, ns0:ClusterConfigSpec spec, xs:boolean modify, )
+            ReconfigureCluster_Task(ns0:ManagedObjectReference _this, ns0:ClusterConfigSpec spec, xs:boolean modify, )
+            ReconfigureComputeResource(ns0:ManagedObjectReference _this, ns0:ComputeResourceConfigSpec spec, xs:boolean modify, )
+            ReconfigureComputeResource_Task(ns0:ManagedObjectReference _this, ns0:ComputeResourceConfigSpec spec, xs:boolean modify, )
+            ReconfigureHostForDAS(ns0:ManagedObjectReference _this, )
+            ReconfigureHostForDAS_Task(ns0:ManagedObjectReference _this, )
+            ReconfigureScheduledTask(ns0:ManagedObjectReference _this, ns0:ScheduledTaskSpec spec, )
+            ReconfigureServiceConsoleReservation(ns0:ManagedObjectReference _this, xs:long cfgBytes, )
+            ReconfigureSnmpAgent(ns0:ManagedObjectReference _this, ns0:HostSnmpConfigSpec spec, )
+            ReconfigureVirtualMachineReservation(ns0:ManagedObjectReference _this, ns0:VirtualMachineMemoryReservationSpec spec, )
+            ReconnectHost(ns0:ManagedObjectReference _this, ns0:HostConnectSpec cnxSpec, )
+            ReconnectHost_Task(ns0:ManagedObjectReference _this, ns0:HostConnectSpec cnxSpec, )
+            RefreshDatastore(ns0:ManagedObjectReference _this, )
+            RefreshDateTimeSystem(ns0:ManagedObjectReference _this, )
+            RefreshFirewall(ns0:ManagedObjectReference _this, )
+            RefreshHealthStatusSystem(ns0:ManagedObjectReference _this, )
+            RefreshNetworkSystem(ns0:ManagedObjectReference _this, )
+            RefreshRecommendation(ns0:ManagedObjectReference _this, )
+            RefreshServices(ns0:ManagedObjectReference _this, )
+            RefreshStorageSystem(ns0:ManagedObjectReference _this, )
+            RegisterExtension(ns0:ManagedObjectReference _this, ns0:Extension extension, )
+            RegisterVM(ns0:ManagedObjectReference _this, xs:string path, xs:string name, xs:boolean asTemplate, ns0:ManagedObjectReference pool, ns0:ManagedObjectReference host, )
+            RegisterVM_Task(ns0:ManagedObjectReference _this, xs:string path, xs:string name, xs:boolean asTemplate, ns0:ManagedObjectReference pool, ns0:ManagedObjectReference host, )
+            Reload(ns0:ManagedObjectReference _this, )
+            RelocateVM(ns0:ManagedObjectReference _this, ns0:VirtualMachineRelocateSpec spec, )
+            RelocateVM_Task(ns0:ManagedObjectReference _this, ns0:VirtualMachineRelocateSpec spec, )
+            RemoveAlarm(ns0:ManagedObjectReference _this, )
+            RemoveAllSnapshots(ns0:ManagedObjectReference _this, )
+            RemoveAllSnapshots_Task(ns0:ManagedObjectReference _this, )
+            RemoveAuthorizationRole(ns0:ManagedObjectReference _this, xs:int roleId, xs:boolean failIfUsed, )
+            RemoveCustomFieldDef(ns0:ManagedObjectReference _this, xs:int key, )
+            RemoveDatastore(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference datastore, )
+            RemoveEntityPermission(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference entity, xs:string user, xs:boolean isGroup, )
+            RemoveGroup(ns0:ManagedObjectReference _this, xs:string groupName, )
+            RemoveInternetScsiSendTargets(ns0:ManagedObjectReference _this, xs:string iScsiHbaDevice, ns0:HostInternetScsiHbaSendTarget[] targets, )
+            RemoveInternetScsiStaticTargets(ns0:ManagedObjectReference _this, xs:string iScsiHbaDevice, ns0:HostInternetScsiHbaStaticTarget[] targets, )
+            RemovePerfInterval(ns0:ManagedObjectReference _this, xs:int samplePeriod, )
+            RemovePortGroup(ns0:ManagedObjectReference _this, xs:string pgName, )
+            RemoveScheduledTask(ns0:ManagedObjectReference _this, )
+            RemoveServiceConsoleVirtualNic(ns0:ManagedObjectReference _this, xs:string device, )
+            RemoveSnapshot(ns0:ManagedObjectReference _this, xs:boolean removeChildren, )
+            RemoveSnapshot_Task(ns0:ManagedObjectReference _this, xs:boolean removeChildren, )
+            RemoveUser(ns0:ManagedObjectReference _this, xs:string userName, )
+            RemoveVirtualNic(ns0:ManagedObjectReference _this, xs:string device, )
+            RemoveVirtualSwitch(ns0:ManagedObjectReference _this, xs:string vswitchName, )
+            Rename(ns0:ManagedObjectReference _this, xs:string newName, )
+            RenameCustomFieldDef(ns0:ManagedObjectReference _this, xs:int key, xs:string name, )
+            RenameCustomizationSpec(ns0:ManagedObjectReference _this, xs:string name, xs:string newName, )
+            RenameDatastore(ns0:ManagedObjectReference _this, xs:string newName, )
+            RenameSnapshot(ns0:ManagedObjectReference _this, xs:string name, xs:string description, )
+            Rename_Task(ns0:ManagedObjectReference _this, xs:string newName, )
+            RescanAllHba(ns0:ManagedObjectReference _this, )
+            RescanHba(ns0:ManagedObjectReference _this, xs:string hbaDevice, )
+            RescanVmfs(ns0:ManagedObjectReference _this, )
+            ResetCollector(ns0:ManagedObjectReference _this, )
+            ResetEntityPermissions(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference entity, ns0:Permission[] permission, )
+            ResetFirmwareToFactoryDefaults(ns0:ManagedObjectReference _this, )
+            ResetGuestInformation(ns0:ManagedObjectReference _this, )
+            ResetListView(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference[] obj, )
+            ResetListViewFromView(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference view, )
+            ResetSystemHealthInfo(ns0:ManagedObjectReference _this, )
+            ResetVM(ns0:ManagedObjectReference _this, )
+            ResetVM_Task(ns0:ManagedObjectReference _this, )
+            RestartService(ns0:ManagedObjectReference _this, xs:string id, )
+            RestartServiceConsoleVirtualNic(ns0:ManagedObjectReference _this, xs:string device, )
+            RestoreFirmwareConfiguration(ns0:ManagedObjectReference _this, xs:boolean force, )
+            RetrieveAllPermissions(ns0:ManagedObjectReference _this, )
+            RetrieveDiskPartitionInfo(ns0:ManagedObjectReference _this, xs:string[] devicePath, )
+            RetrieveEntityPermissions(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference entity, xs:boolean inherited, )
+            RetrieveEntityScheduledTask(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference entity, )
+            RetrieveProductComponents(ns0:ManagedObjectReference _this, )
+            RetrieveProperties(ns0:ManagedObjectReference _this, ns0:PropertyFilterSpec[] specSet, )
+            RetrieveRolePermissions(ns0:ManagedObjectReference _this, xs:int roleId, )
+            RetrieveServiceContent(ns0:ManagedObjectReference _this, )
+            RetrieveUserGroups(ns0:ManagedObjectReference _this, xs:string domain, xs:string searchStr, xs:string belongsToGroup, xs:string belongsToUser, xs:boolean exactMatch, xs:boolean findUsers, xs:boolean findGroups, )
+            RevertToCurrentSnapshot(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference host, )
+            RevertToCurrentSnapshot_Task(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference host, )
+            RevertToSnapshot(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference host, )
+            RevertToSnapshot_Task(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference host, )
+            RewindCollector(ns0:ManagedObjectReference _this, )
+            RunScheduledTask(ns0:ManagedObjectReference _this, )
+            ScanHostPatch(ns0:ManagedObjectReference _this, ns0:HostPatchManagerLocator repository, xs:string[] updateID, )
+            ScanHostPatch_Task(ns0:ManagedObjectReference _this, ns0:HostPatchManagerLocator repository, xs:string[] updateID, )
+            SearchDatastore(ns0:ManagedObjectReference _this, xs:string datastorePath, ns0:HostDatastoreBrowserSearchSpec searchSpec, )
+            SearchDatastoreSubFolders(ns0:ManagedObjectReference _this, xs:string datastorePath, ns0:HostDatastoreBrowserSearchSpec searchSpec, )
+            SearchDatastoreSubFolders_Task(ns0:ManagedObjectReference _this, xs:string datastorePath, ns0:HostDatastoreBrowserSearchSpec searchSpec, )
+            SearchDatastore_Task(ns0:ManagedObjectReference _this, xs:string datastorePath, ns0:HostDatastoreBrowserSearchSpec searchSpec, )
+            SelectActivePartition(ns0:ManagedObjectReference _this, ns0:HostScsiDiskPartition partition, )
+            SelectVnic(ns0:ManagedObjectReference _this, xs:string device, )
+            SendTestNotification(ns0:ManagedObjectReference _this, )
+            SessionIsActive(ns0:ManagedObjectReference _this, xs:string sessionID, xs:string userName, )
+            SetCollectorPageSize(ns0:ManagedObjectReference _this, xs:int maxCount, )
+            SetEntityPermissions(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference entity, ns0:Permission[] permission, )
+            SetField(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference entity, xs:int key, xs:string value, )
+            SetLicenseEdition(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference host, xs:string featureKey, )
+            SetLocale(ns0:ManagedObjectReference _this, xs:string locale, )
+            SetMultipathLunPolicy(ns0:ManagedObjectReference _this, xs:string lunId, ns0:HostMultipathInfoLogicalUnitPolicy policy, )
+            SetPublicKey(ns0:ManagedObjectReference _this, xs:string extensionKey, xs:string publicKey, )
+            SetScreenResolution(ns0:ManagedObjectReference _this, xs:int width, xs:int height, )
+            SetTaskState(ns0:ManagedObjectReference _this, ns0:TaskInfoState state, xs:anyType result, ns0:LocalizedMethodFault fault, )
+            SetVirtualDiskUuid(ns0:ManagedObjectReference _this, xs:string name, ns0:ManagedObjectReference datacenter, xs:string uuid, )
+            ShrinkVirtualDisk(ns0:ManagedObjectReference _this, xs:string name, ns0:ManagedObjectReference datacenter, xs:boolean copy, )
+            ShrinkVirtualDisk_Task(ns0:ManagedObjectReference _this, xs:string name, ns0:ManagedObjectReference datacenter, xs:boolean copy, )
+            ShutdownGuest(ns0:ManagedObjectReference _this, )
+            ShutdownHost(ns0:ManagedObjectReference _this, xs:boolean force, )
+            ShutdownHost_Task(ns0:ManagedObjectReference _this, xs:boolean force, )
+            StandbyGuest(ns0:ManagedObjectReference _this, )
+            StartService(ns0:ManagedObjectReference _this, xs:string id, )
+            StopService(ns0:ManagedObjectReference _this, xs:string id, )
+            SuspendVM(ns0:ManagedObjectReference _this, )
+            SuspendVM_Task(ns0:ManagedObjectReference _this, )
+            TerminateSession(ns0:ManagedObjectReference _this, xs:string[] sessionId, )
+            UnassignUserFromGroup(ns0:ManagedObjectReference _this, xs:string user, xs:string group, )
+            UninstallService(ns0:ManagedObjectReference _this, xs:string id, )
+            UnmountToolsInstaller(ns0:ManagedObjectReference _this, )
+            UnregisterAndDestroy(ns0:ManagedObjectReference _this, )
+            UnregisterAndDestroy_Task(ns0:ManagedObjectReference _this, )
+            UnregisterExtension(ns0:ManagedObjectReference _this, xs:string extensionKey, )
+            UnregisterVM(ns0:ManagedObjectReference _this, )
+            UpdateAuthorizationRole(ns0:ManagedObjectReference _this, xs:int roleId, xs:string newName, xs:string[] privIds, )
+            UpdateBootDevice(ns0:ManagedObjectReference _this, xs:string key, )
+            UpdateChildResourceConfiguration(ns0:ManagedObjectReference _this, ns0:ResourceConfigSpec[] spec, )
+            UpdateConfig(ns0:ManagedObjectReference _this, xs:string name, ns0:ResourceConfigSpec config, )
+            UpdateConsoleIpRouteConfig(ns0:ManagedObjectReference _this, ns0:HostIpRouteConfig config, )
+            UpdateDateTime(ns0:ManagedObjectReference _this, xs:dateTime dateTime, )
+            UpdateDateTimeConfig(ns0:ManagedObjectReference _this, ns0:HostDateTimeConfig config, )
+            UpdateDefaultPolicy(ns0:ManagedObjectReference _this, ns0:HostFirewallDefaultPolicy defaultPolicy, )
+            UpdateDiskPartitions(ns0:ManagedObjectReference _this, xs:string devicePath, ns0:HostDiskPartitionSpec spec, )
+            UpdateDnsConfig(ns0:ManagedObjectReference _this, ns0:HostDnsConfig config, )
+            UpdateExtension(ns0:ManagedObjectReference _this, ns0:Extension extension, )
+            UpdateFlags(ns0:ManagedObjectReference _this, ns0:HostFlagInfo flagInfo, )
+            UpdateInternetScsiAlias(ns0:ManagedObjectReference _this, xs:string iScsiHbaDevice, xs:string iScsiAlias, )
+            UpdateInternetScsiAuthenticationProperties(ns0:ManagedObjectReference _this, xs:string iScsiHbaDevice, ns0:HostInternetScsiHbaAuthenticationProperties authenticationProperties, )
+            UpdateInternetScsiDiscoveryProperties(ns0:ManagedObjectReference _this, xs:string iScsiHbaDevice, ns0:HostInternetScsiHbaDiscoveryProperties discoveryProperties, )
+            UpdateInternetScsiIPProperties(ns0:ManagedObjectReference _this, xs:string iScsiHbaDevice, ns0:HostInternetScsiHbaIPProperties ipProperties, )
+            UpdateInternetScsiName(ns0:ManagedObjectReference _this, xs:string iScsiHbaDevice, xs:string iScsiName, )
+            UpdateIpConfig(ns0:ManagedObjectReference _this, ns0:HostIpConfig ipConfig, )
+            UpdateIpRouteConfig(ns0:ManagedObjectReference _this, ns0:HostIpRouteConfig config, )
+            UpdateLocalSwapDatastore(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference datastore, )
+            UpdateModuleOptionString(ns0:ManagedObjectReference _this, xs:string name, xs:string options, )
+            UpdateNetworkConfig(ns0:ManagedObjectReference _this, ns0:HostNetworkConfig config, xs:string changeMode, )
+            UpdateOptions(ns0:ManagedObjectReference _this, ns0:OptionValue[] changedValue, )
+            UpdatePerfInterval(ns0:ManagedObjectReference _this, ns0:PerfInterval interval, )
+            UpdatePhysicalNicLinkSpeed(ns0:ManagedObjectReference _this, xs:string device, ns0:PhysicalNicLinkInfo linkSpeed, )
+            UpdatePortGroup(ns0:ManagedObjectReference _this, xs:string pgName, ns0:HostPortGroupSpec portgrp, )
+            UpdateProgress(ns0:ManagedObjectReference _this, xs:int percentDone, )
+            UpdateServiceConsoleVirtualNic(ns0:ManagedObjectReference _this, xs:string device, ns0:HostVirtualNicSpec nic, )
+            UpdateServiceMessage(ns0:ManagedObjectReference _this, xs:string message, )
+            UpdateServicePolicy(ns0:ManagedObjectReference _this, xs:string id, xs:string policy, )
+            UpdateSoftwareInternetScsiEnabled(ns0:ManagedObjectReference _this, xs:boolean enabled, )
+            UpdateSystemResources(ns0:ManagedObjectReference _this, ns0:HostSystemResourceInfo resourceInfo, )
+            UpdateUser(ns0:ManagedObjectReference _this, ns0:HostAccountSpec user, )
+            UpdateVirtualNic(ns0:ManagedObjectReference _this, xs:string device, ns0:HostVirtualNicSpec nic, )
+            UpdateVirtualSwitch(ns0:ManagedObjectReference _this, xs:string vswitchName, ns0:HostVirtualSwitchSpec spec, )
+            UpgradeTools(ns0:ManagedObjectReference _this, xs:string installerOptions, )
+            UpgradeTools_Task(ns0:ManagedObjectReference _this, xs:string installerOptions, )
+            UpgradeVM(ns0:ManagedObjectReference _this, xs:string version, )
+            UpgradeVM_Task(ns0:ManagedObjectReference _this, xs:string version, )
+            UpgradeVmLayout(ns0:ManagedObjectReference _this, )
+            UpgradeVmfs(ns0:ManagedObjectReference _this, xs:string vmfsPath, )
+            ValidateMigration(ns0:ManagedObjectReference _this, ns0:ManagedObjectReference[] vm, ns0:VirtualMachinePowerState state, xs:string[] testType, ns0:ManagedObjectReference pool, ns0:ManagedObjectReference host, )
+            WaitForUpdates(ns0:ManagedObjectReference _this, xs:string version, )
+            XmlToCustomizationSpecItem(ns0:ManagedObjectReference _this, xs:string specItemXml, )
+            ZeroFillVirtualDisk(ns0:ManagedObjectReference _this, xs:string name, ns0:ManagedObjectReference datacenter, )
+            ZeroFillVirtualDisk_Task(ns0:ManagedObjectReference _this, xs:string name, ns0:ManagedObjectReference datacenter, )
+            setCustomValue(ns0:ManagedObjectReference _this, xs:string key, xs:string value, )
+         Types (1764):
+            ns0:AboutInfo
+            ns0:AccountCreatedEvent
+            ns0:AccountRemovedEvent
+            ns0:AccountUpdatedEvent
+            ns0:AcquireCimServicesTicketRequestType
+            ns0:AcquireLocalTicketRequestType
+            ns0:AcquireMksTicketRequestType
+            ns0:Action
+            ns0:ActionParameter
+            ns0:ActionType
+            ns0:AddAuthorizationRoleRequestType
+            ns0:AddCustomFieldDefRequestType
+            ns0:AddHostRequestType
+            ns0:AddInternetScsiSendTargetsRequestType
+            ns0:AddInternetScsiStaticTargetsRequestType
+            ns0:AddPortGroupRequestType
+            ns0:AddServiceConsoleVirtualNicRequestType
+            ns0:AddStandaloneHostRequestType
+            ns0:AddVirtualNicRequestType
+            ns0:AddVirtualSwitchRequestType
+            ns0:AdminDisabled
+            ns0:AdminNotDisabled
+            ns0:AdminPasswordNotChangedEvent
+            ns0:AffinityConfigured
+            ns0:AffinityType
+            ns0:AfterStartupTaskScheduler
+            ns0:AgentInstallFailed
+            ns0:AlarmAction
+            ns0:AlarmActionTriggeredEvent
+            ns0:AlarmCreatedEvent
+            ns0:AlarmDescription
+            ns0:AlarmEmailCompletedEvent
+            ns0:AlarmEmailFailedEvent
+            ns0:AlarmEvent
+            ns0:AlarmEventArgument
+            ns0:AlarmExpression
+            ns0:AlarmInfo
+            ns0:AlarmReconfiguredEvent
+            ns0:AlarmRemovedEvent
+            ns0:AlarmScriptCompleteEvent
+            ns0:AlarmScriptFailedEvent
+            ns0:AlarmSetting
+            ns0:AlarmSnmpCompletedEvent
+            ns0:AlarmSnmpFailedEvent
+            ns0:AlarmSpec
+            ns0:AlarmState
+            ns0:AlarmStatusChangedEvent
+            ns0:AlarmTriggeringAction
+            ns0:AllVirtualMachinesLicensedEvent
+            ns0:AlreadyAuthenticatedSessionEvent
+            ns0:AlreadyBeingManaged
+            ns0:AlreadyConnected
+            ns0:AlreadyExists
+            ns0:AlreadyUpgraded
+            ns0:AndAlarmExpression
+            ns0:AnswerVMRequestType
+            ns0:ApplicationQuiesceFault
+            ns0:ApplyRecommendationRequestType
+            ns0:ArrayOfAlarmAction
+            ns0:ArrayOfAlarmExpression
+            ns0:ArrayOfAlarmState
+            ns0:ArrayOfAnyType
+            ns0:ArrayOfAuthorizationPrivilege
+            ns0:ArrayOfAuthorizationRole
+            ns0:ArrayOfAutoStartPowerInfo
+            ns0:ArrayOfByte
+            ns0:ArrayOfClusterAction
+            ns0:ArrayOfClusterActionHistory
+            ns0:ArrayOfClusterAttemptedVmInfo
+            ns0:ArrayOfClusterDasVmConfigInfo
+            ns0:ArrayOfClusterDasVmConfigSpec
+            ns0:ArrayOfClusterDpmHostConfigInfo
+            ns0:ArrayOfClusterDpmHostConfigSpec
+            ns0:ArrayOfClusterDrsMigration
+            ns0:ArrayOfClusterDrsRecommendation
+            ns0:ArrayOfClusterDrsVmConfigInfo
+            ns0:ArrayOfClusterDrsVmConfigSpec
+            ns0:ArrayOfClusterHostRecommendation
+            ns0:ArrayOfClusterNotAttemptedVmInfo
+            ns0:ArrayOfClusterRecommendation
+            ns0:ArrayOfClusterRuleInfo
+            ns0:ArrayOfClusterRuleSpec
+            ns0:ArrayOfCustomFieldDef
+            ns0:ArrayOfCustomFieldValue
+            ns0:ArrayOfCustomizationAdapterMapping
+            ns0:ArrayOfCustomizationSpecInfo
+            ns0:ArrayOfDatacenterMismatchArgument
+            ns0:ArrayOfDatastoreHostMount
+            ns0:ArrayOfDiagnosticManagerBundleInfo
+            ns0:ArrayOfDiagnosticManagerLogDescriptor
+            ns0:ArrayOfDynamicProperty
+            ns0:ArrayOfElementDescription
+            ns0:ArrayOfEvent
+            ns0:ArrayOfEventDescriptionEventDetail
+            ns0:ArrayOfExtendedEventPair
+            ns0:ArrayOfExtension
+            ns0:ArrayOfExtensionClientInfo
+            ns0:ArrayOfExtensionEventTypeInfo
+            ns0:ArrayOfExtensionFaultTypeInfo
+            ns0:ArrayOfExtensionPrivilegeInfo
+            ns0:ArrayOfExtensionResourceInfo
+            ns0:ArrayOfExtensionServerInfo
+            ns0:ArrayOfExtensionTaskTypeInfo
+            ns0:ArrayOfFileInfo
+            ns0:ArrayOfFileQuery
+            ns0:ArrayOfGuestDiskInfo
+            ns0:ArrayOfGuestNicInfo
+            ns0:ArrayOfGuestOsDescriptor
+            ns0:ArrayOfHostBootDevice
+            ns0:ArrayOfHostConnectInfoNetworkInfo
+            ns0:ArrayOfHostCpuIdInfo
+            ns0:ArrayOfHostCpuPackage
+            ns0:ArrayOfHostDatastoreBrowserSearchResults
+            ns0:ArrayOfHostDatastoreConnectInfo
+            ns0:ArrayOfHostDateTimeSystemTimeZone
+            ns0:ArrayOfHostDhcpService
+            ns0:ArrayOfHostDhcpServiceConfig
+            ns0:ArrayOfHostDiagnosticPartition
+            ns0:ArrayOfHostDiagnosticPartitionCreateOption
+            ns0:ArrayOfHostDiskMappingPartitionOption
+            ns0:ArrayOfHostDiskPartitionAttributes
+            ns0:ArrayOfHostDiskPartitionBlockRange
+            ns0:ArrayOfHostDiskPartitionInfo
+            ns0:ArrayOfHostEventArgument
+            ns0:ArrayOfHostFileSystemMountInfo
+            ns0:ArrayOfHostFirewallRule
+            ns0:ArrayOfHostFirewallRuleset
+            ns0:ArrayOfHostHardwareElementInfo
+            ns0:ArrayOfHostHostBusAdapter
+            ns0:ArrayOfHostInternetScsiHbaSendTarget
+            ns0:ArrayOfHostInternetScsiHbaStaticTarget
+            ns0:ArrayOfHostMultipathInfoLogicalUnit
+            ns0:ArrayOfHostMultipathInfoPath
+            ns0:ArrayOfHostNatService
+            ns0:ArrayOfHostNatServiceConfig
+            ns0:ArrayOfHostNatServicePortForwardSpec
+            ns0:ArrayOfHostNumaNode
+            ns0:ArrayOfHostNumericSensorInfo
+            ns0:ArrayOfHostPatchManagerStatus
+            ns0:ArrayOfHostPatchManagerStatusPrerequisitePatch
+            ns0:ArrayOfHostPciDevice
+            ns0:ArrayOfHostPortGroup
+            ns0:ArrayOfHostPortGroupConfig
+            ns0:ArrayOfHostPortGroupPort
+            ns0:ArrayOfHostScsiDisk
+            ns0:ArrayOfHostScsiDiskPartition
+            ns0:ArrayOfHostScsiTopologyInterface
+            ns0:ArrayOfHostScsiTopologyLun
+            ns0:ArrayOfHostScsiTopologyTarget
+            ns0:ArrayOfHostService
+            ns0:ArrayOfHostSnmpDestination
+            ns0:ArrayOfHostStorageElementInfo
+            ns0:ArrayOfHostStorageOperationalInfo
+            ns0:ArrayOfHostSystemIdentificationInfo
+            ns0:ArrayOfHostSystemResourceInfo
+            ns0:ArrayOfHostVMotionCompatibility
+            ns0:ArrayOfHostVirtualNic
+            ns0:ArrayOfHostVirtualNicConfig
+            ns0:ArrayOfHostVirtualSwitch
+            ns0:ArrayOfHostVirtualSwitchConfig
+            ns0:ArrayOfInt
+            ns0:ArrayOfKeyValue
+            ns0:ArrayOfLicenseAvailabilityInfo
+            ns0:ArrayOfLicenseFeatureInfo
+            ns0:ArrayOfLicenseReservationInfo
+            ns0:ArrayOfLong
+            ns0:ArrayOfManagedObjectReference
+            ns0:ArrayOfMethodActionArgument
+            ns0:ArrayOfMethodFault
+            ns0:ArrayOfMissingObject
+            ns0:ArrayOfMissingProperty
+            ns0:ArrayOfObjectContent
+            ns0:ArrayOfObjectSpec
+            ns0:ArrayOfObjectUpdate
+            ns0:ArrayOfOptionDef
+            ns0:ArrayOfOptionValue
+            ns0:ArrayOfPerfCounterInfo
+            ns0:ArrayOfPerfEntityMetricBase
+            ns0:ArrayOfPerfInterval
+            ns0:ArrayOfPerfMetricId
+            ns0:ArrayOfPerfMetricSeries
+            ns0:ArrayOfPerfMetricSeriesCSV
+            ns0:ArrayOfPerfQuerySpec
+            ns0:ArrayOfPerfSampleInfo
+            ns0:ArrayOfPermission
+            ns0:ArrayOfPhysicalNic
+            ns0:ArrayOfPhysicalNicConfig
+            ns0:ArrayOfPhysicalNicHintInfo
+            ns0:ArrayOfPhysicalNicIpHint
+            ns0:ArrayOfPhysicalNicLinkInfo
+            ns0:ArrayOfPhysicalNicNameHint
+            ns0:ArrayOfProductComponentInfo
+            ns0:ArrayOfPropertyChange
+            ns0:ArrayOfPropertyFilterSpec
+            ns0:ArrayOfPropertyFilterUpdate
+            ns0:ArrayOfPropertySpec
+            ns0:ArrayOfResourceConfigSpec
+            ns0:ArrayOfScheduledTaskDetail
+            ns0:ArrayOfScsiLun
+            ns0:ArrayOfScsiLunDurableName
+            ns0:ArrayOfSelectionSpec
+            ns0:ArrayOfShort
+            ns0:ArrayOfString
+            ns0:ArrayOfTaskInfo
+            ns0:ArrayOfTaskInfoState
+            ns0:ArrayOfTypeDescription
+            ns0:ArrayOfUserSearchResult
+            ns0:ArrayOfUserSession
+            ns0:ArrayOfVirtualDevice
+            ns0:ArrayOfVirtualDeviceBackingOption
+            ns0:ArrayOfVirtualDeviceConfigSpec
+            ns0:ArrayOfVirtualDeviceOption
+            ns0:ArrayOfVirtualMachineCdromInfo
+            ns0:ArrayOfVirtualMachineConfigInfoDatastoreUrlPair
+            ns0:ArrayOfVirtualMachineConfigOptionDescriptor
+            ns0:ArrayOfVirtualMachineCpuIdInfoSpec
+            ns0:ArrayOfVirtualMachineDatastoreInfo
+            ns0:ArrayOfVirtualMachineDatastoreVolumeOption
+            ns0:ArrayOfVirtualMachineFileLayoutDiskLayout
+            ns0:ArrayOfVirtualMachineFileLayoutSnapshotLayout
+            ns0:ArrayOfVirtualMachineFloppyInfo
+            ns0:ArrayOfVirtualMachineIdeDiskDeviceInfo
+            ns0:ArrayOfVirtualMachineIdeDiskDevicePartitionInfo
+            ns0:ArrayOfVirtualMachineLegacyNetworkSwitchInfo
+            ns0:ArrayOfVirtualMachineMessage
+            ns0:ArrayOfVirtualMachineNetworkInfo
+            ns0:ArrayOfVirtualMachineParallelInfo
+            ns0:ArrayOfVirtualMachineRelocateSpecDiskLocator
+            ns0:ArrayOfVirtualMachineScsiDiskDeviceInfo
+            ns0:ArrayOfVirtualMachineScsiPassthroughInfo
+            ns0:ArrayOfVirtualMachineSerialInfo
+            ns0:ArrayOfVirtualMachineSnapshotTree
+            ns0:ArrayOfVirtualMachineSoundInfo
+            ns0:ArrayOfVirtualMachineSummary
+            ns0:ArrayOfVirtualMachineUsbInfo
+            ns0:ArrayOfVirtualSCSISharing
+            ns0:ArrayOfVmEventArgument
+            ns0:ArrayOfVmfsDatastoreOption
+            ns0:ArrayUpdateOperation
+            ns0:ArrayUpdateSpec
+            ns0:AssignUserToGroupRequestType
+            ns0:AttachVmfsExtentRequestType
+            ns0:AuthMinimumAdminPermission
+            ns0:AuthorizationDescription
+            ns0:AuthorizationEvent
+            ns0:AuthorizationPrivilege
+            ns0:AuthorizationRole
+            ns0:AutoStartAction
+            ns0:AutoStartDefaults
+            ns0:AutoStartPowerInfo
+            ns0:AutoStartPowerOffRequestType
+            ns0:AutoStartPowerOnRequestType
+            ns0:AutoStartWaitHeartbeatSetting
+            ns0:BackupFirmwareConfigurationRequestType
+            ns0:BadUsernameSessionEvent
+            ns0:BoolOption
+            ns0:BrowseDiagnosticLogRequestType
+            ns0:CancelTaskRequestType
+            ns0:CancelWaitForUpdatesRequestType
+            ns0:CanceledHostOperationEvent
+            ns0:CannotAccessFile
+            ns0:CannotAccessLocalSource
+            ns0:CannotAccessNetwork
+            ns0:CannotAccessVmComponent
+            ns0:CannotAccessVmConfig
+            ns0:CannotAccessVmDevice
+            ns0:CannotAccessVmDisk
+            ns0:CannotCreateFile
+            ns0:CannotDecryptPasswords
+            ns0:CannotDeleteFile
+            ns0:CannotDisableSnapshot
+            ns0:CannotModifyConfigCpuRequirements
+            ns0:Capability
+            ns0:CheckCustomizationResourcesRequestType
+            ns0:CheckCustomizationSpecRequestType
+            ns0:CheckForUpdatesRequestType
+            ns0:CheckLicenseFeatureRequestType
+            ns0:ChoiceOption
+            ns0:CloneVMRequestType
+            ns0:CloseInventoryViewFolderRequestType
+            ns0:ClusterAction
+            ns0:ClusterActionHistory
+            ns0:ClusterAffinityRuleSpec
+            ns0:ClusterAntiAffinityRuleSpec
+            ns0:ClusterAttemptedVmInfo
+            ns0:ClusterComputeResourceSummary
+            ns0:ClusterConfigInfo
+            ns0:ClusterConfigInfoEx
+            ns0:ClusterConfigSpec
+            ns0:ClusterConfigSpecEx
+            ns0:ClusterCreatedEvent
+            ns0:ClusterDasConfigInfo
+            ns0:ClusterDasVmConfigInfo
+            ns0:ClusterDasVmConfigSpec
+            ns0:ClusterDasVmSettings
+            ns0:ClusterDasVmSettingsIsolationResponse
+            ns0:ClusterDasVmSettingsRestartPriority
+            ns0:ClusterDestroyedEvent
+            ns0:ClusterDpmConfigInfo
+            ns0:ClusterDpmHostConfigInfo
+            ns0:ClusterDpmHostConfigSpec
+            ns0:ClusterDrsConfigInfo
+            ns0:ClusterDrsMigration
+            ns0:ClusterDrsRecommendation
+            ns0:ClusterDrsVmConfigInfo
+            ns0:ClusterDrsVmConfigSpec
+            ns0:ClusterEvent
+            ns0:ClusterHostPowerAction
+            ns0:ClusterHostRecommendation
+            ns0:ClusterInitialPlacementAction
+            ns0:ClusterMigrationAction
+            ns0:ClusterNotAttemptedVmInfo
+            ns0:ClusterOvercommittedEvent
+            ns0:ClusterPowerOnVmResult
+            ns0:ClusterRecommendation
+            ns0:ClusterReconfiguredEvent
+            ns0:ClusterRuleInfo
+            ns0:ClusterRuleSpec
+            ns0:ClusterStatusChangedEvent
+            ns0:ComputeDiskPartitionInfoRequestType
+            ns0:ComputeResourceConfigInfo
+            ns0:ComputeResourceConfigSpec
+            ns0:ComputeResourceEventArgument
+            ns0:ComputeResourceSummary
+            ns0:ConcurrentAccess
+            ns0:ConfigTarget
+            ns0:ConfigureDatastorePrincipalRequestType
+            ns0:ConfigureLicenseSourceRequestType
+            ns0:CopyDatastoreFileRequestType
+            ns0:CopyVirtualDiskRequestType
+            ns0:CpuCompatibilityUnknown
+            ns0:CpuIncompatible
+            ns0:CpuIncompatible1ECX
+            ns0:CpuIncompatible81EDX
+            ns0:CreateAlarmRequestType
+            ns0:CreateClusterExRequestType
+            ns0:CreateClusterRequestType
+            ns0:CreateCollectorForEventsRequestType
+            ns0:CreateCollectorForTasksRequestType
+            ns0:CreateContainerViewRequestType
+            ns0:CreateCustomizationSpecRequestType
+            ns0:CreateDatacenterRequestType
+            ns0:CreateDiagnosticPartitionRequestType
+            ns0:CreateFilterRequestType
+            ns0:CreateFolderRequestType
+            ns0:CreateGroupRequestType
+            ns0:CreateInventoryViewRequestType
+            ns0:CreateListViewFromViewRequestType
+            ns0:CreateListViewRequestType
+            ns0:CreateLocalDatastoreRequestType
+            ns0:CreateNasDatastoreRequestType
+            ns0:CreatePerfIntervalRequestType
+            ns0:CreateResourcePoolRequestType
+            ns0:CreateScheduledTaskRequestType
+            ns0:CreateSnapshotRequestType
+            ns0:CreateTaskAction
+            ns0:CreateTaskRequestType
+            ns0:CreateUserRequestType
+            ns0:CreateVMRequestType
+            ns0:CreateVirtualDiskRequestType
+            ns0:CreateVmfsDatastoreRequestType
+            ns0:CurrentTimeRequestType
+            ns0:CustomFieldDef
+            ns0:CustomFieldDefAddedEvent
+            ns0:CustomFieldDefEvent
+            ns0:CustomFieldDefRemovedEvent
+            ns0:CustomFieldDefRenamedEvent
+            ns0:CustomFieldEvent
+            ns0:CustomFieldStringValue
+            ns0:CustomFieldValue
+            ns0:CustomFieldValueChangedEvent
+            ns0:CustomizationAdapterMapping
+            ns0:CustomizationCustomIpGenerator
+            ns0:CustomizationCustomName
+            ns0:CustomizationDhcpIpGenerator
+            ns0:CustomizationEvent
+            ns0:CustomizationFailed
+            ns0:CustomizationFault
+            ns0:CustomizationFixedIp
+            ns0:CustomizationFixedName
+            ns0:CustomizationGlobalIPSettings
+            ns0:CustomizationGuiRunOnce
+            ns0:CustomizationGuiUnattended
+            ns0:CustomizationIPSettings
+            ns0:CustomizationIdentification
+            ns0:CustomizationIdentitySettings
+            ns0:CustomizationIpGenerator
+            ns0:CustomizationLicenseDataMode
+            ns0:CustomizationLicenseFilePrintData
+            ns0:CustomizationLinuxIdentityFailed
+            ns0:CustomizationLinuxOptions
+            ns0:CustomizationLinuxPrep
+            ns0:CustomizationName
+            ns0:CustomizationNetBIOSMode
+            ns0:CustomizationNetworkSetupFailed
+            ns0:CustomizationOptions
+            ns0:CustomizationPassword
+            ns0:CustomizationPending
+            ns0:CustomizationPrefixName
+            ns0:CustomizationSpec
+            ns0:CustomizationSpecInfo
+            ns0:CustomizationSpecItem
+            ns0:CustomizationSpecItemToXmlRequestType
+            ns0:CustomizationStartedEvent
+            ns0:CustomizationSucceeded
+            ns0:CustomizationSysprep
+            ns0:CustomizationSysprepFailed
+            ns0:CustomizationSysprepRebootOption
+            ns0:CustomizationSysprepText
+            ns0:CustomizationUnknownFailure
+            ns0:CustomizationUnknownIpGenerator
+            ns0:CustomizationUnknownName
+            ns0:CustomizationUserData
+            ns0:CustomizationVirtualMachineName
+            ns0:CustomizationWinOptions
+            ns0:CustomizeVMRequestType
+            ns0:DailyTaskScheduler
+            ns0:DasAdmissionControlDisabledEvent
+            ns0:DasAdmissionControlEnabledEvent
+            ns0:DasAgentFoundEvent
+            ns0:DasAgentUnavailableEvent
+            ns0:DasConfigFault
+            ns0:DasDisabledEvent
+            ns0:DasEnabledEvent
+            ns0:DasHostFailedEvent
+            ns0:DasHostIsolatedEvent
+            ns0:DasVmPriority
+            ns0:DatabaseError
+            ns0:DatacenterCreatedEvent
+            ns0:DatacenterEvent
+            ns0:DatacenterEventArgument
+            ns0:DatacenterMismatch
+            ns0:DatacenterMismatchArgument
+            ns0:DatacenterRenamedEvent
+            ns0:DatastoreCapability
+            ns0:DatastoreDestroyedEvent
+            ns0:DatastoreDiscoveredEvent
+            ns0:DatastoreDuplicatedEvent
+            ns0:DatastoreEvent
+            ns0:DatastoreEventArgument
+            ns0:DatastoreHostMount
+            ns0:DatastoreInfo
+            ns0:DatastoreNotWritableOnHost
+            ns0:DatastoreOption
+            ns0:DatastorePrincipalConfigured
+            ns0:DatastoreRemovedOnHostEvent
+            ns0:DatastoreRenamedEvent
+            ns0:DatastoreRenamedOnHostEvent
+            ns0:DatastoreSummary
+            ns0:DayOfWeek
+            ns0:DefragmentAllDisksRequestType
+            ns0:DefragmentVirtualDiskRequestType
+            ns0:DeleteCustomizationSpecRequestType
+            ns0:DeleteDatastoreFileRequestType
+            ns0:DeleteFileRequestType
+            ns0:DeleteVirtualDiskRequestType
+            ns0:Description
+            ns0:DeselectVnicRequestType
+            ns0:DestinationSwitchFull
+            ns0:DestroyChildrenRequestType
+            ns0:DestroyCollectorRequestType
+            ns0:DestroyDatastoreRequestType
+            ns0:DestroyNetworkRequestType
+            ns0:DestroyPropertyFilterRequestType
+            ns0:DestroyRequestType
+            ns0:DestroyViewRequestType
+            ns0:DeviceBackedVirtualDiskSpec
+            ns0:DeviceBackingNotSupported
+            ns0:DeviceControllerNotSupported
+            ns0:DeviceNotFound
+            ns0:DeviceNotSupported
+            ns0:DeviceNotSupportedReason
+            ns0:DiagnosticManagerBundleInfo
+            ns0:DiagnosticManagerLogCreator
+            ns0:DiagnosticManagerLogDescriptor
+            ns0:DiagnosticManagerLogFormat
+            ns0:DiagnosticManagerLogHeader
+            ns0:DiagnosticPartitionStorageType
+            ns0:DiagnosticPartitionType
+            ns0:DisableAdminNotSupported
+            ns0:DisableFeatureRequestType
+            ns0:DisableHyperThreadingRequestType
+            ns0:DisableMultipathPathRequestType
+            ns0:DisableRulesetRequestType
+            ns0:DisallowedDiskModeChange
+            ns0:DisallowedMigrationDeviceAttached
+            ns0:DisconnectHostRequestType
+            ns0:DiskNotSupported
+            ns0:DoesCustomizationSpecExistRequestType
+            ns0:DpmBehavior
+            ns0:DrsBehavior
+            ns0:DrsDisabledEvent
+            ns0:DrsEnabledEvent
+            ns0:DrsEnteredStandbyModeEvent
+            ns0:DrsExitedStandbyModeEvent
+            ns0:DrsRecommendationReasonCode
+            ns0:DrsResourceConfigureFailedEvent
+            ns0:DrsResourceConfigureSyncedEvent
+            ns0:DrsVmMigratedEvent
+            ns0:DrsVmPoweredOnEvent
+            ns0:DuplicateCustomizationSpecRequestType
+            ns0:DuplicateIpDetectedEvent
+            ns0:DuplicateName
+            ns0:DynamicArray
+            ns0:DynamicData
+            ns0:DynamicProperty
+            ns0:ElementDescription
+            ns0:EnableFeatureRequestType
+            ns0:EnableHyperThreadingRequestType
+            ns0:EnableMultipathPathRequestType
+            ns0:EnableRulesetRequestType
+            ns0:EnterMaintenanceModeRequestType
+            ns0:EnteredMaintenanceModeEvent
+            ns0:EnteredStandbyModeEvent
+            ns0:EnteringMaintenanceModeEvent
+            ns0:EnteringStandbyModeEvent
+            ns0:EntityEventArgument
+            ns0:ErrorUpgradeEvent
+            ns0:EvaluationLicenseSource
+            ns0:Event
+            ns0:EventAlarmExpression
+            ns0:EventArgument
+            ns0:EventCategory
+            ns0:EventDescription
+            ns0:EventDescriptionEventDetail
+            ns0:EventFilterSpec
+            ns0:EventFilterSpecByEntity
+            ns0:EventFilterSpecByTime
+            ns0:EventFilterSpecByUsername
+            ns0:EventFilterSpecRecursionOption
+            ns0:ExitMaintenanceModeEvent
+            ns0:ExitMaintenanceModeRequestType
+            ns0:ExitedStandbyModeEvent
+            ns0:ExpiredAddonLicense
+            ns0:ExpiredEditionLicense
+            ns0:ExpiredFeatureLicense
+            ns0:ExtendVirtualDiskRequestType
+            ns0:ExtendVmfsDatastoreRequestType
+            ns0:ExtendedEvent
+            ns0:ExtendedEventPair
+            ns0:ExtendedFault
+            ns0:Extension
+            ns0:ExtensionClientInfo
+            ns0:ExtensionEventTypeInfo
+            ns0:ExtensionFaultTypeInfo
+            ns0:ExtensionPrivilegeInfo
+            ns0:ExtensionResourceInfo
+            ns0:ExtensionServerInfo
+            ns0:ExtensionTaskTypeInfo
+            ns0:FailoverLevelRestored
+            ns0:FibreChannelPortType
+            ns0:FileAlreadyExists
+            ns0:FileBackedPortNotSupported
+            ns0:FileBackedVirtualDiskSpec
+            ns0:FileFault
+            ns0:FileInfo
+            ns0:FileLocked
+            ns0:FileNotFound
+            ns0:FileNotWritable
+            ns0:FileQuery
+            ns0:FileQueryFlags
+            ns0:FileTooLarge
+            ns0:FilesystemQuiesceFault
+            ns0:FindByDatastorePathRequestType
+            ns0:FindByDnsNameRequestType
+            ns0:FindByInventoryPathRequestType
+            ns0:FindByIpRequestType
+            ns0:FindByUuidRequestType
+            ns0:FindChildRequestType
+            ns0:FindExtensionRequestType
+            ns0:FloatOption
+            ns0:FloppyImageFileInfo
+            ns0:FloppyImageFileQuery
+            ns0:FolderEventArgument
+            ns0:FolderFileInfo
+            ns0:FolderFileQuery
+            ns0:FormatVmfsRequestType
+            ns0:FullStorageVMotionNotSupported
+            ns0:GeneralEvent
+            ns0:GeneralHostErrorEvent
+            ns0:GeneralHostInfoEvent
+            ns0:GeneralHostWarningEvent
+            ns0:GeneralUserEvent
+            ns0:GeneralVmErrorEvent
+            ns0:GeneralVmInfoEvent
+            ns0:GeneralVmWarningEvent
+            ns0:GenerateLogBundlesRequestType
+            ns0:GenericDrsFault
+            ns0:GenericVmConfigFault
+            ns0:GetAlarmRequestType
+            ns0:GetAlarmStateRequestType
+            ns0:GetCustomizationSpecRequestType
+            ns0:GetPublicKeyRequestType
+            ns0:GlobalMessageChangedEvent
+            ns0:GroupAlarmAction
+            ns0:GuestDiskInfo
+            ns0:GuestInfo
+            ns0:GuestNicInfo
+            ns0:GuestOsDescriptor
+            ns0:GuestScreenInfo
+            ns0:HAErrorsAtDest
+            ns0:HealthSystemRuntime
+            ns0:HostAccountSpec
+            ns0:HostAddFailedEvent
+            ns0:HostAddedEvent
+            ns0:HostAdminDisableEvent
+            ns0:HostAdminEnableEvent
+            ns0:HostAutoStartManagerConfig
+            ns0:HostBIOSInfo
+            ns0:HostBlockAdapterTargetTransport
+            ns0:HostBlockHba
+            ns0:HostBootDevice
+            ns0:HostBootDeviceInfo
+            ns0:HostCapability
+            ns0:HostCnxFailedAccountFailedEvent
+            ns0:HostCnxFailedAlreadyManagedEvent
+            ns0:HostCnxFailedBadCcagentEvent
+            ns0:HostCnxFailedBadUsernameEvent
+            ns0:HostCnxFailedBadVersionEvent
+            ns0:HostCnxFailedCcagentUpgradeEvent
+            ns0:HostCnxFailedEvent
+            ns0:HostCnxFailedNetworkErrorEvent
+            ns0:HostCnxFailedNoAccessEvent
+            ns0:HostCnxFailedNoConnectionEvent
+            ns0:HostCnxFailedNoLicenseEvent
+            ns0:HostCnxFailedNotFoundEvent
+            ns0:HostCnxFailedTimeoutEvent
+            ns0:HostCommunication
+            ns0:HostConfigChange
+            ns0:HostConfigChangeMode
+            ns0:HostConfigChangeOperation
+            ns0:HostConfigFault
+            ns0:HostConfigInfo
+            ns0:HostConfigManager
+            ns0:HostConfigSummary
+            ns0:HostConnectFault
+            ns0:HostConnectInfo
+            ns0:HostConnectInfoNetworkInfo
+            ns0:HostConnectSpec
+            ns0:HostConnectedEvent
+            ns0:HostConnectionLostEvent
+            ns0:HostCpuIdInfo
+            ns0:HostCpuInfo
+            ns0:HostCpuPackage
+            ns0:HostCpuPackageVendor
+            ns0:HostDasDisabledEvent
+            ns0:HostDasDisablingEvent
+            ns0:HostDasEnabledEvent
+            ns0:HostDasEnablingEvent
+            ns0:HostDasErrorEvent
+            ns0:HostDasEvent
+            ns0:HostDasOkEvent
+            ns0:HostDatastoreBrowserSearchResults
+            ns0:HostDatastoreBrowserSearchSpec
+            ns0:HostDatastoreConnectInfo
+            ns0:HostDatastoreExistsConnectInfo
+            ns0:HostDatastoreNameConflictConnectInfo
+            ns0:HostDatastoreSystemCapabilities
+            ns0:HostDateTimeConfig
+            ns0:HostDateTimeInfo
+            ns0:HostDateTimeSystemTimeZone
+            ns0:HostDevice
+            ns0:HostDhcpService
+            ns0:HostDhcpServiceConfig
+            ns0:HostDhcpServiceSpec
+            ns0:HostDiagnosticPartition
+            ns0:HostDiagnosticPartitionCreateDescription
+            ns0:HostDiagnosticPartitionCreateOption
+            ns0:HostDiagnosticPartitionCreateSpec
+            ns0:HostDisconnectedEvent
+            ns0:HostDiskDimensions
+            ns0:HostDiskDimensionsChs
+            ns0:HostDiskDimensionsLba
+            ns0:HostDiskMappingInfo
+            ns0:HostDiskMappingOption
+            ns0:HostDiskMappingPartitionInfo
+            ns0:HostDiskMappingPartitionOption
+            ns0:HostDiskPartitionAttributes
+            ns0:HostDiskPartitionBlockRange
+            ns0:HostDiskPartitionInfo
+            ns0:HostDiskPartitionInfoType
+            ns0:HostDiskPartitionLayout
+            ns0:HostDiskPartitionSpec
+            ns0:HostDnsConfig
+            ns0:HostEnableAdminFailedEvent
+            ns0:HostEvent
+            ns0:HostEventArgument
+            ns0:HostFibreChannelHba
+            ns0:HostFibreChannelTargetTransport
+            ns0:HostFileAccess
+            ns0:HostFileSystemMountInfo
+            ns0:HostFileSystemVolume
+            ns0:HostFileSystemVolumeInfo
+            ns0:HostFirewallDefaultPolicy
+            ns0:HostFirewallInfo
+            ns0:HostFirewallRule
+            ns0:HostFirewallRuleDirection
+            ns0:HostFirewallRuleProtocol
+            ns0:HostFirewallRuleset
+            ns0:HostFlagInfo
+            ns0:HostGetShortNameFailedEvent
+            ns0:HostHardwareElementInfo
+            ns0:HostHardwareElementStatus
+            ns0:HostHardwareInfo
+            ns0:HostHardwareStatusInfo
+            ns0:HostHardwareSummary
+            ns0:HostHostBusAdapter
+            ns0:HostHyperThreadScheduleInfo
+            ns0:HostInternetScsiHba
+            ns0:HostInternetScsiHbaAuthenticationCapabilities
+            ns0:HostInternetScsiHbaAuthenticationProperties
+            ns0:HostInternetScsiHbaDiscoveryCapabilities
+            ns0:HostInternetScsiHbaDiscoveryProperties
+            ns0:HostInternetScsiHbaIPCapabilities
+            ns0:HostInternetScsiHbaIPProperties
+            ns0:HostInternetScsiHbaSendTarget
+            ns0:HostInternetScsiHbaStaticTarget
+            ns0:HostInternetScsiTargetTransport
+            ns0:HostInventoryFull
+            ns0:HostInventoryFullEvent
+            ns0:HostIpChangedEvent
+            ns0:HostIpConfig
+            ns0:HostIpInconsistentEvent
+            ns0:HostIpRouteConfig
+            ns0:HostIpToShortNameFailedEvent
+            ns0:HostIsolationIpPingFailedEvent
+            ns0:HostLicenseExpiredEvent
+            ns0:HostListSummary
+            ns0:HostListSummaryQuickStats
+            ns0:HostLocalFileSystemVolume
+            ns0:HostLocalFileSystemVolumeSpec
+            ns0:HostMountInfo
+            ns0:HostMountMode
+            ns0:HostMultipathInfo
+            ns0:HostMultipathInfoFixedLogicalUnitPolicy
+            ns0:HostMultipathInfoLogicalUnit
+            ns0:HostMultipathInfoLogicalUnitPolicy
+            ns0:HostMultipathInfoPath
+            ns0:HostNasVolume
+            ns0:HostNasVolumeSpec
+            ns0:HostNatService
+            ns0:HostNatServiceConfig
+            ns0:HostNatServiceNameServiceSpec
+            ns0:HostNatServicePortForwardSpec
+            ns0:HostNatServiceSpec
+            ns0:HostNetCapabilities
+            ns0:HostNetOffloadCapabilities
+            ns0:HostNetworkConfig
+            ns0:HostNetworkConfigResult
+            ns0:HostNetworkInfo
+            ns0:HostNetworkPolicy
+            ns0:HostNetworkSecurityPolicy
+            ns0:HostNetworkTrafficShapingPolicy
+            ns0:HostNewNetworkConnectInfo
+            ns0:HostNicFailureCriteria
+            ns0:HostNicOrderPolicy
+            ns0:HostNicTeamingPolicy
+            ns0:HostNoRedundantManagementNetworkEvent
+            ns0:HostNotConnected
+            ns0:HostNotInClusterEvent
+            ns0:HostNotReachable
+            ns0:HostNtpConfig
+            ns0:HostNumaInfo
+            ns0:HostNumaNode
+            ns0:HostNumericSensorHealthState
+            ns0:HostNumericSensorInfo
+            ns0:HostNumericSensorType
+            ns0:HostParallelScsiHba
+            ns0:HostParallelScsiTargetTransport
+            ns0:HostPatchManagerInstallState
+            ns0:HostPatchManagerIntegrityStatus
+            ns0:HostPatchManagerLocator
+            ns0:HostPatchManagerReason
+            ns0:HostPatchManagerStatus
+            ns0:HostPatchManagerStatusPrerequisitePatch
+            ns0:HostPciDevice
+            ns0:HostPortGroup
+            ns0:HostPortGroupConfig
+            ns0:HostPortGroupPort
+            ns0:HostPortGroupSpec
+            ns0:HostPosixAccountSpec
+            ns0:HostPowerOpFailed
+            ns0:HostPowerOperationType
+            ns0:HostPrimaryAgentNotShortNameEvent
+            ns0:HostReconnectionFailedEvent
+            ns0:HostRemovedEvent
+            ns0:HostRuntimeInfo
+            ns0:HostScsiDisk
+            ns0:HostScsiDiskPartition
+            ns0:HostScsiTopology
+            ns0:HostScsiTopologyInterface
+            ns0:HostScsiTopologyLun
+            ns0:HostScsiTopologyTarget
+            ns0:HostService
+            ns0:HostServiceInfo
+            ns0:HostServicePolicy
+            ns0:HostServiceTicket
+            ns0:HostShortNameInconsistentEvent
+            ns0:HostShortNameToIpFailedEvent
+            ns0:HostShutdownEvent
+            ns0:HostSnmpConfigSpec
+            ns0:HostSnmpDestination
+            ns0:HostSnmpSystemAgentLimits
+            ns0:HostStorageDeviceInfo
+            ns0:HostStorageElementInfo
+            ns0:HostStorageOperationalInfo
+            ns0:HostSystemConnectionState
+            ns0:HostSystemHealthInfo
+            ns0:HostSystemIdentificationInfo
+            ns0:HostSystemIdentificationInfoIdentifier
+            ns0:HostSystemInfo
+            ns0:HostSystemPowerState
+            ns0:HostSystemResourceInfo
+            ns0:HostTargetTransport
+            ns0:HostUpgradeFailedEvent
+            ns0:HostVMotionCompatibility
+            ns0:HostVMotionConfig
+            ns0:HostVMotionInfo
+            ns0:HostVMotionNetConfig
+            ns0:HostVirtualNic
+            ns0:HostVirtualNicConfig
+            ns0:HostVirtualNicSpec
+            ns0:HostVirtualSwitch
+            ns0:HostVirtualSwitchAutoBridge
+            ns0:HostVirtualSwitchBeaconConfig
+            ns0:HostVirtualSwitchBondBridge
+            ns0:HostVirtualSwitchBridge
+            ns0:HostVirtualSwitchConfig
+            ns0:HostVirtualSwitchSimpleBridge
+            ns0:HostVirtualSwitchSpec
+            ns0:HostVmfsSpec
+            ns0:HostVmfsVolume
+            ns0:HostWwnChangedEvent
+            ns0:HostWwnConflictEvent
+            ns0:HotSnapshotMoveNotSupported
+            ns0:HourlyTaskScheduler
+            ns0:IDEDiskNotSupported
+            ns0:ImpersonateUserRequestType
+            ns0:InaccessibleDatastore
+            ns0:IncompatibleDefaultDevice
+            ns0:IncompatibleSetting
+            ns0:IncorrectFileType
+            ns0:IncorrectHostInformation
+            ns0:IncorrectHostInformationEvent
+            ns0:IndependentDiskVMotionNotSupported
+            ns0:InflateVirtualDiskRequestType
+            ns0:InfoUpgradeEvent
+            ns0:InstallHostPatchRequestType
+            ns0:InsufficientCpuResourcesFault
+            ns0:InsufficientFailoverResourcesEvent
+            ns0:InsufficientFailoverResourcesFault
+            ns0:InsufficientHostCapacityFault
+            ns0:InsufficientMemoryResourcesFault
+            ns0:InsufficientPerCpuCapacity
+            ns0:InsufficientResourcesFault
+            ns0:IntOption
+            ns0:InternetScsiSnsDiscoveryMethod
+            ns0:InvalidAffinitySettingFault
+            ns0:InvalidArgument
+            ns0:InvalidBundle
+            ns0:InvalidClientCertificate
+            ns0:InvalidCollectorVersion
+            ns0:InvalidController
+            ns0:InvalidDatastore
+            ns0:InvalidDatastorePath
+            ns0:InvalidDeviceBacking
+            ns0:InvalidDeviceOperation
+            ns0:InvalidDeviceSpec
+            ns0:InvalidDiskFormat
+            ns0:InvalidEditionEvent
+            ns0:InvalidEditionLicense
+            ns0:InvalidEvent
+            ns0:InvalidFolder
+            ns0:InvalidFormat
+            ns0:InvalidHostState
+            ns0:InvalidLicense
+            ns0:InvalidLocale
+            ns0:InvalidLogin
+            ns0:InvalidName
+            ns0:InvalidPowerState
+            ns0:InvalidPrivilege
+            ns0:InvalidProperty
+            ns0:InvalidRequest
+            ns0:InvalidResourcePoolStructureFault
+            ns0:InvalidSnapshotFormat
+            ns0:InvalidState
+            ns0:InvalidType
+            ns0:InvalidVmConfig
+            ns0:IpHostnameGeneratorError
+            ns0:IsoImageFileInfo
+            ns0:IsoImageFileQuery
+            ns0:KeyValue
+            ns0:LegacyNetworkInterfaceInUse
+            ns0:LicenseAvailabilityInfo
+            ns0:LicenseDiagnostics
+            ns0:LicenseEvent
+            ns0:LicenseExpiredEvent
+            ns0:LicenseFeatureInfo
+            ns0:LicenseFeatureInfoSourceRestriction
+            ns0:LicenseFeatureInfoState
+            ns0:LicenseFeatureInfoUnit
+            ns0:LicenseManagerLicenseKey
+            ns0:LicenseManagerState
+            ns0:LicenseReservationInfo
+            ns0:LicenseReservationInfoState
+            ns0:LicenseRestricted
+            ns0:LicenseRestrictedEvent
+            ns0:LicenseServerAvailableEvent
+            ns0:LicenseServerSource
+            ns0:LicenseServerUnavailable
+            ns0:LicenseServerUnavailableEvent
+            ns0:LicenseSource
+            ns0:LicenseSourceUnavailable
+            ns0:LicenseUsageInfo
+            ns0:LinuxVolumeNotClean
+            ns0:LocalDatastoreCreatedEvent
+            ns0:LocalDatastoreInfo
+            ns0:LocalLicenseSource
+            ns0:LocalizedMethodFault
+            ns0:LockerMisconfiguredEvent
+            ns0:LockerReconfiguredEvent
+            ns0:LogBundlingFailed
+            ns0:LogUserEventRequestType
+            ns0:LoginBySSPIRequestType
+            ns0:LoginRequestType
+            ns0:LogoutRequestType
+            ns0:LongOption
+            ns0:MaintenanceModeFileMove
+            ns0:MakeDirectoryRequestType
+            ns0:ManagedEntityEventArgument
+            ns0:ManagedEntityStatus
+            ns0:ManagedObjectNotFound
+            ns0:ManagedObjectReference
+            ns0:MarkAsTemplateRequestType
+            ns0:MarkAsVirtualMachineRequestType
+            ns0:MemorySizeNotRecommended
+            ns0:MemorySizeNotSupported
+            ns0:MemorySnapshotOnIndependentDisk
+            ns0:MergePermissionsRequestType
+            ns0:MethodAction
+            ns0:MethodActionArgument
+            ns0:MethodDescription
+            ns0:MethodFault
+            ns0:MethodNotFound
+            ns0:MetricAlarmExpression
+            ns0:MetricAlarmOperator
+            ns0:MigrateVMRequestType
+            ns0:MigrationErrorEvent
+            ns0:MigrationEvent
+            ns0:MigrationFault
+            ns0:MigrationFeatureNotSupported
+            ns0:MigrationHostErrorEvent
+            ns0:MigrationHostWarningEvent
+            ns0:MigrationResourceErrorEvent
+            ns0:MigrationResourceWarningEvent
+            ns0:MigrationWarningEvent
+            ns0:MismatchedBundle
+            ns0:MismatchedNetworkPolicies
+            ns0:MismatchedVMotionNetworkNames
+            ns0:MissingController
+            ns0:MissingLinuxCustResources
+            ns0:MissingObject
+            ns0:MissingProperty
+            ns0:MissingWindowsCustResources
+            ns0:ModeInfo
+            ns0:ModifyListViewRequestType
+            ns0:MonthlyByDayTaskScheduler
+            ns0:MonthlyByWeekdayTaskScheduler
+            ns0:MonthlyTaskScheduler
+            ns0:MountError
+            ns0:MountToolsInstallerRequestType
+            ns0:MoveDatastoreFileRequestType
+            ns0:MoveHostIntoRequestType
+            ns0:MoveIntoFolderRequestType
+            ns0:MoveIntoRequestType
+            ns0:MoveIntoResourcePoolRequestType
+            ns0:MoveVirtualDiskRequestType
+            ns0:MultipathState
+            ns0:MultipleSnapshotsNotSupported
+            ns0:NASDatastoreCreatedEvent
+            ns0:NasDatastoreInfo
+            ns0:NetworkCopyFault
+            ns0:NetworkSummary
+            ns0:NetworksMayNotBeTheSame
+            ns0:NicSettingMismatch
+            ns0:NoAccessUserEvent
+            ns0:NoActiveHostInCluster
+            ns0:NoClientCertificate
+            ns0:NoDatastoresConfiguredEvent
+            ns0:NoDiskFound
+            ns0:NoDiskSpace
+            ns0:NoDisksToCustomize
+            ns0:NoGateway
+            ns0:NoGuestHeartbeat
+            ns0:NoHost
+            ns0:NoLicenseEvent
+            ns0:NoMaintenanceModeDrsRecommendationForVM
+            ns0:NoPeerHostFound
+            ns0:NoPermission
+            ns0:NoPermissionOnHost
+            ns0:NoSubjectName
+            ns0:NoVirtualNic
+            ns0:NonHomeRDMVMotionNotSupported
+            ns0:NonPersistentDisksNotSupported
+            ns0:NotAuthenticated
+            ns0:NotEnoughCpus
+            ns0:NotEnoughLicenses
+            ns0:NotEnoughLogicalCpus
+            ns0:NotEnoughResourcesToStartVmEvent
+            ns0:NotFound
+            ns0:NotImplemented
+            ns0:NotSupported
+            ns0:NotSupportedHost
+            ns0:NumVirtualCpusNotSupported
+            ns0:ObjectContent
+            ns0:ObjectSpec
+            ns0:ObjectUpdate
+            ns0:ObjectUpdateKind
+            ns0:OnceTaskScheduler
+            ns0:OpenInventoryViewFolderRequestType
+            ns0:OptionDef
+            ns0:OptionType
+            ns0:OptionValue
+            ns0:OrAlarmExpression
+            ns0:OutOfBounds
+            ns0:OverwriteCustomizationSpecRequestType
+            ns0:PatchAlreadyInstalled
+            ns0:PatchBinariesNotFound
+            ns0:PatchInstallFailed
+            ns0:PatchIntegrityError
+            ns0:PatchMetadataCorrupted
+            ns0:PatchMetadataInvalid
+            ns0:PatchMetadataNotFound
+            ns0:PatchMissingDependencies
+            ns0:PatchNotApplicable
+            ns0:PatchSuperseded
+            ns0:PerfCompositeMetric
+            ns0:PerfCounterInfo
+            ns0:PerfEntityMetric
+            ns0:PerfEntityMetricBase
+            ns0:PerfEntityMetricCSV
+            ns0:PerfFormat
+            ns0:PerfInterval
+            ns0:PerfMetricId
+            ns0:PerfMetricIntSeries
+            ns0:PerfMetricSeries
+            ns0:PerfMetricSeriesCSV
+            ns0:PerfProviderSummary
+            ns0:PerfQuerySpec
+            ns0:PerfSampleInfo
+            ns0:PerfStatsType
+            ns0:PerfSummaryType
+            ns0:PerformanceDescription
+            ns0:PerformanceManagerUnit
+            ns0:Permission
+            ns0:PermissionAddedEvent
+            ns0:PermissionEvent
+            ns0:PermissionRemovedEvent
+            ns0:PermissionUpdatedEvent
+            ns0:PhysCompatRDMNotSupported
+            ns0:PhysicalNic
+            ns0:PhysicalNicCdpDeviceCapability
+            ns0:PhysicalNicCdpInfo
+            ns0:PhysicalNicConfig
+            ns0:PhysicalNicHint
+            ns0:PhysicalNicHintInfo
+            ns0:PhysicalNicIpHint
+            ns0:PhysicalNicLinkInfo
+            ns0:PhysicalNicNameHint
+            ns0:PhysicalNicSpec
+            ns0:PlatformConfigFault
+            ns0:PortGroupConnecteeType
+            ns0:PosixUserSearchResult
+            ns0:PostEventRequestType
+            ns0:PowerDownHostToStandByRequestType
+            ns0:PowerOffVMRequestType
+            ns0:PowerOnMultiVMRequestType
+            ns0:PowerOnVMRequestType
+            ns0:PowerUpHostFromStandByRequestType
+            ns0:PrivilegePolicyDef
+            ns0:ProductComponentInfo
+            ns0:PropertyChange
+            ns0:PropertyChangeOp
+            ns0:PropertyFilterSpec
+            ns0:PropertyFilterUpdate
+            ns0:PropertySpec
+            ns0:QueryAvailableDisksForVmfsRequestType
+            ns0:QueryAvailablePartitionRequestType
+            ns0:QueryAvailablePerfMetricRequestType
+            ns0:QueryAvailableTimeZonesRequestType
+            ns0:QueryBootDevicesRequestType
+            ns0:QueryConfigOptionDescriptorRequestType
+            ns0:QueryConfigOptionRequestType
+            ns0:QueryConfigTargetRequestType
+            ns0:QueryConfiguredModuleOptionStringRequestType
+            ns0:QueryConnectionInfoRequestType
+            ns0:QueryDateTimeRequestType
+            ns0:QueryDescriptionsRequestType
+            ns0:QueryEventsRequestType
+            ns0:QueryFirmwareConfigUploadURLRequestType
+            ns0:QueryHostConnectionInfoRequestType
+            ns0:QueryLicenseSourceAvailabilityRequestType
+            ns0:QueryLicenseUsageRequestType
+            ns0:QueryMemoryOverheadExRequestType
+            ns0:QueryMemoryOverheadRequestType
+            ns0:QueryNetworkHintRequestType
+            ns0:QueryOptionsRequestType
+            ns0:QueryPartitionCreateDescRequestType
+            ns0:QueryPartitionCreateOptionsRequestType
+            ns0:QueryPerfCompositeRequestType
+            ns0:QueryPerfCounterByLevelRequestType
+            ns0:QueryPerfCounterRequestType
+            ns0:QueryPerfProviderSummaryRequestType
+            ns0:QueryPerfRequestType
+            ns0:QuerySupportedFeaturesRequestType
+            ns0:QueryVMotionCompatibilityRequestType
+            ns0:QueryVirtualDiskFragmentationRequestType
+            ns0:QueryVirtualDiskGeometryRequestType
+            ns0:QueryVirtualDiskUuidRequestType
+            ns0:QueryVmfsDatastoreCreateOptionsRequestType
+            ns0:QueryVmfsDatastoreExtendOptionsRequestType
+            ns0:RDMNotPreserved
+            ns0:RDMNotSupported
+            ns0:RDMNotSupportedOnDatastore
+            ns0:RDMPointsToInaccessibleDisk
+            ns0:RawDiskNotSupported
+            ns0:ReadNextEventsRequestType
+            ns0:ReadNextTasksRequestType
+            ns0:ReadOnlyDisksWithLegacyDestination
+            ns0:ReadPreviousEventsRequestType
+            ns0:ReadPreviousTasksRequestType
+            ns0:RebootGuestRequestType
+            ns0:RebootHostRequestType
+            ns0:RebootRequired
+            ns0:RecommendHostsForVmRequestType
+            ns0:RecommendationReasonCode
+            ns0:RecommendationType
+            ns0:ReconfigVMRequestType
+            ns0:ReconfigureAlarmRequestType
+            ns0:ReconfigureAutostartRequestType
+            ns0:ReconfigureClusterRequestType
+            ns0:ReconfigureComputeResourceRequestType
+            ns0:ReconfigureHostForDASRequestType
+            ns0:ReconfigureScheduledTaskRequestType
+            ns0:ReconfigureServiceConsoleReservationRequestType
+            ns0:ReconfigureSnmpAgentRequestType
+            ns0:ReconfigureVirtualMachineReservationRequestType
+            ns0:ReconnectHostRequestType
+            ns0:RecurrentTaskScheduler
+            ns0:RefreshDatastoreRequestType
+            ns0:RefreshDateTimeSystemRequestType
+            ns0:RefreshFirewallRequestType
+            ns0:RefreshHealthStatusSystemRequestType
+            ns0:RefreshNetworkSystemRequestType
+            ns0:RefreshRecommendationRequestType
+            ns0:RefreshServicesRequestType
+            ns0:RefreshStorageSystemRequestType
+            ns0:RegisterExtensionRequestType
+            ns0:RegisterVMRequestType
+            ns0:ReloadRequestType
+            ns0:RelocateVMRequestType
+            ns0:RemoteDeviceNotSupported
+            ns0:RemoveAlarmRequestType
+            ns0:RemoveAllSnapshotsRequestType
+            ns0:RemoveAuthorizationRoleRequestType
+            ns0:RemoveCustomFieldDefRequestType
+            ns0:RemoveDatastoreRequestType
+            ns0:RemoveEntityPermissionRequestType
+            ns0:RemoveFailed
+            ns0:RemoveGroupRequestType
+            ns0:RemoveInternetScsiSendTargetsRequestType
+            ns0:RemoveInternetScsiStaticTargetsRequestType
+            ns0:RemovePerfIntervalRequestType
+            ns0:RemovePortGroupRequestType
+            ns0:RemoveScheduledTaskRequestType
+            ns0:RemoveServiceConsoleVirtualNicRequestType
+            ns0:RemoveSnapshotRequestType
+            ns0:RemoveUserRequestType
+            ns0:RemoveVirtualNicRequestType
+            ns0:RemoveVirtualSwitchRequestType
+            ns0:RenameCustomFieldDefRequestType
+            ns0:RenameCustomizationSpecRequestType
+            ns0:RenameDatastoreRequestType
+            ns0:RenameRequestType
+            ns0:RenameSnapshotRequestType
+            ns0:RequestCanceled
+            ns0:RescanAllHbaRequestType
+            ns0:RescanHbaRequestType
+            ns0:RescanVmfsRequestType
+            ns0:ResetCollectorRequestType
+            ns0:ResetEntityPermissionsRequestType
+            ns0:ResetFirmwareToFactoryDefaultsRequestType
+            ns0:ResetGuestInformationRequestType
+            ns0:ResetListViewFromViewRequestType
+            ns0:ResetListViewRequestType
+            ns0:ResetSystemHealthInfoRequestType
+            ns0:ResetVMRequestType
+            ns0:ResourceAllocationInfo
+            ns0:ResourceConfigSpec
+            ns0:ResourceInUse
+            ns0:ResourcePoolCreatedEvent
+            ns0:ResourcePoolDestroyedEvent
+            ns0:ResourcePoolEvent
+            ns0:ResourcePoolEventArgument
+            ns0:ResourcePoolMovedEvent
+            ns0:ResourcePoolReconfiguredEvent
+            ns0:ResourcePoolResourceUsage
+            ns0:ResourcePoolRuntimeInfo
+            ns0:ResourcePoolSummary
+            ns0:ResourceViolatedEvent
+            ns0:RestartServiceConsoleVirtualNicRequestType
+            ns0:RestartServiceRequestType
+            ns0:RestoreFirmwareConfigurationRequestType
+            ns0:RestrictedVersion
+            ns0:RetrieveAllPermissionsRequestType
+            ns0:RetrieveDiskPartitionInfoRequestType
+            ns0:RetrieveEntityPermissionsRequestType
+            ns0:RetrieveEntityScheduledTaskRequestType
+            ns0:RetrieveProductComponentsRequestType
+            ns0:RetrievePropertiesRequestType
+            ns0:RetrieveRolePermissionsRequestType
+            ns0:RetrieveServiceContentRequestType
+            ns0:RetrieveUserGroupsRequestType
+            ns0:RevertToCurrentSnapshotRequestType
+            ns0:RevertToSnapshotRequestType
+            ns0:RewindCollectorRequestType
+            ns0:RoleAddedEvent
+            ns0:RoleEvent
+            ns0:RoleEventArgument
+            ns0:RoleRemovedEvent
+            ns0:RoleUpdatedEvent
+            ns0:RuleViolation
+            ns0:RunScheduledTaskRequestType
+            ns0:RunScriptAction
+            ns0:RuntimeFault
+            ns0:SSLVerifyFault
+            ns0:SSPIChallenge
+            ns0:ScanHostPatchRequestType
+            ns0:ScheduledTaskCompletedEvent
+            ns0:ScheduledTaskCreatedEvent
+            ns0:ScheduledTaskDescription
+            ns0:ScheduledTaskDetail
+            ns0:ScheduledTaskEmailCompletedEvent
+            ns0:ScheduledTaskEmailFailedEvent
+            ns0:ScheduledTaskEvent
+            ns0:ScheduledTaskEventArgument
+            ns0:ScheduledTaskFailedEvent
+            ns0:ScheduledTaskInfo
+            ns0:ScheduledTaskReconfiguredEvent
+            ns0:ScheduledTaskRemovedEvent
+            ns0:ScheduledTaskSpec
+            ns0:ScheduledTaskStartedEvent
+            ns0:ScsiLun
+            ns0:ScsiLunDurableName
+            ns0:ScsiLunState
+            ns0:ScsiLunType
+            ns0:SearchDatastoreRequestType
+            ns0:SearchDatastoreSubFoldersRequestType
+            ns0:SecurityError
+            ns0:SelectActivePartitionRequestType
+            ns0:SelectVnicRequestType
+            ns0:SelectionSpec
+            ns0:SendEmailAction
+            ns0:SendSNMPAction
+            ns0:SendTestNotificationRequestType
+            ns0:ServerLicenseExpiredEvent
+            ns0:ServerStartedSessionEvent
+            ns0:ServiceConsoleReservationInfo
+            ns0:ServiceContent
+            ns0:SessionEvent
+            ns0:SessionIsActiveRequestType
+            ns0:SessionManagerLocalTicket
+            ns0:SessionTerminatedEvent
+            ns0:SetCollectorPageSizeRequestType
+            ns0:SetEntityPermissionsRequestType
+            ns0:SetFieldRequestType
+            ns0:SetLicenseEditionRequestType
+            ns0:SetLocaleRequestType
+            ns0:SetMultipathLunPolicyRequestType
+            ns0:SetPublicKeyRequestType
+            ns0:SetScreenResolutionRequestType
+            ns0:SetTaskStateRequestType
+            ns0:SetVirtualDiskUuidRequestType
+            ns0:SharedBusControllerNotSupported
+            ns0:SharesInfo
+            ns0:SharesLevel
+            ns0:ShrinkVirtualDiskRequestType
+            ns0:ShutdownGuestRequestType
+            ns0:ShutdownHostRequestType
+            ns0:SlpDiscoveryMethod
+            ns0:SnapshotCloneNotSupported
+            ns0:SnapshotCopyNotSupported
+            ns0:SnapshotDisabled
+            ns0:SnapshotFault
+            ns0:SnapshotIncompatibleDeviceInVm
+            ns0:SnapshotLocked
+            ns0:SnapshotMoveFromNonHomeNotSupported
+            ns0:SnapshotMoveNotSupported
+            ns0:SnapshotMoveToNonHomeNotSupported
+            ns0:SnapshotNoChange
+            ns0:SnapshotRevertIssue
+            ns0:StandbyGuestRequestType
+            ns0:StartServiceRequestType
+            ns0:StateAlarmExpression
+            ns0:StateAlarmOperator
+            ns0:StopServiceRequestType
+            ns0:StringOption
+            ns0:SuspendVMRequestType
+            ns0:SuspendedRelocateNotSupported
+            ns0:SwapDatastoreNotWritableOnHost
+            ns0:SwapDatastoreUnset
+            ns0:SwapPlacementOverrideNotSupported
+            ns0:SystemError
+            ns0:TaskDescription
+            ns0:TaskEvent
+            ns0:TaskFilterSpec
+            ns0:TaskFilterSpecByEntity
+            ns0:TaskFilterSpecByTime
+            ns0:TaskFilterSpecByUsername
+            ns0:TaskFilterSpecRecursionOption
+            ns0:TaskFilterSpecTimeOption
+            ns0:TaskInProgress
+            ns0:TaskInfo
+            ns0:TaskInfoState
+            ns0:TaskReason
+            ns0:TaskReasonAlarm
+            ns0:TaskReasonSchedule
+            ns0:TaskReasonSystem
+            ns0:TaskReasonUser
+            ns0:TaskScheduler
+            ns0:TaskTimeoutEvent
+            ns0:TemplateBeingUpgradedEvent
+            ns0:TemplateConfigFileInfo
+            ns0:TemplateConfigFileQuery
+            ns0:TemplateUpgradeEvent
+            ns0:TemplateUpgradeFailedEvent
+            ns0:TemplateUpgradedEvent
+            ns0:TerminateSessionRequestType
+            ns0:TimedOutHostOperationEvent
+            ns0:Timedout
+            ns0:TooManyConsecutiveOverrides
+            ns0:TooManyDevices
+            ns0:TooManyDisksOnLegacyHost
+            ns0:TooManyHosts
+            ns0:TooManySnapshotLevels
+            ns0:ToolsConfigInfo
+            ns0:ToolsUnavailable
+            ns0:TraversalSpec
+            ns0:TypeDescription
+            ns0:UnassignUserFromGroupRequestType
+            ns0:UncommittedUndoableDisk
+            ns0:UncustomizableGuest
+            ns0:UnexpectedCustomizationFault
+            ns0:UnexpectedFault
+            ns0:UninstallServiceRequestType
+            ns0:UnlicensedVirtualMachinesEvent
+            ns0:UnlicensedVirtualMachinesFoundEvent
+            ns0:UnmountToolsInstallerRequestType
+            ns0:UnrecognizedHost
+            ns0:UnregisterAndDestroyRequestType
+            ns0:UnregisterExtensionRequestType
+            ns0:UnregisterVMRequestType
+            ns0:UnsharedSwapVMotionNotSupported
+            ns0:UnsupportedDatastore
+            ns0:UnsupportedGuest
+            ns0:UnsupportedVmxLocation
+            ns0:UpdateAuthorizationRoleRequestType
+            ns0:UpdateBootDeviceRequestType
+            ns0:UpdateChildResourceConfigurationRequestType
+            ns0:UpdateConfigRequestType
+            ns0:UpdateConsoleIpRouteConfigRequestType
+            ns0:UpdateDateTimeConfigRequestType
+            ns0:UpdateDateTimeRequestType
+            ns0:UpdateDefaultPolicyRequestType
+            ns0:UpdateDiskPartitionsRequestType
+            ns0:UpdateDnsConfigRequestType
+            ns0:UpdateExtensionRequestType
+            ns0:UpdateFlagsRequestType
+            ns0:UpdateInternetScsiAliasRequestType
+            ns0:UpdateInternetScsiAuthenticationPropertiesRequestType
+            ns0:UpdateInternetScsiDiscoveryPropertiesRequestType
+            ns0:UpdateInternetScsiIPPropertiesRequestType
+            ns0:UpdateInternetScsiNameRequestType
+            ns0:UpdateIpConfigRequestType
+            ns0:UpdateIpRouteConfigRequestType
+            ns0:UpdateLocalSwapDatastoreRequestType
+            ns0:UpdateModuleOptionStringRequestType
+            ns0:UpdateNetworkConfigRequestType
+            ns0:UpdateOptionsRequestType
+            ns0:UpdatePerfIntervalRequestType
+            ns0:UpdatePhysicalNicLinkSpeedRequestType
+            ns0:UpdatePortGroupRequestType
+            ns0:UpdateProgressRequestType
+            ns0:UpdateServiceConsoleVirtualNicRequestType
+            ns0:UpdateServiceMessageRequestType
+            ns0:UpdateServicePolicyRequestType
+            ns0:UpdateSet
+            ns0:UpdateSoftwareInternetScsiEnabledRequestType
+            ns0:UpdateSystemResourcesRequestType
+            ns0:UpdateUserRequestType
+            ns0:UpdateVirtualNicRequestType
+            ns0:UpdateVirtualSwitchRequestType
+            ns0:UpdatedAgentBeingRestartedEvent
+            ns0:UpgradeEvent
+            ns0:UpgradePolicy
+            ns0:UpgradeToolsRequestType
+            ns0:UpgradeVMRequestType
+            ns0:UpgradeVmLayoutRequestType
+            ns0:UpgradeVmfsRequestType
+            ns0:UserAssignedToGroup
+            ns0:UserLoginSessionEvent
+            ns0:UserLogoutSessionEvent
+            ns0:UserNotFound
+            ns0:UserPasswordChanged
+            ns0:UserSearchResult
+            ns0:UserSession
+            ns0:UserUnassignedFromGroup
+            ns0:UserUpgradeEvent
+            ns0:VMFSDatastoreCreatedEvent
+            ns0:VMINotSupported
+            ns0:VMOnVirtualIntranet
+            ns0:VMotionCompatibilityType
+            ns0:VMotionInterfaceIssue
+            ns0:VMotionLicenseExpiredEvent
+            ns0:VMotionLinkCapacityLow
+            ns0:VMotionLinkDown
+            ns0:VMotionNotConfigured
+            ns0:VMotionNotLicensed
+            ns0:VMotionNotSupported
+            ns0:VMotionProtocolIncompatible
+            ns0:ValidateMigrationRequestType
+            ns0:ValidateMigrationTestType
+            ns0:VcAgentUpgradeFailedEvent
+            ns0:VcAgentUpgradedEvent
+            ns0:VimAccountPasswordChangedEvent
+            ns0:VimFault
+            ns0:VirtualBusLogicController
+            ns0:VirtualBusLogicControllerOption
+            ns0:VirtualCdrom
+            ns0:VirtualCdromAtapiBackingInfo
+            ns0:VirtualCdromAtapiBackingOption
+            ns0:VirtualCdromIsoBackingInfo
+            ns0:VirtualCdromIsoBackingOption
+            ns0:VirtualCdromOption
+            ns0:VirtualCdromPassthroughBackingInfo
+            ns0:VirtualCdromPassthroughBackingOption
+            ns0:VirtualCdromRemoteAtapiBackingInfo
+            ns0:VirtualCdromRemoteAtapiBackingOption
+            ns0:VirtualCdromRemotePassthroughBackingInfo
+            ns0:VirtualCdromRemotePassthroughBackingOption
+            ns0:VirtualController
+            ns0:VirtualControllerOption
+            ns0:VirtualDevice
+            ns0:VirtualDeviceBackingInfo
+            ns0:VirtualDeviceBackingOption
+            ns0:VirtualDeviceConfigSpec
+            ns0:VirtualDeviceConfigSpecFileOperation
+            ns0:VirtualDeviceConfigSpecOperation
+            ns0:VirtualDeviceConnectInfo
+            ns0:VirtualDeviceConnectOption
+            ns0:VirtualDeviceDeviceBackingInfo
+            ns0:VirtualDeviceDeviceBackingOption
+            ns0:VirtualDeviceFileBackingInfo
+            ns0:VirtualDeviceFileBackingOption
+            ns0:VirtualDeviceFileExtension
+            ns0:VirtualDeviceOption
+            ns0:VirtualDevicePipeBackingInfo
+            ns0:VirtualDevicePipeBackingOption
+            ns0:VirtualDeviceRemoteDeviceBackingInfo
+            ns0:VirtualDeviceRemoteDeviceBackingOption
+            ns0:VirtualDisk
+            ns0:VirtualDiskAdapterType
+            ns0:VirtualDiskCompatibilityMode
+            ns0:VirtualDiskFlatVer1BackingInfo
+            ns0:VirtualDiskFlatVer1BackingOption
+            ns0:VirtualDiskFlatVer2BackingInfo
+            ns0:VirtualDiskFlatVer2BackingOption
+            ns0:VirtualDiskMode
+            ns0:VirtualDiskOption
+            ns0:VirtualDiskPartitionedRawDiskVer2BackingInfo
+            ns0:VirtualDiskPartitionedRawDiskVer2BackingOption
+            ns0:VirtualDiskRawDiskMappingVer1BackingInfo
+            ns0:VirtualDiskRawDiskMappingVer1BackingOption
+            ns0:VirtualDiskRawDiskVer2BackingInfo
+            ns0:VirtualDiskRawDiskVer2BackingOption
+            ns0:VirtualDiskSparseVer1BackingInfo
+            ns0:VirtualDiskSparseVer1BackingOption
+            ns0:VirtualDiskSparseVer2BackingInfo
+            ns0:VirtualDiskSparseVer2BackingOption
+            ns0:VirtualDiskSpec
+            ns0:VirtualDiskType
+            ns0:VirtualE1000
+            ns0:VirtualE1000Option
+            ns0:VirtualEnsoniq1371
+            ns0:VirtualEnsoniq1371Option
+            ns0:VirtualEthernetCard
+            ns0:VirtualEthernetCardLegacyNetworkBackingInfo
+            ns0:VirtualEthernetCardLegacyNetworkBackingOption
+            ns0:VirtualEthernetCardLegacyNetworkDeviceName
+            ns0:VirtualEthernetCardMacType
+            ns0:VirtualEthernetCardNetworkBackingInfo
+            ns0:VirtualEthernetCardNetworkBackingOption
+            ns0:VirtualEthernetCardNotSupported
+            ns0:VirtualEthernetCardOption
+            ns0:VirtualFloppy
+            ns0:VirtualFloppyDeviceBackingInfo
+            ns0:VirtualFloppyDeviceBackingOption
+            ns0:VirtualFloppyImageBackingInfo
+            ns0:VirtualFloppyImageBackingOption
+            ns0:VirtualFloppyOption
+            ns0:VirtualFloppyRemoteDeviceBackingInfo
+            ns0:VirtualFloppyRemoteDeviceBackingOption
+            ns0:VirtualHardware
+            ns0:VirtualHardwareCompatibilityIssue
+            ns0:VirtualHardwareOption
+            ns0:VirtualHardwareVersionNotSupported
+            ns0:VirtualIDEController
+            ns0:VirtualIDEControllerOption
+            ns0:VirtualKeyboard
+            ns0:VirtualKeyboardOption
+            ns0:VirtualLsiLogicController
+            ns0:VirtualLsiLogicControllerOption
+            ns0:VirtualMachineAffinityInfo
+            ns0:VirtualMachineBootOptions
+            ns0:VirtualMachineCapability
+            ns0:VirtualMachineCdromInfo
+            ns0:VirtualMachineCloneSpec
+            ns0:VirtualMachineConfigInfo
+            ns0:VirtualMachineConfigInfoDatastoreUrlPair
+            ns0:VirtualMachineConfigInfoNpivWwnType
+            ns0:VirtualMachineConfigInfoSwapPlacementType
+            ns0:VirtualMachineConfigOption
+            ns0:VirtualMachineConfigOptionDescriptor
+            ns0:VirtualMachineConfigSpec
+            ns0:VirtualMachineConfigSpecNpivWwnOp
+            ns0:VirtualMachineConfigSummary
+            ns0:VirtualMachineConnectionState
+            ns0:VirtualMachineConsolePreferences
+            ns0:VirtualMachineCpuIdInfoSpec
+            ns0:VirtualMachineDatastoreInfo
+            ns0:VirtualMachineDatastoreVolumeOption
+            ns0:VirtualMachineDefaultPowerOpInfo
+            ns0:VirtualMachineDiskDeviceInfo
+            ns0:VirtualMachineFileInfo
+            ns0:VirtualMachineFileLayout
+            ns0:VirtualMachineFileLayoutDiskLayout
+            ns0:VirtualMachineFileLayoutSnapshotLayout
+            ns0:VirtualMachineFlagInfo
+            ns0:VirtualMachineFlagInfoMonitorType
+            ns0:VirtualMachineFlagInfoVirtualMmuUsage
+            ns0:VirtualMachineFloppyInfo
+            ns0:VirtualMachineGuestOsFamily
+            ns0:VirtualMachineGuestOsIdentifier
+            ns0:VirtualMachineGuestState
+            ns0:VirtualMachineGuestSummary
+            ns0:VirtualMachineHtSharing
+            ns0:VirtualMachineIdeDiskDeviceInfo
+            ns0:VirtualMachineIdeDiskDevicePartitionInfo
+            ns0:VirtualMachineLegacyNetworkSwitchInfo
+            ns0:VirtualMachineMemoryAllocationPolicy
+            ns0:VirtualMachineMemoryReservationInfo
+            ns0:VirtualMachineMemoryReservationSpec
+            ns0:VirtualMachineMessage
+            ns0:VirtualMachineMksTicket
+            ns0:VirtualMachineMovePriority
+            ns0:VirtualMachineNetworkInfo
+            ns0:VirtualMachineNetworkShaperInfo
+            ns0:VirtualMachineParallelInfo
+            ns0:VirtualMachinePowerOffBehavior
+            ns0:VirtualMachinePowerOpType
+            ns0:VirtualMachinePowerState
+            ns0:VirtualMachineQuestionInfo
+            ns0:VirtualMachineQuickStats
+            ns0:VirtualMachineRelocateSpec
+            ns0:VirtualMachineRelocateSpecDiskLocator
+            ns0:VirtualMachineRelocateTransformation
+            ns0:VirtualMachineRuntimeInfo
+            ns0:VirtualMachineScsiDiskDeviceInfo
+            ns0:VirtualMachineScsiPassthroughInfo
+            ns0:VirtualMachineScsiPassthroughType
+            ns0:VirtualMachineSerialInfo
+            ns0:VirtualMachineSnapshotInfo
+            ns0:VirtualMachineSnapshotTree
+            ns0:VirtualMachineSoundInfo
+            ns0:VirtualMachineStandbyActionType
+            ns0:VirtualMachineSummary
+            ns0:VirtualMachineTargetInfo
+            ns0:VirtualMachineTargetInfoConfigurationTag
+            ns0:VirtualMachineToolsStatus
+            ns0:VirtualMachineUsbInfo
+            ns0:VirtualMachineUsbInfoFamily
+            ns0:VirtualMachineUsbInfoSpeed
+            ns0:VirtualMachineVMIROM
+            ns0:VirtualMachineVideoCard
+            ns0:VirtualPCIController
+            ns0:VirtualPCIControllerOption
+            ns0:VirtualPCNet32
+            ns0:VirtualPCNet32Option
+            ns0:VirtualPS2Controller
+            ns0:VirtualPS2ControllerOption
+            ns0:VirtualParallelPort
+            ns0:VirtualParallelPortDeviceBackingInfo
+            ns0:VirtualParallelPortDeviceBackingOption
+            ns0:VirtualParallelPortFileBackingInfo
+            ns0:VirtualParallelPortFileBackingOption
+            ns0:VirtualParallelPortOption
+            ns0:VirtualPointingDevice
+            ns0:VirtualPointingDeviceBackingOption
+            ns0:VirtualPointingDeviceDeviceBackingInfo
+            ns0:VirtualPointingDeviceHostChoice
+            ns0:VirtualPointingDeviceOption
+            ns0:VirtualSCSIController
+            ns0:VirtualSCSIControllerOption
+            ns0:VirtualSCSIPassthrough
+            ns0:VirtualSCSIPassthroughDeviceBackingInfo
+            ns0:VirtualSCSIPassthroughDeviceBackingOption
+            ns0:VirtualSCSIPassthroughOption
+            ns0:VirtualSCSISharing
+            ns0:VirtualSIOController
+            ns0:VirtualSIOControllerOption
+            ns0:VirtualSerialPort
+            ns0:VirtualSerialPortDeviceBackingInfo
+            ns0:VirtualSerialPortDeviceBackingOption
+            ns0:VirtualSerialPortEndPoint
+            ns0:VirtualSerialPortFileBackingInfo
+            ns0:VirtualSerialPortFileBackingOption
+            ns0:VirtualSerialPortOption
+            ns0:VirtualSerialPortPipeBackingInfo
+            ns0:VirtualSerialPortPipeBackingOption
+            ns0:VirtualSoundBlaster16
+            ns0:VirtualSoundBlaster16Option
+            ns0:VirtualSoundCard
+            ns0:VirtualSoundCardDeviceBackingInfo
+            ns0:VirtualSoundCardDeviceBackingOption
+            ns0:VirtualSoundCardOption
+            ns0:VirtualUSB
+            ns0:VirtualUSBController
+            ns0:VirtualUSBControllerOption
+            ns0:VirtualUSBOption
+            ns0:VirtualUSBUSBBackingInfo
+            ns0:VirtualUSBUSBBackingOption
+            ns0:VirtualVMIROMOption
+            ns0:VirtualVideoCardOption
+            ns0:VirtualVmxnet
+            ns0:VirtualVmxnet2
+            ns0:VirtualVmxnet2Option
+            ns0:VirtualVmxnetOption
+            ns0:VmAcquiredMksTicketEvent
+            ns0:VmAutoRenameEvent
+            ns0:VmBeingClonedEvent
+            ns0:VmBeingCreatedEvent
+            ns0:VmBeingDeployedEvent
+            ns0:VmBeingHotMigratedEvent
+            ns0:VmBeingMigratedEvent
+            ns0:VmBeingRelocatedEvent
+            ns0:VmCloneEvent
+            ns0:VmCloneFailedEvent
+            ns0:VmClonedEvent
+            ns0:VmConfigFault
+            ns0:VmConfigFileInfo
+            ns0:VmConfigFileQuery
+            ns0:VmConfigFileQueryFilter
+            ns0:VmConfigFileQueryFlags
+            ns0:VmConfigMissingEvent
+            ns0:VmConnectedEvent
+            ns0:VmCreatedEvent
+            ns0:VmDasUpdateErrorEvent
+            ns0:VmDasUpdateOkEvent
+            ns0:VmDateRolledBackEvent
+            ns0:VmDeployFailedEvent
+            ns0:VmDeployedEvent
+            ns0:VmDisconnectedEvent
+            ns0:VmDiscoveredEvent
+            ns0:VmDiskFailedEvent
+            ns0:VmDiskFileInfo
+            ns0:VmDiskFileQuery
+            ns0:VmDiskFileQueryFilter
+            ns0:VmDiskFileQueryFlags
+            ns0:VmEmigratingEvent
+            ns0:VmEvent
+            ns0:VmEventArgument
+            ns0:VmFailedMigrateEvent
+            ns0:VmFailedRelayoutEvent
+            ns0:VmFailedRelayoutOnVmfs2DatastoreEvent
+            ns0:VmFailedToPowerOffEvent
+            ns0:VmFailedToPowerOnEvent
+            ns0:VmFailedToRebootGuestEvent
+            ns0:VmFailedToResetEvent
+            ns0:VmFailedToShutdownGuestEvent
+            ns0:VmFailedToStandbyGuestEvent
+            ns0:VmFailedToSuspendEvent
+            ns0:VmFailoverFailed
+            ns0:VmGuestRebootEvent
+            ns0:VmGuestShutdownEvent
+            ns0:VmGuestStandbyEvent
+            ns0:VmLimitLicense
+            ns0:VmLogFileInfo
+            ns0:VmLogFileQuery
+            ns0:VmMacAssignedEvent
+            ns0:VmMacChangedEvent
+            ns0:VmMacConflictEvent
+            ns0:VmMessageEvent
+            ns0:VmMigratedEvent
+            ns0:VmNoNetworkAccessEvent
+            ns0:VmNvramFileInfo
+            ns0:VmNvramFileQuery
+            ns0:VmOrphanedEvent
+            ns0:VmPowerOffOnIsolationEvent
+            ns0:VmPoweredOffEvent
+            ns0:VmPoweredOnEvent
+            ns0:VmReconfiguredEvent
+            ns0:VmRegisteredEvent
+            ns0:VmRelayoutSuccessfulEvent
+            ns0:VmRelayoutUpToDateEvent
+            ns0:VmRelocateFailedEvent
+            ns0:VmRelocateSpecEvent
+            ns0:VmRelocatedEvent
+            ns0:VmRemovedEvent
+            ns0:VmRenamedEvent
+            ns0:VmResettingEvent
+            ns0:VmResourcePoolMovedEvent
+            ns0:VmResourceReallocatedEvent
+            ns0:VmRestartedOnAlternateHostEvent
+            ns0:VmResumingEvent
+            ns0:VmSnapshotFileInfo
+            ns0:VmSnapshotFileQuery
+            ns0:VmStartingEvent
+            ns0:VmStaticMacConflictEvent
+            ns0:VmStoppingEvent
+            ns0:VmSuspendedEvent
+            ns0:VmSuspendingEvent
+            ns0:VmToolsUpgradeFault
+            ns0:VmUnsupportedStartingEvent
+            ns0:VmUpgradeCompleteEvent
+            ns0:VmUpgradeFailedEvent
+            ns0:VmUpgradingEvent
+            ns0:VmUuidAssignedEvent
+            ns0:VmUuidChangedEvent
+            ns0:VmUuidConflictEvent
+            ns0:VmWwnAssignedEvent
+            ns0:VmWwnChangedEvent
+            ns0:VmWwnConflict
+            ns0:VmWwnConflictEvent
+            ns0:VmfsDatastoreAllExtentOption
+            ns0:VmfsDatastoreBaseOption
+            ns0:VmfsDatastoreCreateSpec
+            ns0:VmfsDatastoreExtendSpec
+            ns0:VmfsDatastoreInfo
+            ns0:VmfsDatastoreMultipleExtentOption
+            ns0:VmfsDatastoreOption
+            ns0:VmfsDatastoreSingleExtentOption
+            ns0:VmfsDatastoreSpec
+            ns0:VmotionInterfaceNotEnabled
+            ns0:VolumeEditorError
+            ns0:WaitForUpdatesRequestType
+            ns0:WakeOnLanNotSupported
+            ns0:WakeOnLanNotSupportedByVmotionNIC
+            ns0:WarningUpgradeEvent
+            ns0:WeekOfMonth
+            ns0:WeeklyTaskScheduler
+            ns0:WillModifyConfigCpuRequirements
+            ns0:XmlToCustomizationSpecItemRequestType
+            ns0:ZeroFillVirtualDiskRequestType
+            ns0:setCustomValueRequestType
+
