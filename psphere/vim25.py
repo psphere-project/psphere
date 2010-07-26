@@ -15,15 +15,16 @@
 
 from suds.client import Client
 from psphere.mor import ManagedObjectReference
+from psphere.managed_objects import ManagedEntity
 
-import logging
-logging.basicConfig(level=logging.INFO)
-logging.getLogger('suds.client').setLevel(logging.DEBUG)
+#import logging
+#logging.basicConfig(level=logging.INFO)
+#logging.getLogger('suds.client').setLevel(logging.DEBUG)
 #logging.getLogger('suds.wsdl').setLevel(logging.DEBUG)
 
 class VimService(object):
     def __init__(self, url):
-        self.vim_soap = Client('file:///home/jonathan/fooo/vimService.wsdl')
+        self.vim_soap = Client('%s/vimService.wsdl' % url)
         self.vim_soap.set_options(location=url)
 
     def Login(self, _this, username, password):
@@ -60,7 +61,7 @@ class VimService(object):
 
     def CreateVM_Task(self, _this, config, pool, host=None):
         print('In VimService.CreateVM_Task()')
-        result = self.vim_soap.service.CreateVM_Task(_this, vm)
+        result = self.vim_soap.service.CreateVM_Task(_this, config)
         return result
 
     def CreateFolder(self, _this, name):
@@ -117,7 +118,7 @@ class Vim(object):
         ps.all = False
         ps.pathSet = None
         ps.type = view_type
-        pfs = ExtensibleManagedObject.get_search_filter_spec(begin_entity, ps)
+        pfs = ManagedEntity.get_search_filter_spec(begin_entity, ps)
         obj_contents = self.vim_service.RetrieveProperties(
             mo_ref=self.service_content.property_collector,
             spec_set=pfs)
