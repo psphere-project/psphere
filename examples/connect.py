@@ -15,19 +15,33 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from optparse import OptionParser
-
 from psphere.vim25 import Vim
-from psphere import host_utils
 
-parser = OptionParser()
-parser.add_option('--url', dest='url', help='the url of the vSphere server')
-parser.add_option('--username', dest='username', help='the username to connnect with')
-parser.add_option('--password', dest='password', help='the password to connect with')
+def connect(url, username, password):
+    """A simple connection test to login and print the server time.
 
-(option, args) = parser.parse_args()
+    Arguments:
+        url: The URL of the ESX or VIC server. e.g. (https://bennevis/sdk)
+        username: The username to connect with.
+        password: The password to connect with.
+    """
+    vim = Vim(url)
+    vim.login(username, password)
 
-vim = Vim(config.url)
-vim.login(config.username, config.password)
+    print(vim.vim_service.CurrentTime(vim.si_mo_ref))
 
-print(vim.vim_service.CurrentTime(vim.si_mo_ref))
+if __name__ == '__main__':
+    from optparse import OptionParser
+    parser = OptionParser()
+    parser.add_option('--url', dest='url',
+                      help='the url of the vSphere server')
+    parser.add_option('--username', dest='username',
+                      help='the username to connnect with')
+    parser.add_option('--password', dest='password',
+                      help='the password to connect with')
+
+    (option, args) = parser.parse_args()
+
+    # Call the main method with the passed in arguments
+    connect(option.url, option.username, option.password)
+
