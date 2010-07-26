@@ -18,6 +18,8 @@ Contains client side classes representing the server
 side managed objects.
 """
 
+import time
+from suds.sudsobject import Object
 from psphere.mor import ManagedObjectReference
 
 class ManagedObject(object):
@@ -74,7 +76,6 @@ class ManagedObject(object):
     def wait_for_task(self, task_ref):
         """Execute a task and wait for it to complete."""
         task_view = self.vim.get_view(mo_ref=task_ref)
-        progress = -1
         while True:
             info = task_view.info
             if info.state.val == 'success':
@@ -116,81 +117,83 @@ class ManagedEntity(ExtensibleManagedObject):
         self.triggeredAlarmState = []
 
     def get_search_filter_spec(self, mo_ref, property_spec):
-        ss_strings = ['resourcePoolTraversalSpec',
-                      'resourcePoolVmTraversalSpec',
-                      'folderTraversalSpec',
-                      'datacenterHostTraversalSpec',
-                      'datacenterVmTraversalSpec',
-                      'computeResourceRpTraversalSpec',
-                      'computeResourceHostTraversalSpec',
-                      'hostVmTraversalSpec']
+        # The selection spec for additional objects we want to filter
+        ss_strings = ['resource_pool_traversal_spec',
+                      'resource_pool_vm_traversal_spec',
+                      'folder_traversal_spec',
+                      'datacenter_host_traversal_spec',
+                      'datacenter_vm_traversal_spec',
+                      'compute_resource_rp_traversal_spec',
+                      'compute_resource_host_traversal_spec',
+                      'host_vm_traversal_spec']
 
+        # Create a selection spec for each of the strings specified above
         selection_specs = []
         for ss_string in ss_strings:
-            selection_spec = SelectionSpec(name=ss_string)
+            selection_spec = self.vim.create_object('SelectionSpec')
+            selection_spec.name = ss_string
             selection_specs.append(selection_spec)
 
-        resource_pool_traversal_spec = TraversalSpec(
-            name='resource_pool_traversal_spec',
-            type='ResourcePool',
-            path='resourcePool',
-            select_set=[selection_specs[0], selection_specs[1]])
+        # A traversal spec for deriving ResourcePool's from found VMs
+        rpts = self.vim.create_object('TraversalSpec')
+        rpts.name = 'resource_pool_traversal_spec'
+        rpts.type = 'ResourcePool'
+        rpts.path = 'resourcePool'
+        rpts.select_set = [selection_specs[0], selection_specs[1]]
 
-        resource_pool_vm_traversal_spec = TraversalSpec(
-            name='resource_pool_vm_traversal_spec',
-            type='ResourcePool',
-            path='vm')
+        # A traversal spec for deriving ResourcePool's from found VMs
+        rpvts = self.vim.create_object('TraversalSpec')
+        rpvts.name = 'resource_pool_vm_traversal_spec'
+        rpvts.type = 'ResourcePool'
+        rpvts.path = 'vm'
 
-        compute_resource_rp_traversal_spec = TraversalSpec(
-            name='compute_resource_rp_traversal_spec',
-            type='ComputeResource',
-            path='resourcePool',
-            select_set=[selection_specs[0], selection_specs[1]])
+        crrts = self.vim.create_object('TraversalSpec')
+        crrts.name = 'compute_resource_rp_traversal_spec'
+        crrts.type = 'ComputeResource'
+        crrts.path = 'resourcePool'
+        crrts.select_set = [selection_specs[0], selection_specs[1]]
    
-        compute_resource_host_traversal_spec = TraversalSpec(
-            name='compute_resource_host_traversal_spec',
-            type='ComputeResource',
-            path='host')
+        crhts = self.vim.create_object('TraversalSpec')
+        crhts.name = 'compute_resource_host_traversal_spec'
+        crhts.type = 'ComputeResource'
+        crhts.path = 'host'
          
-        datacenter_host_traversal_spec = TraversalSpec(
-            name='datacenter_host_traversal_spec',
-            type='Datacenter',
-            path='hostFolder',
-            select_set=[selection_specs[2]])
+        dhts = self.vim.create_object('TraversalSpec')
+        dhts.name = 'datacenter_host_traversal_spec'
+        dhts.type = 'Datacenter'
+        dhts.path = 'hostFolder'
+        dhts.select_set = [selection_specs[2]]
    
-        datacenter_vm_traversal_spec = TraversalSpec(
-            name='datacenter_vm_traversal_spec',
-            type='Datacenter',
-            path='vmFolder',
-            select_set=[selection_specs[2]])
+        dvts = self.vim.create_object('TraversalSpec')
+        dvts.name = 'datacenter_vm_traversal_spec'
+        dvts.type = 'Datacenter'
+        dvts.path = 'vmFolder'
+        dvts.select_set = [selection_specs[2]]
 
-        host_vm_traversal_spec = TraversalSpec(
-            name='host_vm_traversal_spec',
-            type='HostSystem',
-            path='vm',
-            select_set=[selection_specs[2]])
+        hvts = self.vim.create_object('TraversalSpec')
+        hvts.name = 'host_vm_traversal_spec'
+        hvts.type = 'HostSystem'
+        hvts.path = 'vm'
+        hvts.select_set = [selection_specs[2]]
       
-        folder_traversal_spec = TraversalSpec(
-            name='folder_traversal_spec',
-            type='Folder',
-            path='childEntity',
-            select_set=[selection_specs[2], selection_specs[3],
-                       selection_specs[4], selection_specs[5],
-                       selection_specs[6], selection_specs[7],
-                       selection_specs[1]])
+        fts = self.vim.create_object('TraversalSpec')
+        fts.name = 'folder_traversal_spec'
+        fts.type = 'Folder'
+        fts.path = 'childEntity'
+        fts.select_set = [selection_specs[2], selection_specs[3],
+                          selection_specs[4], selection_specs[5],
+                          selection_specs[6], selection_specs[7],
+                          selection_specs[1]]
 
-        obj_spec = ObjectSpec(obj=mo_ref,
-                              select_set=[folder_traversal_spec,
-                                          datacenter_vm_traversal_spec,
-                                          datacenter_host_traversal_spec,
-                                          compute_resource_host_traversal_spec,
-                                          compute_resource_rp_traversal_spec,
-                                          resource_pool_traversal_spec,
-                                          host_vm_traversal_spec,
-                                          resource_pool_vm_traversal_spec])
+        obj_spec = self.vim.create_object('ObjectSpec')
+        obj_spec.obj = mo_ref
+        obj_spec.select_set = [fts, dvts, dhts, crhts, crrts,
+                               rpts, hvts, rpvts]
    
-        return PropertyFilterSpec(prop_set=property_spec,
-                                  object_set=[obj_spec])
+        pfs = self.vim.create_object('PropertyFilterSpec')
+        pfs.prop_set = property_spec
+        pfs.object_set = [obj_spec]
+        return pfs
 
     def set_view_data(self, entity, properties):
         self.vim.foo = entity
@@ -261,13 +264,13 @@ class Folder(ManagedEntity):
         result = self.vim.vim_service.CreateFolder(self.mo_ref, name)
         return result
 
-class PropertyCollector(ViewBase):
+class PropertyCollector(ManagedObject):
     def __init__(self, mo_ref, vim):
-        ViewBase.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, vim)
 
-class ServiceInstance(ViewBase):
+class ServiceInstance(ManagedObject):
     def __init__(self, mo_ref, vim):
-        ViewBase.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, vim)
 
     def CurrentTime(self):
         result = self.vim.vim_service.CurrentTime(self.mo_ref)
