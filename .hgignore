@@ -1,7 +1,10 @@
-syntax: glob
-
-*.pyc
-*.pyo
+.*\.pyc
+.*\.egg
+.*\.so
+^build/
+^dist/
+^psphere.egg-info/
+^doc/_build/
 .project
 .pydevproject
 .*.swp
