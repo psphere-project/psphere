@@ -19,8 +19,13 @@ side managed objects.
 """
 
 import time
-from suds.sudsobject import Object
-from psphere.mor import ManagedObjectReference
+from psphere.ws import Object, Property
+
+class ManagedObjectReference(Property):
+    """Custom class to replace the suds generated class, which lacks _type."""
+    def __init__(self, value, type):
+        Property.__init__(self, value)
+        self._type = str(type)
 
 class ManagedObject(object):
     """The base class which all managed object's derive from."""
@@ -57,7 +62,7 @@ class ManagedObject(object):
         """Synchronise the local object with the server-side object."""
         pfs = self.get_property_filter_spec(self.mo_ref)
         # TODO: Use the properties argument to filter relevant props
-        obj_contents = self.vim.vim_service.RetrieveProperties(
+        obj_contents = self.vim.vs.invoke('RetrieveProperties',
             _this=self.vim.service_content.propertyCollector, specSet=pfs)
         for entity in obj_contents:
             self.set_view_data(entity, properties)
@@ -69,9 +74,6 @@ class ManagedObject(object):
                 self.properties[dyn_prop.name] = dyn_prop.val
             else:
                 self.properties[dyn_prop.name] = dyn_prop.val
-
-    def invoke(self, method, **kwargs):
-        return eval('self.vim_service.%s' % method)(_this=self.mo_ref, **kwargs)
 
     def wait_for_task(self, task_ref):
         """Execute a task and wait for it to complete."""
@@ -116,91 +118,14 @@ class ManagedEntity(ExtensibleManagedObject):
         self.tag = []
         self.triggeredAlarmState = []
 
-    def get_search_filter_spec(self, mo_ref, property_spec):
-        # The selection spec for additional objects we want to filter
-        ss_strings = ['resource_pool_traversal_spec',
-                      'resource_pool_vm_traversal_spec',
-                      'folder_traversal_spec',
-                      'datacenter_host_traversal_spec',
-                      'datacenter_vm_traversal_spec',
-                      'compute_resource_rp_traversal_spec',
-                      'compute_resource_host_traversal_spec',
-                      'host_vm_traversal_spec']
-
-        # Create a selection spec for each of the strings specified above
-        selection_specs = []
-        for ss_string in ss_strings:
-            selection_spec = self.vim.create_object('SelectionSpec')
-            selection_spec.name = ss_string
-            selection_specs.append(selection_spec)
-
-        # A traversal spec for deriving ResourcePool's from found VMs
-        rpts = self.vim.create_object('TraversalSpec')
-        rpts.name = 'resource_pool_traversal_spec'
-        rpts.type = 'ResourcePool'
-        rpts.path = 'resourcePool'
-        rpts.select_set = [selection_specs[0], selection_specs[1]]
-
-        # A traversal spec for deriving ResourcePool's from found VMs
-        rpvts = self.vim.create_object('TraversalSpec')
-        rpvts.name = 'resource_pool_vm_traversal_spec'
-        rpvts.type = 'ResourcePool'
-        rpvts.path = 'vm'
-
-        crrts = self.vim.create_object('TraversalSpec')
-        crrts.name = 'compute_resource_rp_traversal_spec'
-        crrts.type = 'ComputeResource'
-        crrts.path = 'resourcePool'
-        crrts.select_set = [selection_specs[0], selection_specs[1]]
-   
-        crhts = self.vim.create_object('TraversalSpec')
-        crhts.name = 'compute_resource_host_traversal_spec'
-        crhts.type = 'ComputeResource'
-        crhts.path = 'host'
-         
-        dhts = self.vim.create_object('TraversalSpec')
-        dhts.name = 'datacenter_host_traversal_spec'
-        dhts.type = 'Datacenter'
-        dhts.path = 'hostFolder'
-        dhts.select_set = [selection_specs[2]]
-   
-        dvts = self.vim.create_object('TraversalSpec')
-        dvts.name = 'datacenter_vm_traversal_spec'
-        dvts.type = 'Datacenter'
-        dvts.path = 'vmFolder'
-        dvts.select_set = [selection_specs[2]]
-
-        hvts = self.vim.create_object('TraversalSpec')
-        hvts.name = 'host_vm_traversal_spec'
-        hvts.type = 'HostSystem'
-        hvts.path = 'vm'
-        hvts.select_set = [selection_specs[2]]
-      
-        fts = self.vim.create_object('TraversalSpec')
-        fts.name = 'folder_traversal_spec'
-        fts.type = 'Folder'
-        fts.path = 'childEntity'
-        fts.select_set = [selection_specs[2], selection_specs[3],
-                          selection_specs[4], selection_specs[5],
-                          selection_specs[6], selection_specs[7],
-                          selection_specs[1]]
-
-        obj_spec = self.vim.create_object('ObjectSpec')
-        obj_spec.obj = mo_ref
-        obj_spec.select_set = [fts, dvts, dhts, crhts, crrts,
-                               rpts, hvts, rpvts]
-   
-        pfs = self.vim.create_object('PropertyFilterSpec')
-        pfs.prop_set = property_spec
-        pfs.object_set = [obj_spec]
-        return pfs
-
     def set_view_data(self, entity, properties):
         self.vim.foo = entity
         props = {}
         for dyn_prop in entity.propSet:
-            # See if we're dealing with a suds Object
-            if issubclass(dyn_prop.val, Object):
+            # FIXME: If the val is an instance of an Object, then
+            # we're assuming it's an array which has been turned into
+            # a suds Object
+            if isinstance(dyn_prop.val, Object):
                 # The real list is always found in the first slot
                 props[dyn_prop.name] = dyn_prop.val[0]
             else:
@@ -236,10 +161,12 @@ class ManagedEntity(ExtensibleManagedObject):
         for rt in props['recentTask']:
             mo_ref = ManagedObjectReference(rt.value, rt._type)
             self.recentTask.append(mo_ref)
-        for tag in props['tag']:
-            self.tag.append(tag)
-        for tas in props['triggeredAlarmState']:
-            self.triggeredAlarmState.append(tas)
+        if 'tag' in props:
+            for tag in props['tag']:
+                self.tag.append(tag)
+        if 'triggeredAlarmState' in props:
+            for tas in props['triggeredAlarmState']:
+                self.triggeredAlarmState.append(tas)
 
 class Folder(ManagedEntity):
     def __init__(self, mo_ref, vim):
@@ -253,15 +180,16 @@ class Folder(ManagedEntity):
         for dyn_prop in entity.propSet:
             props[dyn_prop.name] = dyn_prop.val
 
-        for ce in props['childEntity'][0]:
+        for ce in props['childEntity']:
             mo_ref = ManagedObjectReference(ce.value, ce._type)
             self.childEntity.append(mo_ref)
 
-        for ct in props['childType'][0]:
+        for ct in props['childType']:
             self.childType.append(ct)
 
     def CreateFolder(self, name):
-        result = self.vim.vim_service.CreateFolder(self.mo_ref, name)
+        result = self.vim.vs.invoke('CreateFolder', _this=self.mo_ref,
+                                    name=name)
         return result
 
 class PropertyCollector(ManagedObject):
@@ -270,14 +198,14 @@ class PropertyCollector(ManagedObject):
 
 class ServiceInstance(ManagedObject):
     def __init__(self, mo_ref, vim):
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, self.mo_ref, vim)
 
     def CurrentTime(self):
-        result = self.vim.vim_service.CurrentTime(self.mo_ref)
+        result = self.vim.vs.invoke('CurrentTime', _this=self.mo_ref)
         return result
 
     def RetrieveServiceContent(self):
-        sc = self.vim.vim_service.RetrieveServiceContent(mo_ref=self.mo_ref)
+        sc = self.vim.vs.invoke('RetrieveServiceContent', _this=self.mo_ref)
         return sc
 
 class Datacenter(ManagedEntity):
