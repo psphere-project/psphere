@@ -27,8 +27,8 @@ parser.add_option('--password', dest='password', help='the password to connect w
 
 (option, args) = parser.parse_args()
 
-vim = Vim(config.url)
-vim.login(config.username, config.password)
+vim = Vim(option.url)
+vim.login(option.username, option.password)
 
 def create_conf_spec():
     shared_bus = vim.create_object('VirtualSCSISharing')
@@ -121,7 +121,7 @@ def create_vm(vmname, vmhost, datacenter, guestid, datastore, disksize,
     vm_devices.append(controller_vm_dev_conf_spec)
     vm_devices.append(disk_vm_dev_conf_spec)
 
-    files = vim.create_object('VirtualMachingFileInfo')
+    files = vim.create_object('VirtualMachineFileInfo')
     files.vmPathName = ds_path
 
     vm_config_spec = vim.create_object('VirtualMachineConfigSpec')
