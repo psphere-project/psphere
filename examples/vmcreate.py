@@ -27,38 +27,36 @@ parser.add_option('--password', dest='password', help='the password to connect w
 
 (option, args) = parser.parse_args()
 
-vim = Vim(option.url)
-vim.login(option.username, option.password)
+si = ServiceInstance(option.url, option.username, option.password)
 
 def create_conf_spec():
-    shared_bus = vim.create_object('VirtualSCSISharing')
-    controller = vim.create_object('VirtualLsiLogicController')
+    controller = si.vs.create_object('VirtualLsiLogicController')
     controller.key = 0
     controller.device = [0]
     controller.busNumber = 0,
-    controller.sharedBus = shared_bus.noSharing
+    controller.sharedBus = si.vs.create_object('VirtualSCSISharing').noSharing
 
-    operation = vim.create_object('VirtualDeviceConfigSpecOperation')
-    spec = vim.create_object('VirtualDeviceConfigSpec')
+    spec = si.vs.create_object('VirtualDeviceConfigSpec')
     spec.device = controller
-    spec.operation = operation.add
+    spec.operation = si.vs.create_object('VirtualDeviceConfigSpecOperation').add
+
     return spec
 
 def create_virtual_disk(ds_path, disksize):
-    disk_backing_info = vim.create_object('VirtualDiskFlatVer2BackingInfo')
+    disk_backing_info = si.vs.create_object('VirtualDiskFlatVer2BackingInfo')
     disk_backing_info.diskMode = 'persistent'
     disk_backing_info.fileName = ds_path
 
-    disk = vim.create_object('VirtualDisk')
+    disk = si.vs.create_object('VirtualDisk')
     disk.backing = disk_backing_info
     disk.controllerKey = 0
     disk.key = 0
     disk.unitNumber = 0
     disk.capacityInKB = disksize
 
-    disk_vm_dev_conf_spec = vim.create_object('VirtualDeviceConfigSpec')
+    disk_vm_dev_conf_spec = si.vs.create_object('VirtualDeviceConfigSpec')
     disk_vm_dev_conf_spec.device = disk
-    file_op_spec = vim.create_object('VirtualDeviceConfigSpecOperation')
+    file_op_spec = si.vs.create_object('VirtualDeviceConfigSpecOperation')
     disk_vm_dev_conf_spec.fileOperation = file_op_spec.add
 
     return disk_vm_dev_conf_spec
@@ -76,36 +74,38 @@ def create_nic(network_name, poweron, host_view):
     unit_num = 1
 
     if(network_name):
-        network_list = vim.get_views(host_view.network)
-        for n in network_list:
+        for network in host_system.network:
             if network_name == n.name:
                 network = n
-                nic_backing_info = vim.create_object(
+                nic_backing_info = si.vs.create_object(
                     'VirtualEthernetCardNetworkBackingInfo')
                 nic_backing_info.deviceName = network.name
                 nic_backing_info.network = network
 
-                vd_connect_info = vim.create_object('VirtualDeviceConnectInfo')
+                vd_connect_info = si.vs.create_object(
+                                              'VirtualDeviceConnectInfo')
                 vd_connect_info.allowGuestControl = True
                 vd_connect_info.connected = True
                 vd_connect_info.startConnected = poweron
 
 def create_vm(vmname, vmhost, datacenter, guestid, datastore, disksize,
               memory, num_cpus, nic_network, nic_poweron):
-    host_view = vim.find_entity_view('ClusterComputeResource', {'name': vmhost})
-    ds_info = host_utils.get_datastore(host_view, disksize, datastore)
-    if not ds_info.mor:
-        if ds_info.name == 'datastore_error':
-            print('Error creating VM "%s": Datastore %s not available' %
-                  (vmname, datastore))
-            return None
+    """Create a virtual machine with the given arguments."""
+    ccr_mor = si.find_entity('ClusterComputeResource', {'name': vmhost})
+    ccr = ClusterComputeResource(mor=ccr_mor)
+    for datastore in ccr.datastore:
+        if datastore.name == datastore:
+            if not datastore.summary.accessible:
+                print("ERROR: Requested datastore is not accessible.")
+                break
 
-        if ds_info.name == 'disksize_error':
-            print('Error creating VM "%s": Not enough free space on %s' %
-                  (vmname, datastore))
-            return None
+            if datastore.summary.freeSpace < disksize/1024:
+                print("ERROR: Not enough free space on requested datastore.")
+                break
 
-    ds_path = '[%s]' % ds_info.name
+            ds_path = '[%s]' % datastore.name
+            break
+
 
     controller_vm_dev_conf_spec = create_controller()
     disk_vm_dev_conf_spec = create_virtual_disk(ds_path, disksize)
@@ -145,7 +145,6 @@ def create_vm(vmname, vmhost, datacenter, guestid, datastore, disksize,
 
     datacenter = datacenter_views[0]
 
-    vm_folder_view = vim.get_view(datacenter.vmFolder)
-
+    vm_folder_view = Folder(mor=datacenter.vmFolder)
     comp_res_view = vim.get_view(host_view.parent)
     

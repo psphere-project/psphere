@@ -25,10 +25,8 @@ def connect(url, username, password):
         username: The username to connect with.
         password: The password to connect with.
     """
-    vim = Vim(url)
-    vim.login(username, password)
-
-    print(vim.vim_service.CurrentTime(vim.si_mo_ref))
+    vim = Vim(url, username, password)
+    print(vim.service_instance.current_time())
 
 if __name__ == '__main__':
     from optparse import OptionParser
