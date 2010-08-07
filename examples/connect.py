@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 # Copyright 2010 Jonathan Kinred <jonathan.kinred@gmail.com>
 #
@@ -30,7 +30,9 @@ def connect(url, username, password):
 
 if __name__ == '__main__':
     from optparse import OptionParser
-    parser = OptionParser()
+    usage = ('usage: %prog --url https://<host>/sdk --username <username> '
+             '--password <password>')
+    parser = OptionParser(usage)
     parser.add_option('--url', dest='url',
                       help='the url of the vSphere server')
     parser.add_option('--username', dest='username',
@@ -38,8 +40,14 @@ if __name__ == '__main__':
     parser.add_option('--password', dest='password',
                       help='the password to connect with')
 
-    (option, args) = parser.parse_args()
+    (options, args) = parser.parse_args()
 
-    # Call the main method with the passed in arguments
-    connect(option.url, option.username, option.password)
+    if not options.url:
+        parser.error('--url option is required')
+    if not options.username:
+        parser.error('--username option is required')
+    if not options.password:
+        parser.error('--password option is required')
+
+    connect(options.url, options.username, options.password)
 
