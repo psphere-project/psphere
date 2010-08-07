@@ -36,25 +36,57 @@ class Vim(object):
         self.vsoap = VimSoap(url)
         self.service_instance = ServiceInstance(vim=self)
         self.vsoap.invoke('Login',
-                         _this=self.service_instance.content.sessionManager,
-                         userName=username, password=password)
+                          _this=self.service_instance.content.sessionManager,
+                          userName=username, password=password)
 
-    def get_entity(self, mor, properties=None):
+    def get_mo_view(self, mor, properties=None):
         """Retrieve the properties of a single managed object.
-        Arguments:
-            mor: ManagedObjectReference of the object to retrieve.
-            properties: The properties to retrieve from the managed object.
-        Returns:
-            A view of the 
+
+        Parameters
+        ----------
+        mor : ManagedObjectReference
+            The collection of ManagedObjectReference's that the method
+            is to create views for.
+        properties : list
+            The properties to retrieve in the view.
+
+        Returns
+        -------
+        entity : ManagedObject derived object
+            A local instance of the server-side managed object.
+
         """
 
         entity = eval(str(mor._type))(mor=mor, vim=self)
+        entity.update_view_data(properties=properties)
         return entity
 
-    def get_entities(self, mors, properties=None):
+    def get_mo_views(self, mors, properties=None):
+        """Retrieve multiple entities from a collection of MORs.
+
+        Parameters
+        ----------
+        mors : ManagedObjectReference
+            The list of ManagedObjectReference's that views are to
+            be created for.
+        properties : list
+            The properties to retrieve in the views.
+
+        Returns
+        -------
+        entities : list
+            A list of local instances representing the server-side
+            managed objects.
+
+        """
         property_spec = self.vsoap.create_object('PropertySpec')
-        property_spec.all = True
+        # FIXME: Makes assumption about mors being a list
         property_spec.type = str(mors[0]._type)
+        if properties:
+            property_spec.all = False
+            property_spec.pathSet = properties
+        else:
+            property_spec.all = True
 
         object_specs = []
         for mor in mors:
@@ -68,15 +100,19 @@ class Vim(object):
 
         pc_mor = self.service_instance.content.propertyCollector
         property_collector = PropertyCollector(mor=pc_mor, vim=self)
-        obj_contents = property_collector.retrieve_properties(spec_set=pfs)
+ 
+        object_contents = property_collector.retrieve_properties(spec_set=pfs)
+        views = []
+        for object_content in object_contents:
+            # Instantiate the class in the obj_content
+            view = eval(str(object_content.obj._type))(mor=object_content.obj,
+                                                       vim=self)
+            # Update the instance with the data in object_content
+            view.set_view_data(object_content=object_content,
+                               properties=properties)
+            views.append(view)
 
-        entities = []
-        for obj_content in obj_contents:
-            entity = eval(str(obj_content.obj._type))(mor=obj_content.obj,
-                                                      vim=self)
-            entities.append(entity)
-
-        return entities
+        return views
         
     def get_property_spec(self):
         """Return a PropertySpec for matching the class this is called from."""
@@ -85,6 +121,7 @@ class Vim(object):
         property_spec.type = self.mor._type
 
         return property_spec
+
     def get_search_filter_spec(self, begin_entity, property_spec):
         """Build a PropertyFilterSpec capable of full inventory traversal.
         
@@ -170,13 +207,32 @@ class Vim(object):
         pfs.objectSet = [obj_spec]
         return pfs
 
-    def find_entity(self, entity_type, begin_entity=None, filter=None):
-        entity_types = ['ClusterComputeResource', 'ComputeResource',
-                        'Datacenter', 'Folder', 'HostSystem',
-                        'ResourcePool', 'VirtualMachine']
+    def find_entity_view(self, view_type, begin_entity=None, filter=None):
+        """Traverse the MOB looking for an entity matching the filter.
 
-        if entity_type not in entity_types:
-            print('Invalid entity type specified.')
+        Parameters
+        ----------
+        view_type : str
+            The type of entity to find.
+        begin_entity : ManagedObjectReference
+            If specified, the traversal is started at this MOR. If not
+            specified the search is started at the root folder.
+        filter : dict
+            Key/value pairs to filter the results. The key refers to a
+            valid member of the `entity_type` parameter and the value
+            is the `str` that the member should match.
+
+        Returns
+        -------
+        view : Instance of an object derived from ManagedObject
+
+        """
+        view_types = ['ClusterComputeResource', 'ComputeResource',
+                      'Datacenter', 'Folder', 'HostSystem',
+                      'ResourcePool', 'VirtualMachine']
+
+        if view_type not in view_types:
+            print('Invalid view type specified.')
             return None
 
         # Start at the root folder if no begin_entity was specified
@@ -184,16 +240,20 @@ class Vim(object):
             begin_entity = self.service_instance.content.rootFolder
 
         property_spec = self.vsoap.create_object('PropertySpec')
-        # TODO: Set all to False and set the pathSet parameter
+        # TODO: Implement filtering
         property_spec.all = False
-        property_spec.type = entity_type
-        #property_spec.pathSet = filter
+        property_spec.type = view_type
+        property_spec.pathSet = filter.keys()
         pfs = self.get_search_filter_spec(begin_entity, property_spec)
         pc_mor = self.service_instance.content.propertyCollector
         property_collector = PropertyCollector(mor=pc_mor, vim=self)
+
+        # Retrieve properties from server and update entity
         obj_contents = property_collector.retrieve_properties(spec_set=pfs)
-        entity = eval(entity_type)(mor=obj_contents[0].obj, vim=self)
-        return entity
+        view = eval(view_type)(mor=obj_contents[0].obj, vim=self)
+        view.update_view_data(properties=filter.keys())
+
+        return view
 
 class ServiceInstance(object):
     def __init__(self, vim):
@@ -238,22 +298,26 @@ class ManagedObject(object):
         return property_filter_spec
 
     def update_view_data(self, properties=None):
-        """Synchronise the local object with the server-side object."""
+        """Update the local object from the server-side object."""
         pfs = self.get_property_filter_spec(self.mor)
-        # TODO: Use the properties argument to filter relevant props
+        if properties:
+            pfs.propSet[0].all = False
+            pfs.propSet[0].pathSet = properties
+
         pc_mor = self.vim.service_instance.content.propertyCollector
         property_collector = PropertyCollector(mor=pc_mor, vim=self.vim)
-        obj_contents = property_collector.retrieve_properties(spec_set=pfs)
-        if not obj_contents:
+        object_contents = property_collector.retrieve_properties(spec_set=pfs)
+        if not object_contents:
             # TODO: Improve error checking and reporting
             print('The view could not be updated.')
-        for obj_content in obj_contents:
-            self.set_view_data(obj_content, properties)
+        for object_content in object_contents:
+            self.set_view_data(object_content, properties)
 
-    def set_view_data(self, entity, properties):
-        self.ent = entity
+    def set_view_data(self, object_content, properties=None):
+        """Update the local object from the passed in obj_content array."""
+        self.ent = object_content
         props = {}
-        for dyn_prop in entity.propSet:
+        for dyn_prop in object_content.propSet:
             # Kludgy way of finding if the dyn_prop contains a collection
             prop_type = str(dyn_prop.val.__class__)[
                 str(dyn_prop.val.__class__).rfind('.')+1:]
@@ -266,7 +330,6 @@ class ManagedObject(object):
                 props[dyn_prop.name] = dyn_prop.val
 
         for prop in props:
-
             # We're not interested in empty values
             if len(props[prop]) == 0:
                 continue
@@ -305,18 +368,15 @@ class ManagedObject(object):
 
 class ExtensibleManagedObject(ManagedObject):
     def __init__(self, mor, vim):
+        # Init the base class
+        ManagedObject.__init__(self, mor, vim)
         # Set the properties for this object
         self.availableField = []
         self.value = []
-        
-        # Init the base class
-        ManagedObject.__init__(self, mor, vim)
-
-        # Sync the object data with the server
-        self.update_view_data()
 
 class ManagedEntity(ExtensibleManagedObject):
     def __init__(self, mor, vim):
+        ExtensibleManagedObject.__init__(self, mor=mor, vim=vim)
         self.alarmActionsEnabled = []
         self.configIssue = []
         self.configStatus = None
@@ -332,14 +392,33 @@ class ManagedEntity(ExtensibleManagedObject):
         self.tag = []
         self.triggeredAlarmState = []
 
+class Alarm(ExtensibleManagedObject):
+    def __init__(self, mor, vim):
         ExtensibleManagedObject.__init__(self, mor=mor, vim=vim)
+        self.info = None
+        
+class Alarm(ExtensibleManagedObject):
+    def __init__(self, mor, vim):
+        ExtensibleManagedObject.__init__(self, mor=mor, vim=vim)
+        self.info = None
+        
+class AlarmManager(ManagedObject):
+    def __init__(self, mor, vim):
+        self.defaultExpression = []
+        self.description = None
+
+class AuthorizationManager(ManagedObject):
+    def __init__(self, mor, vim):
+        ManagedObject.__init__(self, mor, vim)
+        self.description = None
+        self.privilege_list = []
+        self.role_list = []
 
 class Folder(ManagedEntity):
     def __init__(self, mor, vim):
+        ManagedEntity.__init__(self, mor=mor, vim=vim)
         self.childEntity = []
         self.childType = []
-
-        ManagedEntity.__init__(self, mor=mor, vim=vim)
 
     def create_folder(self, name):
         """Create a new folder with the specified name.
@@ -358,9 +437,8 @@ class Folder(ManagedEntity):
 
 class PropertyCollector(ManagedObject):
     def __init__(self, mor, vim):
-        self.filter = None
-
         ManagedObject.__init__(self, mor=mor, vim=vim)
+        self.filter = None
 
     def retrieve_properties(self, spec_set):
         return self.vim.vsoap.invoke('RetrieveProperties', _this=self.mor,
@@ -368,17 +446,18 @@ class PropertyCollector(ManagedObject):
 
 class ComputeResource(ManagedEntity):
     def __init__(self, mor, vim):
+        ManagedEntity.__init__(self, mor, vim)
         self.configurationEx = None
         self.datastore = []
         self.environmentBrowser = None
         self.host = []
+        self.network = []
         self.resourcePool = None
         self.summary = None
 
-        ManagedEntity.__init__(self, mor, vim)
-
 class ClusterComputeResource(ComputeResource):
     def __init__(self, mor, vim):
+        ComputeResource.__init__(self, mor, vim)
         self.actionHistory = []
         self.configuration = None
         self.drsFault = []
@@ -386,10 +465,9 @@ class ClusterComputeResource(ComputeResource):
         self.migrationHistory = []
         self.recommendation = []
 
-        ComputeResource.__init__(self, mor, vim)
-
 class Datacenter(ManagedEntity):
     def __init__(self, mor, vim):
+        ManagedEntity.__init__(self, mor, vim)
         self.datastore = []
         # TODO: vSphere API 4.0
         self.datastoreFolder = None
@@ -399,7 +477,6 @@ class Datacenter(ManagedEntity):
         self.networkFolder = None
         self.vmFolder = None
 
-        ManagedEntity.__init__(self, mor, vim)
 
     def power_on_multi_vm_task(self, vm):
         """Powers on multiple VMs in a data center.
@@ -438,7 +515,6 @@ class Datastore(ManagedEntity):
                                   _this=self.mor)
             # Update the view data to get the new values
             self.update_view_data()
-
 
 class VirtualMachine(ManagedEntity):
     def __init__(self, mor, vim):
