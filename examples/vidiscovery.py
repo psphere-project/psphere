@@ -19,12 +19,17 @@ import optparse
 from psphere.vim25 import Vim
 
 def discovery(url, username, password):
-    """A discovery example to print the hosts and VMs in a cluster.
+    """An example that discovers all hosts and VMs in the specified cluster.
 
-    Arguments:
-        url: The URL of the ESX or VIC server. e.g. (https://bennevis/sdk)
-        username: The username to connect with.
-        password: The password to connect with.
+    Parameters
+    ----------
+    url : str
+        The URL of the ESX or VIC server. e.g. (https://bennevis/sdk)
+    username : str
+        The username to connect with.
+    password : str
+        The password to connect with.
+
     """
     vim = Vim(url, username, password)
 
