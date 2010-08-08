@@ -14,46 +14,43 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
-from psphere.soap import VimSoap, Property
-
-#import logging
-#logging.basicConfig(level=logging.INFO)
-#logging.getLogger('suds.client').setLevel(logging.DEBUG)
-#logging.getLogger('suds.wsdl').setLevel(logging.DEBUG)
-
-class ManagedObjectReference(Property):
-    """Custom class to replace the suds generated class, which lacks _type."""
-    def __init__(self, mor=None, type=None, value=None):
-        if mor:
-            Property.__init__(self, mor.value)
-            self._type = str(mor._type)
-        else:
-            Property.__init__(self, value)
-            self._type = str(type)
+import psphere.soap
 
 class Vim(object):
     def __init__(self, url, username, password):
-        self.vsoap = VimSoap(url)
+        self.vsoap = psphere.soap.VimSoap(url)
         self.service_instance = ServiceInstance(vim=self)
         self.vsoap.invoke('Login',
                           _this=self.service_instance.content.sessionManager,
                           userName=username, password=password)
 
     def get_mo_view(self, mor, properties=None):
-        """Retrieve the properties of a single managed object.
+        """Get a local view of a single managed object.
 
         Parameters
         ----------
         mor : ManagedObjectReference
-            The collection of ManagedObjectReference's that the method
-            is to create views for.
-        properties : list
+            The ManagedObjectReference to the managed object that
+            a view is to be retrieved for.
+        properties : list of str's
             The properties to retrieve in the view.
 
         Returns
         -------
-        entity : ManagedObject derived object
+        entity : instance (ManagedObject subclass)
             A local instance of the server-side managed object.
+
+        Notes
+        -----
+        A view is a local, static representation of a managed object in
+        the inventory. The view is not automatically synchronised with 
+        the server-side object and can therefore be out of date a moment
+        after it is retrieved.
+        
+        Retrieval of only the properties you intend to use -- through
+        the use of the properties parameter -- is considered best
+        practise as the properties of some managed objects can be
+        costly to retrieve.
 
         """
 
@@ -62,7 +59,7 @@ class Vim(object):
         return entity
 
     def get_mo_views(self, mors, properties=None):
-        """Retrieve multiple entities from a collection of MORs.
+        """Get a list of local view's for multiple managed objects.
 
         Parameters
         ----------
@@ -74,9 +71,13 @@ class Vim(object):
 
         Returns
         -------
-        entities : list
+        entities : list of instances (ManagedObject subclasses)
             A list of local instances representing the server-side
             managed objects.
+
+        See also
+        --------
+        get_mo_view : Get the view for a single managed object.
 
         """
         property_spec = self.vsoap.create_object('PropertySpec')
@@ -258,8 +259,8 @@ class Vim(object):
 class ServiceInstance(object):
     def __init__(self, vim):
         self.vim = vim
-        self.mor = ManagedObjectReference(type='ServiceInstance',
-                                          value='ServiceInstance')
+        self.mor = psphere.soap.ManagedObjectReference(type='ServiceInstance',
+                                                       value='ServiceInstance')
         self.content = self.vim.vsoap.invoke('RetrieveServiceContent',
                                              _this=self.mor)
 
