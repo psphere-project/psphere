@@ -8,6 +8,7 @@ psphere documentation contents
 
    intro
    examples
+   vim25
 
 Indices and tables
 ==================
