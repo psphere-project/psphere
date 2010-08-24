@@ -270,7 +270,16 @@ class ServiceInstance(object):
 class ManagedObject(object):
     """The base class which all managed object's derive from."""
     def __init__(self, mor, vim):
-        """vim: A reference back to the Vim object."""
+        """Create a new instance.
+        
+        Parameters
+        ----------
+        mor : ManagedObjectReference
+            The managed object reference used to create this instance
+        vim: Vim
+            A reference back to the Vim object, which we use to make calls
+
+        """
         self.mor = mor
         self.vim = vim
 
@@ -346,26 +355,22 @@ class ManagedObject(object):
                 print('WARNING: Skipping undefined property "%s" '
                       'with value "%s"' % (prop, props[prop]))
                     
-    def wait_for_task(self, task_ref):
+    def wait_for_task(self, task_mor):
         """Execute a task and wait for it to complete."""
-        task_view = self.vim.get_entity(mor=task_ref)
+        task_view = self.vim.get_mo_view(mor=task_mor, properties=['info'])
+        result = {}
         while True:
-            info = task_view.info
-            if info.state.val == 'success':
-                return info.result
-            elif info.state.val == 'error':
+            if task_view.info.state == 'success':
+                result['error_message'] = None
+                return result
+            elif task_view.info.state == 'error':
                 # TODO: Handle error checking properly
-                fault = {}
-                fault['name'] = info.error.fault
-                fault['detail'] = info.error.fault
-                fault['error_message'] = info.error.localizedMessage
-                return fault
-            else:
-                print('Unknown state val')
+                result['error_message'] = task_view.info.error.localizedMessage
+                return result
 
             # TODO: Implement progresscallbackfunc
             time.sleep(2)
-            task_view.update_view_data()
+            task_view.update_view_data(properties=['info'])
 
 class ExtensibleManagedObject(ManagedObject):
     def __init__(self, mor, vim):
@@ -393,11 +398,6 @@ class ManagedEntity(ExtensibleManagedObject):
         self.tag = []
         self.triggeredAlarmState = []
 
-class Alarm(ExtensibleManagedObject):
-    def __init__(self, mor, vim):
-        ExtensibleManagedObject.__init__(self, mor=mor, vim=vim)
-        self.info = None
-        
 class Alarm(ExtensibleManagedObject):
     def __init__(self, mor, vim):
         ExtensibleManagedObject.__init__(self, mor=mor, vim=vim)
@@ -436,6 +436,13 @@ class Folder(ManagedEntity):
         else:
             return Folder(mor=result, vim=self.vim)
 
+    def create_vm(self, config, pool):
+        result = self.wait_for_task(self.create_vm_task(config, pool))
+        return result
+
+    def create_vm_task(self, config, pool):
+        return self.vim.vsoap.invoke('CreateVM_Task', _this=self.mor, config=config, pool=pool)
+        
 class PropertyCollector(ManagedObject):
     def __init__(self, mor, vim):
         ManagedObject.__init__(self, mor=mor, vim=vim)
@@ -550,6 +557,7 @@ class VirtualMachine(ManagedEntity):
 
 class HostSystem(ManagedEntity):
     def __init__(self, mor, vim):
+        ManagedEntity.__init__(self, mor, vim)
         self.capability = None
         self.config = None
         self.configManager = None
@@ -562,5 +570,17 @@ class HostSystem(ManagedEntity):
         self.systemResources = None
         self.vm = []
 
+
+class Network(ManagedEntity):
+    def __init__(self, mor, vim):
         ManagedEntity.__init__(self, mor, vim)
+        self.host = []
+        self.name = None
+        self.summary = None
+        self.vm = []
+
+class Task(ExtensibleManagedObject):
+    def __init__(self, mor, vim):
+        ExtensibleManagedObject.__init__(self, mor=mor, vim=vim)
+        self.info = None
 
