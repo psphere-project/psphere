@@ -13,8 +13,7 @@ import suds
 
 class VimSoap(object):
     def __init__(self, url):
-        #self.client = suds.client.Client(url + '/vimService.wsdl')
-        self.client = suds.client.Client('file:///home/jonathan/projects/Personal/psphere/resources/vimService.wsdl')
+        self.client = suds.client.Client(url + '/vimService.wsdl')
         self.client.set_options(location=url)
 
     def invoke(self, method, **kwargs):
