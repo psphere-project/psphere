@@ -52,6 +52,9 @@ def discovery(url, username, password):
         for vm in vms:
             print('    VM: %s' % vm.name)
     
+def main(options):
+    discovery(options.url, options.username, options.password)
+
 if __name__ == '__main__':
     usage = ('usage: %prog --url https://<host>/sdk --username <username> '
              '--password <password>')
@@ -73,5 +76,5 @@ if __name__ == '__main__':
         parser.error('--password option is required')
 
     # Call the main method with the passed in arguments
-    discovery(options.url, options.username, options.password)
+    main(options)
 
