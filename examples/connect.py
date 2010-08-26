@@ -16,38 +16,38 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from psphere.vim25 import Vim
+from psphere.util import optionbuilder
 
 def connect(url, username, password):
     """A simple connection test to login and print the server time.
 
-    Arguments:
-        url: The URL of the ESX or VIC server. e.g. (https://bennevis/sdk)
-        username: The username to connect with.
-        password: The password to connect with.
+    Parameters
+    ----------
+    url : str
+        The URL of the ESX or VIC server. e.g. (https://bennevis/sdk)
+    username : str
+        The username to connect with.
+    password : str
+        The password to connect with.
+
+    Examples
+    --------
+    >>> import connect
+    >>> connect.connect('https://localhost/sdk', 'root', 'root')
+    Successfully connected to https://bennevis/sdk
+    Server time is 2010-08-26 23:53:38.003445
+
     """
     vim = Vim(url, username, password)
-    print(vim.service_instance.current_time())
+    curtime = vim.service_instance.current_time()
+    print('Successfully connected to %s' % url)
+    print('Server time is %s' % curtime)
+
+def main(options):
+    connect(options.url, options.username, options.password)
 
 if __name__ == '__main__':
-    from optparse import OptionParser
-    usage = ('usage: %prog --url https://<host>/sdk --username <username> '
-             '--password <password>')
-    parser = OptionParser(usage)
-    parser.add_option('--url', dest='url',
-                      help='the url of the vSphere server')
-    parser.add_option('--username', dest='username',
-                      help='the username to connnect with')
-    parser.add_option('--password', dest='password',
-                      help='the password to connect with')
-
-    (options, args) = parser.parse_args()
-
-    if not options.url:
-        parser.error('--url option is required')
-    if not options.username:
-        parser.error('--username option is required')
-    if not options.password:
-        parser.error('--password option is required')
-
-    connect(options.url, options.username, options.password)
+    ob = optionbuilder.OptionBuilder()
+    options = ob.get_options()
+    main(options)
 

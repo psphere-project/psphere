@@ -15,15 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import optparse
 import sys
-import psphere.vim25
-
-def main(options):
-    vim = psphere.vim25.Vim(options.url, options.username, options.password)
-    create_vm(vim, 'Application Engineering', 'nas03', 12582912,
-              [{'network_name': 'AE_SDFDIE VLAN'}], 'test', 1024, 1,
-              'rhel5Guest', 'Dalley St')
+from psphere.vim25 import Vim
+from psphere.utils import optionbuilder
 
 def create_vm(vim, compute_resource, datastore, disksize, nics, name, memory,
               num_cpus, guest_id, datacenter):
@@ -204,26 +198,15 @@ def create_virtual_disk(vim, datastore, disksize):
 
     return disk_spec
 
+def main(options):
+    vim = Vim(options.url, options.username, options.password)
+    create_vm(vim, 'Application Engineering', 'nas03', 12582912,
+              [{'network_name': 'AE_SDFDIE VLAN'}], 'test', 1024, 1,
+              'rhel5Guest', 'Dalley St')
+
 if __name__ == '__main__':
-    usage = ('usage: %prog --url https://<host>/sdk --username <username> '
-             '--password <password>')
-    parser = optparse.OptionParser(usage)
-    parser.add_option('--url', dest='url',
-                      help='the url of the vSphere server')
-    parser.add_option('--username', dest='username',
-                      help='the username to connnect with')
-    parser.add_option('--password', dest='password',
-                      help='the password to connect with')
+    ob = optionbuilder.OptionBuilder()
+    options = ob.get_options()
 
-    (options, args) = parser.parse_args()
-
-    if not options.url:
-        parser.error('--url option is required')
-    if not options.username:
-        parser.error('--username option is required')
-    if not options.password:
-        parser.error('--password option is required')
-
-    # Call the main method with the passed in arguments
     main(options)
 
