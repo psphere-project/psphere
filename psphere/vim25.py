@@ -323,6 +323,11 @@ class ManagedObject(object):
         for object_content in object_contents:
             self.set_view_data(object_content, properties)
 
+    def update_view_all(self):
+        """Update all properties of this view."""
+        # TODO: Implement a method which updates all properties in one go
+        pass
+
     def set_view_data(self, object_content, properties=None):
         """Update the local object from the passed in obj_content array."""
         self.ent = object_content
