@@ -2,13 +2,24 @@ Introduction
 ============
 
 This is the documentation for psphere, a project which intends to provide
-native Python bindings for the vSphere Web Services SDK.
+native Python bindings for the vSphere Web Services SDK. This project has
+no affiliation with VMware Inc.
+
+Home page
+---------
+For now you, it's all happening on my `my bitbucket page`_.
+
+.. _my bitbucket page: http://bitbucket.org/jkinred
+
+Why
+---
+Personally I am using psphere in an automated provisioning framework. I'm
+learning Python and this is a project I can gain immediate benefit from.
 
 Warning
 -------
-I'm a novice programmer and psphere is my first project. I'm continually
-learning new things so it's quite common for me to refactor code and rename
-things.
+psphere is my first Python project. I'm continually learning so it's quite
+common for me to refactor code and rename things based.
 
 As I move towards a usable code base and my skills develop I'll stop 
 doing this and just live with what I've implemented. If you stumble 
@@ -22,7 +33,12 @@ See :doc:`examples` for various code samples.
 Alternatives
 ------------
 
-- vijava
-- vijava with Jython
-- vSphere SDK for Perl
-- vSphere SDK for .NET
+- `VMware VI Java API`_
+- `VMware VI Java API with Jython`_
+- `VMware vSphere SDK for Perl`_
+- `VMware vSphere PowerCLI`_
+
+.. _VMware VI Java API: http://vijava.sourceforge.net/
+.. _VMware VI Java API with Jython: http://www.doublecloud.org/2010/03/using-vsphere-java-api-in-jython-and-other-jvm-languages/
+.. _VMware vSphere SDK for Perl: http://www.vmware.com/support/developer/viperltoolkit/
+.. _VMware vSphere PowerCLI: http://www.vmware.com/support/pubs/ps_pubs.html
