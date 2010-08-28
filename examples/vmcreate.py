@@ -16,193 +16,186 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-from psphere.vim25 import Vim
-from psphere.utils import optionbuilder
+from psphere.vim25 import Vim, ObjectNotFoundError, ComputeResource
+from psphere.soap import VimFault
+from psphere.util import optionbuilder
 
-def create_vm(vim, compute_resource, datastore, disksize, nics, name, memory,
-              num_cpus, guest_id, datacenter):
-    compute_resource_view = vim.find_entity_view(
-                                        view_type='ClusterComputeResource',
-                                        filter={'name': compute_resource})
+class PsphereScript(object):
+    def __init__(self, url, username, password):
+        self.vim = Vim(options.url, options.username, options.password)
 
-    compute_resource_view.update_view_data(['name', 'datastore',
-                                            'network', 'resourcePool'])
+class VMCreate(PsphereScript):
+    def create_vm(self, compute_resource, datastore, disksize, nics, name,
+                  memory, num_cpus, guest_id, host=None):
+        # If the host is not set, use the ComputeResource as the target
+        if not host:
+            target = self.vim.find_entity_view(view_type='ComputeResource',
+                                            filter={'name': compute_resource})
+            target.update_view_data(['name', 'datastore', 'network', 'parent',
+                                     'resourcePool'])
+            resource_pool = target.resourcePool
+        else:
+            target = self.vim.find_entity_view(view_type='HostSystem',
+                                                filter={'name': host})
+            # Retrieve the properties we're going to use
+            target.update_view_data(['name', 'datastore', 'network', 'parent'])
+            host_cr = ComputeResource(mor=target.parent, vim=self.vim)
+            host_cr.update_view_data(properties=['resourcePool'])
+            resource_pool = host_cr.resourcePool
 
-    # Build a list of devices for the VM
-    vm_devices = []
-    controller_spec = create_controller_spec(vim, 'VirtualLsiLogicController')
-    vm_devices.append(controller_spec)
+        # TODO: Convert the requested disk size to kb
+        disksize_kb = disksize * 1024 * 1024
 
-    # Find the given datastore and ensure it is suitable
-    datastore = get_datastore(vim, compute_resource_view, datastore)
-    if not datastore:
-        print('No datastore found with name %s' % datastore)
-        sys.exit()
+        # A list of devices to be assigned to the VM
+        vm_devices = []
 
-    free_space_kb = datastore.summary.freeSpace / 1024
-    # Ensure the datastore is accessible
-    if not datastore.summary.accessible or free_space_kb < disksize:
-        print('Datastore (%s) exists, but is not accessible or'
-              'does not have sufficient free space.' % datastore.summary.name)
-        sys.exit()
+        # Create a disk controller
+        controller = self.create_controller('VirtualLsiLogicController')
+        vm_devices.append(controller)
 
-    disk_spec = create_virtual_disk(vim, datastore=datastore,
-                                    disksize=disksize)
-    vm_devices.append(disk_spec)
-    
-    for nic in nics:
-        nic_spec = get_nic_spec(vim, compute_resource_view,
-                                'VirtualE1000', nic['network_name'])
-        if not nic_spec:
-            print('Could not create spec for NIC')
+        # Find the given datastore and ensure it is suitable
+        if host:
+            ds_target = host_cr
+        else:
+            ds_target = target
+
+        try:
+            ds = ds_target.find_datastore(name=datastore)
+        except ObjectNotFoundError, e:
+            print('Could not find datastore with name %s: %s' % (datastore,
+                                                                 e.error))
             sys.exit()
 
-        # Append the nic spec to the vm_devices list
-        vm_devices.append(nic_spec)
+        ds.update_view_data(properties=['summary'])
+        # Ensure the datastore is accessible and has enough space
+        if (not ds.summary.accessible or
+            ds.summary.freeSpace < disksize_kb * 1024):
+            print('Datastore (%s) exists, but is not accessible or'
+                  'does not have sufficient free space.' % ds.summary.name)
+            sys.exit()
 
-    files = vim.vsoap.create_object('VirtualMachineFileInfo')
-    files.vmPathName = '[%s]' % datastore.summary.name
+        disk = self.create_disk(datastore=ds, disksize_kb=disksize_kb)
+        vm_devices.append(disk)
+        
+        for nic in nics:
+            nic_spec = self.create_nic(target, nic)
+            if not nic_spec:
+                print('Could not create spec for NIC')
+                sys.exit()
 
-    vm_config_spec = vim.vsoap.create_object('VirtualMachineConfigSpec')
-    vm_config_spec.name = name
-    vm_config_spec.memoryMB = memory
-    vm_config_spec.files = files
-    vm_config_spec.annotation = 'Auto-provisioned by vmcreate.py script'
-    vm_config_spec.numCPUs = num_cpus
-    vm_config_spec.guestId = guest_id
-    vm_config_spec.deviceChange = vm_devices
+            # Append the nic spec to the vm_devices list
+            vm_devices.append(nic_spec)
 
-    datacenter_view = vim.find_entity_view(view_type='Datacenter',
-                                           filter={'name': datacenter})
-    if not datacenter_view:
-        print('Could not find datacenter %s' % datacenter)
-        sys.exit()
+        vmfi = self.vim.create_object('VirtualMachineFileInfo')
+        vmfi.vmPathName = '[%s]' % ds.summary.name
+        vm_config_spec = self.vim.create_object('VirtualMachineConfigSpec')
+        vm_config_spec.name = name
+        vm_config_spec.memoryMB = memory
+        vm_config_spec.files = vmfi
+        vm_config_spec.annotation = 'Auto-provisioned by pSphere'
+        vm_config_spec.numCPUs = num_cpus
+        vm_config_spec.guestId = guest_id
+        vm_config_spec.deviceChange = vm_devices
 
-    datacenter_view.update_view_data(properties=['name', 'vmFolder'])
-    vmfolder_view = vim.get_mo_view(mor=datacenter_view.vmFolder)
+        # Find the datacenter of the target
+        try:
+            dc = target.find_datacenter()
+        except ObjectNotFoundError, e:
+            print('Error while trying to find datacenter for %s: %s' %
+                  (target.name, e.error))
+            sys.exit()
 
-    result = vmfolder_view.create_vm(config=vm_config_spec,
-                                     pool=compute_resource_view.resourcePool)
+        dc.update_view_data(properties=['vmFolder'])
 
-    if result['error_message']:
-        print('Error while creating VM: %s' % result['error_message'])
-    else:
-        print('Successfully created VM: %s' % name)
+        try:
+            self.vim.CreateVM(_this=dc.vmFolder, config=vm_config_spec,
+                              pool=resource_pool)
+        except VimFault, e:
+            print('Failed to create %s: ' % e)
+            sys.exit()
 
-def get_nic_spec(vim, compute_resource_view, nic_type, network_name):
-    """Return a NIC spec"""
-    # Get all the networks associated with the compute resource
-    networks = vim.get_mo_views(mors=compute_resource_view.network,
-                                properties=['name'])
-    # Iterate through the networks and look for one matching the requested name
-    for network in networks:
-        if network.name == network_name:
-            # Success! Create a nic attached to this network
-            backing = (vim.vsoap.
+        print('Successfully created new VM: %s' % name)
+
+    def create_nic(self, target, nic):
+        """Return a NIC spec"""
+        # Get all the networks associated with the HostSystem/ComputeResource
+        networks = self.vim.get_views(mors=target.network, properties=['name'])
+
+        # Iterate through the networks and look for one matching
+        # the requested name
+        for network in networks:
+            if network.name == nic['network_name']:
+                # Success! Create a nic attached to this network
+                backing = (self.vim.
                        create_object('VirtualEthernetCardNetworkBackingInfo'))
-            backing.deviceName = network_name
-            backing.network = network.mor
+                backing.deviceName = nic['network_name']
+                backing.network = network.mor
 
-            connect_info = vim.vsoap.create_object('VirtualDeviceConnectInfo')
-            connect_info.allowGuestControl = True
-            connect_info.connected = False
-            connect_info.startConnected = True
+                connect_info = (self.vim.
+                                create_object('VirtualDeviceConnectInfo'))
+                connect_info.allowGuestControl = True
+                connect_info.connected = False
+                connect_info.startConnected = True
 
-            nic = vim.vsoap.create_object(nic_type) 
-            nic.backing = backing
-            nic.key = 0
-            # TODO: Work out a way to automatically increment this
-            nic.unitNumber = 1
-            nic.addressType = 'generated'
-            nic.connectable = connect_info
+                new_nic = self.vim.create_object(nic['type']) 
+                new_nic.backing = backing
+                new_nic.key = 2
+                # TODO: Work out a way to automatically increment this
+                new_nic.unitNumber = 1
+                new_nic.addressType = 'generated'
+                new_nic.connectable = connect_info
 
-            nic_spec = vim.vsoap.create_object('VirtualDeviceConfigSpec')
-            nic_spec.device = nic
-            operation = vim.vsoap.create_object(
-                                            'VirtualDeviceConfigSpecOperation')
-            nic_spec.operation = (operation.add)
-            return nic_spec
+                nic_spec = self.vim.create_object('VirtualDeviceConfigSpec')
+                nic_spec.device = new_nic
+                operation = (self.vim.
+                             create_object('VirtualDeviceConfigSpecOperation'))
+                nic_spec.operation = (operation.add)
 
-def get_datastore(vim, compute_resource_view, name=None):
-    """Find a datastore on the given managed object by name.
+                return nic_spec
 
-    Parameters
-    ----------
-    vim : Vim
-        The base Vim instance to use for vSphere related operations.
-    compute_resource_view : {'ClusterComputeResource', 'ComputeResource'}
-        The entity on which the datastore should be found.
-    name : str, optional
-        The name of the datastore to be found. If name is not specified
-        then the first available datastore will be used.
+    def create_controller(self, controller_type):
+        controller = self.vim.create_object(controller_type)
+        controller.key = 0
+        controller.device = [0]
+        controller.busNumber = 0,
+        controller.sharedBus = (self.vim.
+                                create_object('VirtualSCSISharing').noSharing)
 
-    Returns
-    -------
-    datastore : Datastore
-        A Datastore view instance.
+        spec = self.vim.create_object('VirtualDeviceConfigSpec')
+        spec.device = controller
+        spec.operation = (self.vim.
+                          create_object('VirtualDeviceConfigSpecOperation').add)
 
-    Raises
-    ------
-    DatastoreException
-        If there is a problem (inaccessible, insufficient free space) with
-        the desired datastore.
+        return spec
 
-    """
-    # TODO: Implement selection of datastore if name is not specified
-    if not name:
-        print('Auto-selection of datastore not implemented.')
-        return None
+    def create_disk(self, datastore, disksize_kb):
+        backing = (self.vim.create_object('VirtualDiskFlatVer2BackingInfo'))
+        backing.diskMode = 'persistent'
+        backing.fileName = '[%s]' % datastore.summary.name
 
-    # Retrieve the datastores associated with the host
-    datastores = vim.get_mo_views(mors=compute_resource_view.datastore,
-                                  properties=['info', 'summary'])
+        disk = self.vim.create_object('VirtualDisk')
+        disk.backing = backing
+        disk.controllerKey = 0
+        disk.key = 1
+        disk.unitNumber = 0
+        disk.capacityInKB = disksize_kb
 
-    # Iterate throught the datastores for one matching `name`
-    for datastore in datastores:
-        if datastore.info.name == name:
-            return datastore 
+        disk_spec = self.vim.create_object('VirtualDeviceConfigSpec')
+        disk_spec.device = disk
+        file_op = self.vim.create_object('VirtualDeviceConfigSpecFileOperation')
+        disk_spec.fileOperation = file_op.create
+        operation = self.vim.create_object('VirtualDeviceConfigSpecOperation')
+        disk_spec.operation = operation.add
 
-    return None
-
-def create_controller_spec(vim, controller_type):
-    controller = vim.vsoap.create_object(controller_type)
-    controller.key = 0
-    controller.device = [0]
-    controller.busNumber = 0,
-    controller.sharedBus = (vim.vsoap.
-                            create_object('VirtualSCSISharing').noSharing)
-
-    spec = vim.vsoap.create_object('VirtualDeviceConfigSpec')
-    spec.device = controller
-    spec.operation = (vim.vsoap.
-                      create_object('VirtualDeviceConfigSpecOperation').add)
-
-    return spec
-
-def create_virtual_disk(vim, datastore, disksize):
-    backing = (vim.vsoap.create_object('VirtualDiskFlatVer2BackingInfo'))
-    backing.diskMode = 'persistent'
-    backing.fileName = '[%s]' % datastore.summary.name
-
-    disk = vim.vsoap.create_object('VirtualDisk')
-    disk.backing = backing
-    disk.controllerKey = 0
-    disk.key = 0
-    disk.unitNumber = 0
-    disk.capacityInKB = disksize
-
-    disk_spec = vim.vsoap.create_object('VirtualDeviceConfigSpec')
-    disk_spec.device = disk
-    operation = vim.vsoap.create_object('VirtualDeviceConfigSpecOperation')
-    disk_spec.operation = (operation.add)
-
-    return disk_spec
+        return disk_spec
 
 def main(options):
-    vim = Vim(options.url, options.username, options.password)
-    create_vm(vim, 'Application Engineering', 'nas03', 12582912,
-              [{'network_name': 'AE_SDFDIE VLAN'}], 'test', 1024, 1,
-              'rhel5Guest', 'Dalley St')
+    vmcreate = VMCreate(options.url, options.username, options.password)
+    nic = {'network_name': 'AE_SDFDIE VLAN', 'type': 'VirtualE1000'}
+    vmcreate.create_vm(compute_resource='Application Engineering',
+                       datastore='nas03', disksize=12, nics=[nic],
+                       name='test', memory=1024, num_cpus=1,
+                       guest_id='rhel5Guest')
 
 if __name__ == '__main__':
     ob = optionbuilder.OptionBuilder()

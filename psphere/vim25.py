@@ -14,51 +14,44 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
-import psphere.soap
+from psphere.soap import VimSoap, VimFault, ManagedObjectReference
+
+class ObjectNotFoundError(Exception):
+    def __init__(self, error):
+        self.error = error
+    def __str__(self):
+        return repr(self.error)
 
 class Vim(object):
     def __init__(self, url, username, password):
-        self.vsoap = psphere.soap.VimSoap(url)
-        self.service_instance = ServiceInstance(vim=self)
-        self.vsoap.invoke('Login',
-                          _this=self.service_instance.content.sessionManager,
+        self.vsoap = VimSoap(url)
+        self.si = ServiceInstance(vim=self)
+        self.sc = self.si.content
+        self.pc = PropertyCollector(mor=self.sc.propertyCollector, vim=self)
+        self.vsoap.invoke('Login', _this=self.sc.sessionManager,
                           userName=username, password=password)
 
-    def get_mo_view(self, mor, properties=None):
-        """Get a local view of a single managed object.
+    def invoke(self, method, **kwargs):
+        result = self.vsoap.invoke(method, **kwargs)
+        return result
 
-        Parameters
-        ----------
-        mor : ManagedObjectReference
-            The ManagedObjectReference to the managed object that
-            a view is to be retrieved for.
-        properties : list of str's
-            The properties to retrieve in the view.
+    def create_object(self, type):
+        """Create a SOAP object of the requested type."""
+        return self.vsoap.create(type)
 
-        Returns
-        -------
-        entity : instance (ManagedObject subclass)
-            A local instance of the server-side managed object.
+#        Notes
+#        -----
+#        A view is a local, static representation of a managed object in
+#        the inventory. The view is not automatically synchronised with 
+#        the server-side object and can therefore be out of date a moment
+#        after it is retrieved.
+#        
+#        Retrieval of only the properties you intend to use -- through
+#        the use of the properties parameter -- is considered best
+#        practise as the properties of some managed objects can be
+#        costly to retrieve.
 
-        Notes
-        -----
-        A view is a local, static representation of a managed object in
-        the inventory. The view is not automatically synchronised with 
-        the server-side object and can therefore be out of date a moment
-        after it is retrieved.
-        
-        Retrieval of only the properties you intend to use -- through
-        the use of the properties parameter -- is considered best
-        practise as the properties of some managed objects can be
-        costly to retrieve.
-
-        """
-
-        entity = eval(str(mor._type))(mor=mor, vim=self)
-        entity.update_view_data(properties=properties)
-        return entity
-
-    def get_mo_views(self, mors, properties=None):
+    def get_views(self, mors, properties=None):
         """Get a list of local view's for multiple managed objects.
 
         Parameters
@@ -77,10 +70,10 @@ class Vim(object):
 
         See also
         --------
-        get_mo_view : Get the view for a single managed object.
+        get_view : Get the view for a single managed object.
 
         """
-        property_spec = self.vsoap.create_object('PropertySpec')
+        property_spec = self.create_object('PropertySpec')
         # FIXME: Makes assumption about mors being a list
         property_spec.type = str(mors[0]._type)
         if properties:
@@ -91,18 +84,15 @@ class Vim(object):
 
         object_specs = []
         for mor in mors:
-            object_spec = self.vsoap.create_object('ObjectSpec')
+            object_spec = self.create_object('ObjectSpec')
             object_spec.obj = mor
             object_specs.append(object_spec)
 
-        pfs = self.vsoap.create_object('PropertyFilterSpec')
+        pfs = self.create_object('PropertyFilterSpec')
         pfs.propSet = [property_spec]
         pfs.objectSet = object_specs
 
-        pc_mor = self.service_instance.content.propertyCollector
-        property_collector = PropertyCollector(mor=pc_mor, vim=self)
- 
-        object_contents = property_collector.retrieve_properties(spec_set=pfs)
+        object_contents = self.pc.RetrieveProperties(specSet=pfs)
         views = []
         for object_content in object_contents:
             # Instantiate the class in the obj_content
@@ -115,14 +105,6 @@ class Vim(object):
 
         return views
         
-    def get_property_spec(self):
-        """Return a PropertySpec for matching the class this is called from."""
-        property_spec = self.vim.vsoap.create_object('PropertySpec')
-        property_spec.all = True
-        property_spec.type = self.mor._type
-
-        return property_spec
-
     def get_search_filter_spec(self, begin_entity, property_spec):
         """Build a PropertyFilterSpec capable of full inventory traversal.
         
@@ -143,53 +125,53 @@ class Vim(object):
         # Create a selection spec for each of the strings specified above
         selection_specs = []
         for ss_string in ss_strings:
-            selection_spec = self.vsoap.create_object('SelectionSpec')
+            selection_spec = self.create_object('SelectionSpec')
             selection_spec.name = ss_string
             selection_specs.append(selection_spec)
 
         # A traversal spec for deriving ResourcePool's from found VMs
-        rpts = self.vsoap.create_object('TraversalSpec')
+        rpts = self.create_object('TraversalSpec')
         rpts.name = 'resource_pool_traversal_spec'
         rpts.type = 'ResourcePool'
         rpts.path = 'resourcePool'
         rpts.selectSet = [selection_specs[0], selection_specs[1]]
 
         # A traversal spec for deriving ResourcePool's from found VMs
-        rpvts = self.vsoap.create_object('TraversalSpec')
+        rpvts = self.create_object('TraversalSpec')
         rpvts.name = 'resource_pool_vm_traversal_spec'
         rpvts.type = 'ResourcePool'
         rpvts.path = 'vm'
 
-        crrts = self.vsoap.create_object('TraversalSpec')
+        crrts = self.create_object('TraversalSpec')
         crrts.name = 'compute_resource_rp_traversal_spec'
         crrts.type = 'ComputeResource'
         crrts.path = 'resourcePool'
         crrts.selectSet = [selection_specs[0], selection_specs[1]]
 
-        crhts = self.vsoap.create_object('TraversalSpec')
+        crhts = self.create_object('TraversalSpec')
         crhts.name = 'compute_resource_host_traversal_spec'
         crhts.type = 'ComputeResource'
         crhts.path = 'host'
          
-        dhts = self.vsoap.create_object('TraversalSpec')
+        dhts = self.create_object('TraversalSpec')
         dhts.name = 'datacenter_host_traversal_spec'
         dhts.type = 'Datacenter'
         dhts.path = 'hostFolder'
         dhts.selectSet = [selection_specs[2]]
 
-        dvts = self.vsoap.create_object('TraversalSpec')
+        dvts = self.create_object('TraversalSpec')
         dvts.name = 'datacenter_vm_traversal_spec'
         dvts.type = 'Datacenter'
         dvts.path = 'vmFolder'
         dvts.selectSet = [selection_specs[2]]
 
-        hvts = self.vsoap.create_object('TraversalSpec')
+        hvts = self.create_object('TraversalSpec')
         hvts.name = 'host_vm_traversal_spec'
         hvts.type = 'HostSystem'
         hvts.path = 'vm'
         hvts.selectSet = [selection_specs[2]]
       
-        fts = self.vsoap.create_object('TraversalSpec')
+        fts = self.create_object('TraversalSpec')
         fts.name = 'folder_traversal_spec'
         fts.type = 'Folder'
         fts.path = 'childEntity'
@@ -198,74 +180,127 @@ class Vim(object):
                           selection_specs[6], selection_specs[7],
                           selection_specs[1]]
 
-        obj_spec = self.vsoap.create_object('ObjectSpec')
+        obj_spec = self.create_object('ObjectSpec')
         obj_spec.obj = begin_entity
         obj_spec.selectSet = [fts, dvts, dhts, crhts, crrts,
                                rpts, hvts, rpvts]
 
-        pfs = self.vsoap.create_object('PropertyFilterSpec')
+        pfs = self.create_object('PropertyFilterSpec')
         pfs.propSet = [property_spec]
         pfs.objectSet = [obj_spec]
         return pfs
 
+    def wait_for_task(self, task_mor):
+        """Execute a task and wait for it to complete."""
+        task = Task(mor=task_mor, vim=self)
+        task.update_view_data(properties=['info'])
+        result = {}
+        # TODO: This returns true when there is an error
+        while True:
+            if task.info.state == 'success':
+                result['error_message'] = None
+                return result
+            elif task.info.state == 'error':
+                # TODO: Handle error checking properly
+                result['error_message'] = task.info.error.localizedMessage
+                return result
+
+            # TODO: Implement progresscallbackfunc
+            # Sleep two seconds and then refresh the data from the server
+            time.sleep(2)
+            task.update_view_data(properties=['info'])
+
+    def CreateVM(self, **kwargs):
+        try:
+            result = self.invoke('CreateVM_Task', **kwargs)
+        except VimFault:
+            raise
+
+        return self.wait_for_task(result)
+
     def find_entity_view(self, view_type, begin_entity=None, filter=None):
-        """Traverse the MOB looking for an entity matching the filter.
+        """Return a new instance based on the search filter.
+
+        Traverses the MOB looking for an entity matching the filter.
 
         Parameters
         ----------
         view_type : str
-            The type of entity to find.
+            The object for which we are retrieving the view.
         begin_entity : ManagedObjectReference
             If specified, the traversal is started at this MOR. If not
             specified the search is started at the root folder.
         filter : dict
-            Key/value pairs to filter the results. The key refers to a
-            valid member of the `entity_type` parameter and the value
-            is the `str` that the member should match.
+            Key/value pairs to filter the results. The key is a valid
+            parameter of the object type. The value is what that
+            parameter should match.
 
         Returns
         -------
-        view : Instance of an object derived from ManagedObject
+        object : object
+            A new instance of the requested object.
 
         """
-        view_types = ['ClusterComputeResource', 'ComputeResource',
-                      'Datacenter', 'Folder', 'HostSystem',
-                      'ResourcePool', 'VirtualMachine']
-
-        if view_type not in view_types:
-            print('Invalid view type specified.')
-            return None
-
-        # Start at the root folder if no begin_entity was specified
+        kls = classmapper(view_type)
+        # Start the search at the root folder if no begin_entity was given
         if not begin_entity:
-            begin_entity = self.service_instance.content.rootFolder
+            begin_entity = self.sc.rootFolder
 
-        property_spec = self.vsoap.create_object('PropertySpec')
-        # TODO: Implement filtering
+        property_spec = self.create_object('PropertySpec')
         property_spec.all = False
-        property_spec.type = view_type
-        property_spec.pathSet = filter.keys()
+        property_spec.type = str(view_type)
+        if filter:
+            property_spec.pathSet = filter.keys()
         pfs = self.get_search_filter_spec(begin_entity, property_spec)
-        pc_mor = self.service_instance.content.propertyCollector
-        property_collector = PropertyCollector(mor=pc_mor, vim=self)
 
         # Retrieve properties from server and update entity
-        obj_contents = property_collector.retrieve_properties(spec_set=pfs)
-        view = eval(view_type)(mor=obj_contents[0].obj, vim=self)
-        view.update_view_data(properties=filter.keys())
+        obj_contents = self.pc.RetrieveProperties(specSet=pfs)
 
-        return view
+        # TODO: Implement filtering
+        if not filter:
+            print('No filter specified')
+            print(obj_contents[0].obj)
+            # If no filter is specified we just return the first item
+            # in the list of returned objects
+            return kls(mor=obj_contents[0].obj, vim=self)
+
+        matched = False
+        # Iterate through obj_contents retrieved
+        for obj_content in obj_contents:
+            # If there are is no propSet, skip this one
+            if not obj_content.propSet:
+                continue
+
+            # Iterate through each property in the set
+            for prop in obj_content.propSet:
+                # If the property name is in the defined filter
+                if prop.name in filter:
+                    # ...and it matches the value specified
+                    # TODO: Regex this?
+                    if prop.val == filter[prop.name]:
+                        # We've found a match
+                        filtered_obj = obj_content.obj
+                        matched = True
+                        break
+
+            # If we've matched something at this point, there
+            # is no reason to continue
+            if matched:
+                break
+
+        if matched:
+            return kls(mor=filtered_obj, vim=self)
+        else:
+            # There were no matches
+            raise ObjectNotFoundError(error="No matching objects for filter")
 
 class ServiceInstance(object):
     def __init__(self, vim):
         self.vim = vim
-        self.mor = psphere.soap.ManagedObjectReference(type='ServiceInstance',
-                                                       value='ServiceInstance')
+        self.mor = ManagedObjectReference(type='ServiceInstance',
+                                          value='ServiceInstance')
         self.content = self.vim.vsoap.invoke('RetrieveServiceContent',
                                              _this=self.mor)
-
-    def current_time(self):
-        return self.vim.vsoap.invoke('CurrentTime', _this=self.mor)
 
 class ManagedObject(object):
     """The base class which all managed object's derive from."""
@@ -283,50 +318,29 @@ class ManagedObject(object):
         self.mor = mor
         self.vim = vim
 
-    def get_property_filter_spec(self, mor):
-        """Create a PropertyFilterSpec for matching the current class.
-        
-        Called from derived classes, it's a simple way of creating
-        a PropertySpec that will match the type of object that the
-        method is called from. It returns a List, which is what
-        PropertyFilterSpec expects.
-
-        Returns:
-            A list of one PropertySpec
-        """
-        property_spec = self.vim.vsoap.create_object('PropertySpec')
-        property_spec.all = True
-        property_spec.type = self.mor._type
-
-        object_spec = self.vim.vsoap.create_object('ObjectSpec')
-        object_spec.obj = mor
-
-        property_filter_spec = self.vim.vsoap.create_object('PropertyFilterSpec')
-        property_filter_spec.propSet = [property_spec]
-        property_filter_spec.objectSet = [object_spec]
-
-        return property_filter_spec
-
     def update_view_data(self, properties=None):
         """Update the local object from the server-side object."""
-        pfs = self.get_property_filter_spec(self.mor)
+        property_spec = self.vim.create_object('PropertySpec')
+        property_spec.type = str(self.mor._type)
         if properties:
-            pfs.propSet[0].all = False
-            pfs.propSet[0].pathSet = properties
+            property_spec.all = False
+            property_spec.pathSet = properties
+        else:
+            property_spec.all = True
 
-        pc_mor = self.vim.service_instance.content.propertyCollector
-        property_collector = PropertyCollector(mor=pc_mor, vim=self.vim)
-        object_contents = property_collector.retrieve_properties(spec_set=pfs)
+        object_spec = self.vim.create_object('ObjectSpec')
+        object_spec.obj = self.mor
+
+        pfs = self.vim.create_object('PropertyFilterSpec')
+        pfs.propSet = [property_spec]
+        pfs.objectSet = [object_spec]
+
+        object_contents = self.vim.pc.RetrieveProperties(specSet=pfs)
         if not object_contents:
             # TODO: Improve error checking and reporting
             print('The view could not be updated.')
         for object_content in object_contents:
             self.set_view_data(object_content, properties)
-
-    def update_view_all(self):
-        """Update all properties of this view."""
-        # TODO: Implement a method which updates all properties in one go
-        pass
 
     def set_view_data(self, object_content, properties=None):
         """Update the local object from the passed in obj_content array."""
@@ -346,7 +360,7 @@ class ManagedObject(object):
 
         for prop in props:
             # We're not interested in empty values
-            if len(props[prop]) == 0:
+            if not len(props[prop]):
                 continue
 
             # If the property hasn't been initialised in this class
@@ -360,23 +374,6 @@ class ManagedObject(object):
                 print('WARNING: Skipping undefined property "%s" '
                       'with value "%s"' % (prop, props[prop]))
                     
-    def wait_for_task(self, task_mor):
-        """Execute a task and wait for it to complete."""
-        task_view = self.vim.get_mo_view(mor=task_mor, properties=['info'])
-        result = {}
-        while True:
-            if task_view.info.state == 'success':
-                result['error_message'] = None
-                return result
-            elif task_view.info.state == 'error':
-                # TODO: Handle error checking properly
-                result['error_message'] = task_view.info.error.localizedMessage
-                return result
-
-            # TODO: Implement progresscallbackfunc
-            time.sleep(2)
-            task_view.update_view_data(properties=['info'])
-
 class ExtensibleManagedObject(ManagedObject):
     def __init__(self, mor, vim):
         # Init the base class
@@ -403,6 +400,32 @@ class ManagedEntity(ExtensibleManagedObject):
         self.tag = []
         self.triggeredAlarmState = []
 
+    def find_datacenter(self, parent=None):
+        """Find the datacenter which this ManagedEntity belongs to."""
+        # If the parent hasn't been set, use the parent of the
+        # calling instance, if it exists
+        if not parent:
+            if self.parent:
+                # Establish the type of object we need to create
+                kls = classmapper(self.parent._type)
+                parent = kls(mor=self.parent, vim=self.vim)
+                parent.update_view_data(properties=['name', 'parent'])
+            else:
+                raise ObjectNotFoundError('No parent found for this instance')
+
+        if not parent.__class__.__name__ == 'Datacenter':
+            # Create an instance of the parent class
+            kls = classmapper(parent.parent._type)
+            next_parent = kls(mor=parent.parent, vim=self.vim)
+            next_parent.update_view_data(properties=['name', 'parent'])
+            # ...and recursively call this method
+            parent = self.find_datacenter(parent=next_parent)
+
+        if parent.__class__.__name__ == 'Datacenter':
+            return parent
+        else:
+            raise ObjectNotFoundError('No parent found for this instance')
+
 class Alarm(ExtensibleManagedObject):
     def __init__(self, mor, vim):
         ExtensibleManagedObject.__init__(self, mor=mor, vim=vim)
@@ -426,36 +449,14 @@ class Folder(ManagedEntity):
         self.childEntity = []
         self.childType = []
 
-    def create_folder(self, name):
-        """Create a new folder with the specified name.
-        Arguments:
-            name: The name of the folder to create.
-        Returns:
-            The newly created Folder object or None if an error was encountered.
-
-        """
-        result = self.vim.vsoap.invoke('CreateFolder', _this=self.mor,
-                                       name=name)
-        if not result:
-            return None
-        else:
-            return Folder(mor=result, vim=self.vim)
-
-    def create_vm(self, config, pool):
-        result = self.wait_for_task(self.create_vm_task(config, pool))
-        return result
-
-    def create_vm_task(self, config, pool):
-        return self.vim.vsoap.invoke('CreateVM_Task', _this=self.mor, config=config, pool=pool)
-        
 class PropertyCollector(ManagedObject):
     def __init__(self, mor, vim):
         ManagedObject.__init__(self, mor=mor, vim=vim)
         self.filter = None
 
-    def retrieve_properties(self, spec_set):
+    def RetrieveProperties(self, specSet):
         return self.vim.vsoap.invoke('RetrieveProperties', _this=self.mor,
-                                     specSet=spec_set)
+                                     specSet=specSet)
 
 class ComputeResource(ManagedEntity):
     def __init__(self, mor, vim):
@@ -467,6 +468,17 @@ class ComputeResource(ManagedEntity):
         self.network = []
         self.resourcePool = None
         self.summary = None
+
+    def find_datastore(self, name):
+        if not self.datastore:
+            self.update_view_data(self.datastore)
+
+        datastores = self.vim.get_views(self.datastore, properties=['summary'])
+        for datastore in datastores:
+            if datastore.summary.name == name:
+                return datastore
+
+        raise ObjectNotFoundError(error='No datastore matching %s' % name)
 
 class ClusterComputeResource(ComputeResource):
     def __init__(self, mor, vim):
@@ -575,7 +587,6 @@ class HostSystem(ManagedEntity):
         self.systemResources = None
         self.vm = []
 
-
 class Network(ManagedEntity):
     def __init__(self, mor, vim):
         ManagedEntity.__init__(self, mor, vim)
@@ -588,4 +599,56 @@ class Task(ExtensibleManagedObject):
     def __init__(self, mor, vim):
         ExtensibleManagedObject.__init__(self, mor=mor, vim=vim)
         self.info = None
+
+    def CancelTask(self):
+        pass
+
+    def SetTaskDescription(self, description):
+        pass
+
+    def SetTaskState(self, state, result=None, fault=None):
+        pass
+
+    def UpdateProgress(self, percentDone):
+        pass
+
+class ResourcePool(ManagedEntity):
+    def __init__(self, mor, vim):
+        ExtensibleManagedObject.__init__(self, mor=mor, vim=vim)
+        self.config = None
+        self.owner = None
+        self.resource_pool = []
+        self.runtime = None
+        self.summary = None
+        self.vm = []
+
+    def CreateChildVM_Task(self, config, host=None):
+        pass
+
+    def CreateResourcePool(self, name, spec):
+        pass
+
+    def CreateVApp(self, name, resSpec, configSpec, vmFolder=None):
+        pass
+
+    def DestroyChildren(self):
+        pass
+
+    def ImportVApp(self, spec, folder=None, host=None):
+        pass
+
+classmap = {
+    'Folder': Folder,
+    'ClusterComputeResource': ClusterComputeResource,
+    'ComputeResource': ComputeResource,
+    'Datacenter': Datacenter,
+    'Datastore': Datastore,
+    'HostSystem': HostSystem,
+    'Network': Network,
+    'ResourcePool': ResourcePool,
+    'VirtualMachine': VirtualMachine,
+}
+
+def classmapper(name):
+    return classmap[name]
 

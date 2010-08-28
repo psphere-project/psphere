@@ -9,6 +9,7 @@ setup(name='psphere',
       author_email='jonathan.kinred@gmail.com',
       url='http://jkinred.bitbucket.org/psphere',
       packages=['psphere'],
+      install_requires=['suds'],
       classifiers=[
         "Development Status :: 2 - Pre-Alpha",
       ],
