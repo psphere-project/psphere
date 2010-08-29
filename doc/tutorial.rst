@@ -1,44 +1,75 @@
+.. highlight:: python
+
 First steps with pSphere
 ========================
 
-pSphere is a convenience API for the vSphere Web Services SDK. As such,
-the official documentation is valuable and relevant reference material.
+This document is meant to give a tutorial-like overview of the main pSphere
+objects and the common tasks that pSphere is used for.
 
-Links to these documents can be found in the references section.
+The green arrows designate "more info" links leading to advanced sections about 
+the described task.
+
+
+Official documentation
+----------------------
+
+The offical VMware documentation is A-spec and ranges from the high-level
+concepts to detailed API reference.
+
+|more| See the list of :ref:`useful references <useful-references>`.
+
 
 The Vim object
 --------------
+
 The Vim object is the entry point into the pSphere API. Creating a new
 Vim instance logs you into a vSphere server and provides methods for 
 obtaining local *views* of server-side objects.
 
 After initialisation, the Vim object provides convenient access to a few
 of the common managed objects:
+
 * ServiceInstance through Vim.`si`
 * ServiceContent through Vim.`sc`
 * PropertyCollector through Vim.`pc`
 
 The Vim object also provides:
+
 * The `invoke` method for sending webservice calls
 * A number of convenience methods for finding managed objects in the inventory
 * Synchronous versions of a number of the \*_Task methods
 
-Read more about the Vim object methods here.
+|more| Read more about the :ref:`Vim attributes and methods <vim-reference>`.
 
-Hello World in pSphere
+
+Connecting to a server
 ----------------------
-Not quite, but we can connect and print the servers time::
+
+Connecting to the server is done by instantiating the Vim object with
+the necessary credentials::
 
     >>> from psphere.vim25 import Vim
     >>> vim = Vim('https://localhost/sdk', 'Administrator', 'none')
-    >>> vim.invoke('CurrentTime', _this=vim.si.mor)
+
+
+Invoking a method on a managed object
+-------------------------------------
+
+Specify the method that you would like to invoke as the first parameter to
+the **invoke** method of the newly created Vim object::
+
+    >>> vim.invoke(method='CurrentTime', _this=vim.si)
     datetime.datetime(2010, 8, 27, 0, 25, 45, 9695)
+
+All vSphere API methods are invoked with a **_this** parameter, which is
+a **ManagedObjectReference** to the object on which the method should be
+invoked.
+
 
 General programming pattern
 ---------------------------
-Create a new Vim instance:
 
-::
+Create a new Vim instance::
 
     >>> from psphere.vim25 import Vim, Folder, Datacenter
     >>> vim = Vim('https://localhost/sdk', 'Administrator', 'none')
@@ -111,9 +142,9 @@ Finding an entity and retrieving a view object
 
 ::
 
-    >>> from psphere.vim25 import Vim
+    >>> from psphere.vim25 import *
     >>> vim = Vim('https://localhost/sdk', 'Administrator', 'none')
-    >>> vm = VirtualMachine.from_filter(vim=vim, filter={'name': 'bennevis'})
+    >>> vm = vim.find_entity_view(view_type='VirtualMachine', filter={'name': 'bennevis'})
     >>> vm.name
     bennevis
     >>> vm.update_view_data(['summary', 'config'])
@@ -122,67 +153,6 @@ Finding an entity and retrieving a view object
     >>> vm.config.hardware.memoryMB
     4096
 
-Finding a datastore on a ComputeResource
------------------------------------------
-
-::
-
-    >>> from psphere.vim25 import Vim, ComputeResource
-    >>> vim = Vim('https://localhost/sdk', 'Administrator', 'none')
-    >>> host = vim.find_entity_view(view_type='HostSystem', filter={'name': 'k2'})
-    >>> host.update_view_data(properties=['parent'])
-    >>> cr = ComputeResource(mor=host.parent, vim=vim)
-    >>> ds = cr.find_datastore(name='nas03')
-    >>> ds.update_view_data(properties=['summary'])
-    >>> ds.summary.name
-    nas03
-    >>> ds.summary.freeSpace
-    14493557854208L
-
-Querying all datastores in a ComputeResource
----------------------------------------------
-
-::
-
-    >>> from psphere.vim25 import Vim, ComputeResource
-    >>> vim = Vim('https://localhost/sdk', 'Administrator', 'none')
-    >>> host = vim.find_entity_view(view_type='HostSystem', filter={'name': 'k2'})
-    >>> host.update_view_data(properties=['parent'])
-    >>> cr = ComputeResource(mor=host.parent, vim=vim)
-    >>> cr.update_view_data(properties=['datastore'])
-    >>> datastores = vim.get_views(mors=cr.datastore, properties=['summary'])
-    >>> for datastore in datastores:
-    >>>     datastore.summary.name
-    >>>     datastore.summary.freeSpace
-    nas03
-    14493557854208L
-    k2:storage1
-    137924444160L
-    k2:storage2
-    310702505984L
-
-Finding all VMs attached to a datastore
----------------------------------------
-
-::
-
-    >>> from psphere.vim25 import Vim, ComputeResource
-    >>> vim = Vim('https://localhost/sdk', 'Administrator', 'none')
-    >>> cluster.update_view_data(properties=['datastore']
-    >>> datastores = vim.get_views(mors=cluster.datastore, properties=['vm', 'summary'])
-    >>> for datastore in datastores:
-    >>>     if datastore.summary.name == 'nas03':
-    >>>         ds = datastore
-    >>>         break
-    >>> vms = vim.get_views(mors=ds.vm, properties=['name', 'summary', 'config'])
-    >>> for vm in vms:
-    >>>     vm.name
-    hudsla02
-    hudmas01
-    sandbox5
-    maunaloa
-    sandbox2
-
 
 It is important to note that an object created using the `find_entity_view`
 method will only contain the properties which are specified in the 
@@ -190,7 +160,7 @@ method will only contain the properties which are specified in the
 the necessary properties, see TODO.
 
 Populating view attributes
-==========================
+--------------------------
 
 One aspect which new users might find confusing is the way in which
 attributes are populated in a view instance.
@@ -215,3 +185,6 @@ For maximum convenience, call the `update_view_data` method with no
 parameters. For maximum efficiency call the `update_view_data` method
 with the required items in the properties parameter.
 
+.. |more| image:: more.png
+          :align: middle
+          :alt: more info    
