@@ -78,11 +78,7 @@ class VimSoap(object):
 
 class ManagedObjectReference(suds.sudsobject.Property):
     """Custom class to replace the suds generated class, which lacks _type."""
-    def __init__(self, mor=None, type=None, value=None):
-        if mor:
-            suds.sudsobject.Property.__init__(self, mor.value)
-            self._type = str(mor._type)
-        else:
-            suds.sudsobject.Property.__init__(self, value)
-            self._type = str(type)
+    def __init__(self, value):
+        suds.sudsobject.Property.__init__(self, value)
+        self._type = self.__class__.__name__
 
