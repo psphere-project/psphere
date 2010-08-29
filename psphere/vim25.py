@@ -22,17 +22,22 @@ class ObjectNotFoundError(Exception):
     def __str__(self):
         return repr(self.error)
 
+class ServiceInstance(ManagedObjectReference):
+    value = 'ServiceInstance'
+    def __init__(self):
+        ManagedObjectReference.__init__(self, value=self.value)
+
 class Vim(object):
     def __init__(self, url, username, password):
         self.vsoap = VimSoap(url)
-        self.si = ServiceInstance(vim=self)
-        self.sc = self.si.content
+        self.si = ServiceInstance()
+        self.sc = self.vsoap.invoke('RetrieveServiceContent', _this=self.si)
         self.pc = PropertyCollector(mor=self.sc.propertyCollector, vim=self)
         self.vsoap.invoke('Login', _this=self.sc.sessionManager,
                           userName=username, password=password)
 
-    def invoke(self, method, **kwargs):
-        result = self.vsoap.invoke(method, **kwargs)
+    def invoke(self, method, _this, **kwargs):
+        result = self.vsoap.invoke(method, _this=_this, **kwargs)
         return result
 
     def create_object(self, type):
@@ -279,7 +284,7 @@ class Vim(object):
                     # TODO: Regex this?
                     if prop.val == filter[prop.name]:
                         # We've found a match
-                        filtered_obj = obj_content.obj
+                        filtered_obj_content = obj_content
                         matched = True
                         break
 
@@ -289,18 +294,12 @@ class Vim(object):
                 break
 
         if matched:
-            return kls(mor=filtered_obj, vim=self)
+            view = kls(mor=filtered_obj_content.obj, vim=self)
+            view.set_view_data(filtered_obj_content, filter.keys())
+            return view
         else:
             # There were no matches
             raise ObjectNotFoundError(error="No matching objects for filter")
-
-class ServiceInstance(object):
-    def __init__(self, vim):
-        self.vim = vim
-        self.mor = ManagedObjectReference(type='ServiceInstance',
-                                          value='ServiceInstance')
-        self.content = self.vim.vsoap.invoke('RetrieveServiceContent',
-                                             _this=self.mor)
 
 class ManagedObject(object):
     """The base class which all managed object's derive from."""
@@ -344,7 +343,9 @@ class ManagedObject(object):
 
     def set_view_data(self, object_content, properties=None):
         """Update the local object from the passed in obj_content array."""
-        self.ent = object_content
+        # This is a debugging entry that allows one to view the
+        # ObjectContent that this instance was created from
+        self._object_content = object_content
         props = {}
         for dyn_prop in object_content.propSet:
             # Kludgy way of finding if the dyn_prop contains a collection
@@ -454,10 +455,6 @@ class PropertyCollector(ManagedObject):
         ManagedObject.__init__(self, mor=mor, vim=vim)
         self.filter = None
 
-    def RetrieveProperties(self, specSet):
-        return self.vim.vsoap.invoke('RetrieveProperties', _this=self.mor,
-                                     specSet=specSet)
-
 class ComputeResource(ManagedEntity):
     def __init__(self, mor, vim):
         ManagedEntity.__init__(self, mor, vim)
@@ -528,19 +525,6 @@ class Datastore(ManagedEntity):
 
         ManagedEntity.__init__(self, mor, vim)
 
-        def refresh_datastore(self):
-            """Explicitly refreshes free-space and capacity values."""
-            self.vim.vsoap.invoke('RefreshDatastore', _this=self.mor)
-            # Update the view data to get the new values
-            self.update_view_data()
-
-        # vSphere API 4.0
-        def refresh_datastore_storage_info(self):
-            self.vim.vsoap.invoke('RefreshDatastoreStorageInfo',
-                                  _this=self.mor)
-            # Update the view data to get the new values
-            self.update_view_data()
-
 class VirtualMachine(ManagedEntity):
     def __init__(self, mor, vim):
         self.capability = None
@@ -562,15 +546,6 @@ class VirtualMachine(ManagedEntity):
         self.summary = None
 
         ManagedEntity.__init__(self, mor, vim)
-
-    def acquire_mks_ticket(self):
-        return self.vim.vsoap.invoke('AcquireMksTicket', _this=self.mor)
-
-    def answer_vm(self, question_id, answer_choice):
-        """Responds to a question that is blocking this virtual machine."""
-        self.vim.vsoap.invoke('AnswerVM', _this=self.mor,
-                              questionId=question_id,
-                              answerChoice=answer_choice)
 
 class HostSystem(ManagedEntity):
     def __init__(self, mor, vim):
