@@ -4,21 +4,6 @@ Introduction
 This is the documentation for pSphere, native Python bindings for the
 vSphere Web Services SDK and VMware Infrastructure SDK.
 
-Installing pSphere
-------------------
-
-Until I release to PyPI, you have to clone the hg repository and install it
-manually (**make sure you read the notes below on suds 0.4**)::
-
-    $ hg clone https://jkinred@bitbucket.org/jkinred/psphere
-    $ cd psphere
-    $ sudo python setup.py install
-    $ ./examples/connect.py --url https://yourserver/sdk --username youruser --password yourpass
-    Successfully connected to https://yourserver/sdk
-    Server time is 2010-09-05 00:14:06.037575
-
-
-
 Prerequisites
 -------------
 
@@ -38,6 +23,21 @@ install it yourself from the `the suds website`_::
     $ sudo python setup.py install
 
 .. _the suds website: https://fedorahosted.org/suds/#Resources
+
+
+Installing pSphere
+------------------
+
+Until I release to PyPI, you have to clone the hg repository and install it
+manually (**make sure you read the notes below on suds 0.4**)::
+
+    $ hg clone https://jkinred@bitbucket.org/jkinred/psphere
+    $ cd psphere
+    $ sudo python setup.py install
+    $ ./examples/connect.py --url https://yourserver/sdk --username youruser --password yourpass
+    Successfully connected to https://yourserver/sdk
+    Server time is 2010-09-05 00:14:06.037575
+
 
 
 Usage
