@@ -17,7 +17,7 @@ convenience method::
     >>> datastore = compute_resource.find_datastore(name='nas03')
     >>> print(datastore.summary.name)
     nas03
-    >>> print('%sGB' % (int(datastore.summary.freeSpace)/1024/1024/1024))
+    >>> print('%sGB' % (int(datastore.summary.freeSpace)/1073741824))
     13203GB
 
 
@@ -65,7 +65,7 @@ them::
     >>> for datastore in datastores:
     >>>     try:
     >>>         print(datastore.summary.name)
-    >>>         print('%sGB' % (int(datastore.summary.freeSpace)/1024/1024/1024))
+    >>>         print('%sGB' % (int(datastore.summary.freeSpace)/1073741824))
     >>>     except AttributeError:
     >>>         print('Unknown')
     >>>     print('----------')
