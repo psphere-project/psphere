@@ -4,16 +4,14 @@ pSphere documentation contents
 ==============================
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
 
-   intro
-   tutorial
-   datastores
-
-   faq
-   glossary
-   changes
-   examples
+    
+    intro
+    tutorial
+    errors
+    datastore
+    hostsystem
 
 
 Indices and tables
@@ -22,4 +20,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-* :ref:`glossary`

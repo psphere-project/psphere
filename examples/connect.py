@@ -38,10 +38,12 @@ def connect(url, username, password):
     Server time is 2010-08-26 23:53:38.003445
 
     """
-    vim = Vim(url, username, password)
-    curtime = vim.service_instance.current_time()
+    vim = Vim(url)
+    vim.login(username, password)
+    curtime = vim.invoke('CurrentTime', _this=vim.service_instance)
     print('Successfully connected to %s' % url)
     print('Server time is %s' % curtime)
+    vim.logout()
 
 def main(options):
     connect(options.url, options.username, options.password)

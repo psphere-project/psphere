@@ -22,7 +22,8 @@ from psphere.util import optionbuilder
 
 class PsphereScript(object):
     def __init__(self, url, username, password):
-        self.vim = Vim(options.url, options.username, options.password)
+        self.vim = Vim(options.url)
+        self.vim.login(options.username, options.password)
 
 class VMCreate(PsphereScript):
     def create_vm(self, compute_resource, datastore, disksize, nics, name,
@@ -39,7 +40,7 @@ class VMCreate(PsphereScript):
                                                 filter={'name': host})
             # Retrieve the properties we're going to use
             target.update_view_data(['name', 'datastore', 'network', 'parent'])
-            host_cr = ComputeResource(mor=target.parent, vim=self.vim)
+            host_cr = ComputeResource(mo_ref=target.parent, vim=self.vim)
             host_cr.update_view_data(properties=['resourcePool'])
             resource_pool = host_cr.resourcePool
 
@@ -108,18 +109,19 @@ class VMCreate(PsphereScript):
         dc.update_view_data(properties=['vmFolder'])
 
         try:
-            self.vim.CreateVM(_this=dc.vmFolder, config=vm_config_spec,
-                              pool=resource_pool)
+            self.invoke('CreateVM', _this=dc.vmFolder, config=vm_config_spec,
+                        pool=resource_pool)
         except VimFault, e:
             print('Failed to create %s: ' % e)
             sys.exit()
 
         print('Successfully created new VM: %s' % name)
+        self.vim.logout()
 
     def create_nic(self, target, nic):
         """Return a NIC spec"""
         # Get all the networks associated with the HostSystem/ComputeResource
-        networks = self.vim.get_views(mors=target.network, properties=['name'])
+        networks = self.vim.get_views(mo_refs=target.network, properties=['name'])
 
         # Iterate through the networks and look for one matching
         # the requested name
@@ -129,7 +131,7 @@ class VMCreate(PsphereScript):
                 backing = (self.vim.
                        create_object('VirtualEthernetCardNetworkBackingInfo'))
                 backing.deviceName = nic['network_name']
-                backing.network = network.mor
+                backing.network = network.mo_ref
 
                 connect_info = (self.vim.
                                 create_object('VirtualDeviceConnectInfo'))

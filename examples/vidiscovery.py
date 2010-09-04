@@ -31,7 +31,8 @@ def discovery(url, username, password):
         The password to connect with.
 
     """
-    vim = Vim(url, username, password)
+    vim = Vim(url)
+    vim.login(username, password)
 
     # Find the first ClusterComputeResource
     ccs = vim.find_entity_view(view_type='ClusterComputeResource',
@@ -44,11 +45,11 @@ def discovery(url, username, password):
     # are retrieved from the server. Getting all the properties
     # of some managed entities (HostSystem is one) can be very
     # costly in terms of server resources and response time.
-    hosts = vim.get_mo_views(mors=ccs.host, properties=['name', 'vm'])
+    hosts = vim.get_views(mo_refs=ccs.host, properties=['name', 'vm'])
     for host in hosts:
         print('  Host: %s (%s VMs)' % (host.name, len(host.vm)))
         # Get the vm views in one fell swoop
-        vms = vim.get_mo_views(mors=host.vm, properties=['name'])
+        vms = vim.get_views(mo_refs=host.vm, properties=['name'])
         for vm in vms:
             print('    VM: %s' % vm.name)
     

@@ -23,9 +23,10 @@ class VimFault(Exception):
         Exception.__init__(self, '%s: %s' % (self.fault_type, self._fault_dict))
 
 class VimSoap(object):
-    def __init__(self, url):
-        self.client = suds.client.Client('file:///home/jonathan/projects/Personal/psphere/resources/vimService.wsdl')
-        #self.client = suds.client.Client(url + '/vimService.wsdl')
+    def __init__(self, url, debug=False):
+        if debug:
+            self.client = suds.client.Client('file:///home/jonathan/projects/Personal/psphere/resources/vimService.wsdl')
+        self.client = suds.client.Client(url + '/vimService.wsdl')
         self.client.set_options(location=url)
 
     def create(self, type):
@@ -78,7 +79,7 @@ class VimSoap(object):
 
 class ManagedObjectReference(suds.sudsobject.Property):
     """Custom class to replace the suds generated class, which lacks _type."""
-    def __init__(self, value):
+    def __init__(self, _type, value):
         suds.sudsobject.Property.__init__(self, value)
-        self._type = self.__class__.__name__
+        self._type = _type
 
