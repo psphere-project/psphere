@@ -36,7 +36,6 @@ reference array::
     >>>     except AttributeError:
     >>>         print('Unknown')
     >>>     print('----------')
-    ----------
     sdi3extapp01
     sles10_64Guest
     ----------
