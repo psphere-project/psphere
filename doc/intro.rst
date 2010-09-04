@@ -7,9 +7,12 @@ vSphere Web Services SDK and VMware Infrastructure SDK.
 Installing pSphere
 ------------------
 
-This document describes how to install pSphere. There is no release yet, so at
-the moment you have to clone the hg repository and should be able to run::
-    ./setup.py install
+Until I release to PyPI, you have to clone the hg repository and install it
+manually (**make sure you read the notes below on suds 0.4**)::
+
+    $ hg clone https://jkinred@bitbucket.org/jkinred/psphere
+    $ cd psphere
+    $ sudo python setup.py install
 
 
 Prerequisites
@@ -18,12 +21,18 @@ Prerequisites
 All development is done against VMware ESX Server 3.5 which is VI SDK 2.5. I
 have not tested it against ESXi, vSphere 4, etc. although I fully intend to.
 
-The suds_ library is used for SOAP communication and at least version 0.4 is required.
-
 pSphere is developed with **Python 2.6**. My intention is to ensure
 pSphere is compatible with **Python 2.4** so that it can run on CentOS/RHEL 5.
 
-.. _suds: http://fedorahosted.org/suds/
+The suds SOAP library is used for comms with the vSphere server. The 0.4 beta
+is required which isn't in PyPI at time of writing. You can download and
+install it yourself from the `the suds website`_::
+
+    $ tar -zxvf python-suds-0.4.tar.gz
+    $ cd python-suds-0.4
+    $ sudo python setup.py install
+
+.. _the suds website: https://fedorahosted.org/suds/#Resources
 
 
 Usage
