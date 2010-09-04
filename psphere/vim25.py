@@ -30,7 +30,8 @@ class TaskFailed(Exception):
 
 class Vim(object):
     def __init__(self, url, auto_populate=True, debug=False):
-        if debug:
+        self.debug = debug
+        if self.debug:
             import logging
             logging.basicConfig(level=logging.INFO)
             logging.getLogger('suds.client').setLevel(logging.DEBUG)
@@ -221,12 +222,12 @@ class Vim(object):
         pfs.objectSet = [obj_spec]
         return pfs
 
-    def invoke_s(self, method, **kwargs):
+    def invoke_task(self, method, **kwargs):
         """Execute a task and wait for it to complete."""
         # Don't execute methods which don't return a Task object
         if not method.endswith('_Task'):
-            print('ERROR: invoke_s can only be used for methods which return '
-                  'a ManagedObjectReference to a Task.')
+            print('ERROR: invoke_task can only be used for methods which '
+                  'return a ManagedObjectReference to a Task.')
             return None
 
         task_mo_ref = self.invoke(method=method, **kwargs)
@@ -272,7 +273,7 @@ class Vim(object):
         kls = classmapper(view_type)
         # Start the search at the root folder if no begin_entity was given
         if not begin_entity:
-            begin_entity = self.sc.rootFolder
+            begin_entity = self.service_content.rootFolder
 
         property_spec = self.create_object('PropertySpec')
         property_spec.type = view_type
@@ -288,11 +289,12 @@ class Vim(object):
 
         # TODO: Implement filtering
         if not filter:
-            print('No filter specified')
-            print(obj_contents[0].obj)
+            print('WARNING: No filter specified, returning first match.')
             # If no filter is specified we just return the first item
             # in the list of returned objects
-            return kls(mo_ref=obj_contents[0].obj, vim=self)
+            view = kls(mo_ref=obj_contents[0].obj, vim=self)
+            view.update_view_data(properties)
+            return view
 
         matched = False
         # Iterate through obj_contents retrieved
@@ -386,7 +388,8 @@ class ManagedObject(object):
                 continue
 
             if not len(dynprop.val):
-                print('Skipping %s with empty value' % dynprop.name)
+                if self.vim.debug:
+                    print('DEBUG: Skipping %s with empty value' % dynprop.name)
                 continue
 
             # Values which contain classes starting with Array need
