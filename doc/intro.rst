@@ -13,6 +13,10 @@ manually (**make sure you read the notes below on suds 0.4**)::
     $ hg clone https://jkinred@bitbucket.org/jkinred/psphere
     $ cd psphere
     $ sudo python setup.py install
+    $ ./examples/connect.py --url https://yourserver/sdk --username youruser --password yourpass
+    Successfully connected to https://yourserver/sdk
+    Server time is 2010-09-05 00:14:06.037575
+
 
 
 Prerequisites
@@ -28,7 +32,8 @@ The suds SOAP library is used for comms with the vSphere server. The 0.4 beta
 is required which isn't in PyPI at time of writing. You can download and
 install it yourself from the `the suds website`_::
 
-    $ tar -zxvf python-suds-0.4.tar.gz
+    $ wget https://fedorahosted.org/releases/s/u/suds/python-suds-0.4.tar.gz
+    $ tar -zxf python-suds-0.4.tar.gz
     $ cd python-suds-0.4
     $ sudo python setup.py install
 
