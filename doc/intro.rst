@@ -38,8 +38,15 @@ install it yourself from the `the suds website`_::
 Usage
 -----
 
-See :doc:`tutorial` for an introduction.  It also contains links to more
-advanced sections in this manual for the topics it discusses.
+See :doc:`tutorial` for an introductory tutorial. It also contains links
+to more advanced sections in this manual.
+
+
+Examples
+--------
+
+* :doc:`hostsystem`
+* :doc:`datastore`
 
 
 Alternatives
