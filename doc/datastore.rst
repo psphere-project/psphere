@@ -10,9 +10,11 @@ Finding a datastore in a ComputeResource
 You can find a datastore in a ComputeResource using the **find_datastore**
 convenience method::
 
-    >>> from psphere.vim25 import Vim, ComputeResource
-    >>> vim = Vim('https://localhost/sdk', 'Administrator', 'none')
-    >>> compute_resource = vim.find_entity_view(view_type='ComputeResource', filter={'name': 'My Cluster'})
+    >>> from psphere.vim25 import Vim
+    >>> vim = Vim('https://localhost/sdk')
+    >>> vim.login('Administrator', 'none')
+    >>> compute_resource = vim.find_entity_view(view_type='ComputeResource',
+                                                filter={'name': 'My Cluster'})
     >>> datastore = compute_resource.find_datastore(name='nas03')
     >>> datastore.update_view_data(properties=['summary'])
     >>> datastore.summary.name
@@ -27,9 +29,6 @@ Finding and querying all datastores in a ComputeResource
 You can find all datastores attached to a ComputeResource and iterate through
 them::
 
-    >>> from psphere.vim25 import Vim, ComputeResource
-    >>> vim = Vim('https://localhost/sdk', 'Administrator', 'none')
-    >>> compute_resource = vim.find_entity_view(view_type='ComputeResource', filter={'name': 'My Cluster'})
     >>> datastore = compute_resource.find_datastore(name='nas03')
     >>> compute_resource.update_view_data(properties=['datastore'])
     >>> datastores = vim.get_views(mors=compute_resource.datastore, properties=['summary'])
