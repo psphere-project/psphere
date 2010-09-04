@@ -16,16 +16,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-from psphere.vim25 import Vim, ObjectNotFoundError, ComputeResource
+from psphere.vim25 import ObjectNotFoundError
 from psphere.soap import VimFault
-from psphere.util import optionbuilder
+from psphere.scripting import BaseScript
 
-class PsphereScript(object):
-    def __init__(self, url, username, password):
-        self.vim = Vim(options.url)
-        self.vim.login(options.username, options.password)
-
-class VMCreate(PsphereScript):
+class VMCreate(BaseScript):
     def create_vm(self, compute_resource, datastore, disksize, nics, name,
                   memory, num_cpus, guest_id, host=None):
         # If the host is not set, use the ComputeResource as the target
@@ -40,7 +35,7 @@ class VMCreate(PsphereScript):
                                                 filter={'name': host})
             # Retrieve the properties we're going to use
             target.update_view_data(['name', 'datastore', 'network', 'parent'])
-            host_cr = ComputeResource(mo_ref=target.parent, vim=self.vim)
+            host_cr = self.vim.get_view(mo_ref=target.parent, vim=self.vim)
             host_cr.update_view_data(properties=['resourcePool'])
             resource_pool = host_cr.resourcePool
 
@@ -109,8 +104,8 @@ class VMCreate(PsphereScript):
         dc.update_view_data(properties=['vmFolder'])
 
         try:
-            self.invoke('CreateVM', _this=dc.vmFolder, config=vm_config_spec,
-                        pool=resource_pool)
+            self.vim.invoke_task('CreateVM_Task', _this=dc.vmFolder,
+                                 config=vm_config_spec, pool=resource_pool)
         except VimFault, e:
             print('Failed to create %s: ' % e)
             sys.exit()
@@ -191,17 +186,15 @@ class VMCreate(PsphereScript):
 
         return disk_spec
 
-def main(options):
-    vmcreate = VMCreate(options.url, options.username, options.password)
+def main():
+    vmc = VMCreate()
+    vmc.login()
     nic = {'network_name': 'AE_SDFDIE VLAN', 'type': 'VirtualE1000'}
-    vmcreate.create_vm(compute_resource='Application Engineering',
+    vmc.create_vm(compute_resource='Application Engineering',
                        datastore='nas03', disksize=12, nics=[nic],
                        name='test', memory=1024, num_cpus=1,
                        guest_id='rhel5Guest')
 
 if __name__ == '__main__':
-    ob = optionbuilder.OptionBuilder()
-    options = ob.get_options()
-
-    main(options)
+    main()
 

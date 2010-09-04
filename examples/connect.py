@@ -15,41 +15,41 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from psphere.vim25 import Vim
-from psphere.util import optionbuilder
+from psphere.scripting import BaseScript
 
-def connect(url, username, password):
-    """A simple connection test to login and print the server time.
+class Connect(BaseScript):
+    def connect(self):
+        """A simple connection test to login and print the server time.
 
-    Parameters
-    ----------
-    url : str
-        The URL of the ESX or VIC server. e.g. (https://bennevis/sdk)
-    username : str
-        The username to connect with.
-    password : str
-        The password to connect with.
+        Parameters
+        ----------
+        url : str
+            The URL of the ESX or VIC server. e.g. (https://bennevis/sdk)
+        username : str
+            The username to connect with.
+        password : str
+            The password to connect with.
 
-    Examples
-    --------
-    >>> import connect
-    >>> connect.connect('https://localhost/sdk', 'root', 'root')
-    Successfully connected to https://bennevis/sdk
-    Server time is 2010-08-26 23:53:38.003445
+        Examples
+        --------
+        >>> from psphere.scripts import Connect
+        >>> c = Connect()
+        >>> c.connect()
+        Successfully connected to https://bennevis/sdk
+        Server time is 2010-08-26 23:53:38.003445
 
-    """
-    vim = Vim(url)
-    vim.login(username, password)
-    curtime = vim.invoke('CurrentTime', _this=vim.service_instance)
-    print('Successfully connected to %s' % url)
-    print('Server time is %s' % curtime)
-    vim.logout()
+        """
+        self.login()
+        print('Successfully connected to %s' % self.options.url)
+        servertime = self.vim.invoke('CurrentTime',
+                                     _this=self.vim.service_instance)
+        print('Server time is %s' % servertime)
+        self.vim.logout()
 
-def main(options):
-    connect(options.url, options.username, options.password)
+def main():
+    c = Connect()
+    c.connect()
 
 if __name__ == '__main__':
-    ob = optionbuilder.OptionBuilder()
-    options = ob.get_options()
-    main(options)
+    main()
 
