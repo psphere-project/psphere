@@ -1,8 +1,8 @@
 HostSystem examples
 ===================
 
-This page provides examples for working with **HostSystem**'s. The examples
-accumulate as they go so make sure you reference the previous examples.
+This page provides examples for working with **HostSystem** views. The
+examples accumulate as they go so make sure you reference the previous examples.
 
 Finding a HostSystem
 --------------------
@@ -10,15 +10,13 @@ Finding a HostSystem
 Connect to the server and find the **HostSystem** view::
 
 
-    >>> from psphere.vim25 import Vim, Folder, Datacenter
+    >>> from psphere.vim25 import Vim
     >>> vim = Vim('https://localhost/sdk')
     >>> vim.login('Administrator', 'none')
-    >>> host_system = vim.find_entity_view(view_type='HostSystem',
-                                           filter={'name': 'k2.local'},
-                                           properties=['name', 'summary', 'vm'])
-    >>> host_system.name
+    >>> host_system = vim.find_entity_view(view_type='HostSystem', filter={'name': 'k2.local'}, properties=['name', 'summary', 'vm'])
+    >>> print(host_system.name)
     k2.local
-    >>> host_system.summary.hardware.model
+    >>> print(host_system.summary.hardware.model)
     Sun Fire X4440
 
 
@@ -41,30 +39,35 @@ First we use this to create a list of **VirtualMachine** views using the
 using the *properties* parameter.
 
 Then it's just a matter of using a for loop to iterate through them. Notice
-though, that we except NameError to catch any attributes that the server
+though, that we except AttributeError to catch any attributes that the server
 hasn't returned::
 
-    >>> host_system = vim.find_entity_view(view_type='HostSystem',
-                                           filter={'name': 'k2.local'},
-                                           properties=['vm'])
-    >>> vms = vim.get_views(mo_refs=host_system.vm, properties=['name', 'summary']
+    >>> host_system = vim.find_entity_view(view_type='HostSystem', filter={'name': 'k2.local'}, properties=['vm'])
+    >>> vms = vim.get_views(mo_refs=host_system.vm, properties=['name', 'summary'])
     >>> for vm in vms:
-    >>> try:
-    >>>     vm.name
-    >>>     vm.summary.config.memorySizeMB
-    >>> except NameError:
-    >>>     'No value'
+    >>>     try:
+    >>>         print(vm.name)
+    >>>         print(vm.summary.config.memorySizeMB)
+    >>>     except AttributeError:
+    >>>         print('No value')
+    >>>     print('---------')
     genesis
     2048
+    ---------
     sdv1sdfsas04
     'No value'
+    ---------
     pelmo
     4096
+    ---------
     sdi2brmapp01
     4096
+    ---------
     ssi5oamapp01
     4096
+    ---------
     twynam
     1024
+    ---------
     <truncated>
 
