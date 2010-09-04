@@ -24,8 +24,6 @@ class VimFault(Exception):
 
 class VimSoap(object):
     def __init__(self, url, debug=False):
-        if debug:
-            self.client = suds.client.Client('file:///home/jonathan/projects/Personal/psphere/resources/vimService.wsdl')
         self.client = suds.client.Client(url + '/vimService.wsdl')
         self.client.set_options(location=url)
 
@@ -49,14 +47,16 @@ class VimSoap(object):
             print('Unknown method: %s' % method)
             sys.exit()
         except urllib2.URLError, e:
-            pprint(e)
+            if debug:
+                pprint(e)
             print('A URL related error occurred while invoking the "%s" '
                   'method on the VIM server, this can be caused by '
                   'name resolution or connection problems.' % method)
             print('The underlying error is: %s' % e.reason[1])
             sys.exit()
         except suds.client.TransportError, e:
-            pprint(e)
+            if debug:
+                pprint(e)
             print('TransportError: %s' % e)
         except suds.WebFault, e:
             # Get the type of fault
