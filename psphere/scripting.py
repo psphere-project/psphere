@@ -83,8 +83,9 @@ class BaseScript(object):
         for opt in self.config_vars:
             if not getattr(options, opt):
                 # Try and use value from visdkrc
-                if opt in visdkrc_opts:
-                    setattr(options, opt, visdkrc_opts[opt])
+                if visdkrc_opts:
+                    if opt in visdkrc_opts:
+                        setattr(options, opt, visdkrc_opts[opt])
 
         # Ensure all the required options are set
         for opt in self.required_opts:
@@ -99,11 +100,13 @@ class BaseScript(object):
         except IOError, e:
             if e.errno == 2:
                 # Doesn't exist, ignore it
-                pass
+                return None
             elif e.errno == 13:
-                print('Permission denied opening %s' % self.visdkrc)
+                print('ERROR: Permission denied opening %s' % self.visdkrc)
+                return None
             else:
-                print('Could not open %s: %s' % (self.visdkrc, e.strerror))
+                print('ERROR: Could not open %s: %s' % (self.visdkrc, e.strerror))
+                return None
 
         lines = config.readlines()
         config.close()
