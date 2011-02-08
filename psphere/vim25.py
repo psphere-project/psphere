@@ -590,6 +590,7 @@ class Task(ExtensibleManagedObject):
 class ResourcePool(ManagedEntity):
     def __init__(self, mo_ref, vim):
         self.config = None
+        self.name = None
         self.owner = None
         self.resource_pool = []
         self.runtime = None
