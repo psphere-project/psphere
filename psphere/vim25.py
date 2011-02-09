@@ -453,16 +453,19 @@ class ManagedEntity(ExtensibleManagedObject):
         else:
             raise ObjectNotFoundError('No parent found for this instance')
 
+
 class Alarm(ExtensibleManagedObject):
     def __init__(self, mo_ref, vim):
         self.info = None
         ExtensibleManagedObject.__init__(self, mo_ref=mo_ref, vim=vim)
-        
+
+
 class AlarmManager(ManagedObject):
     def __init__(self, mo_ref, vim):
         self.defaultExpression = []
         self.description = None
         ManagedObject.__init__(self, mo_ref, vim)
+
 
 class AuthorizationManager(ManagedObject):
     def __init__(self, mo_ref, vim):
@@ -471,16 +474,6 @@ class AuthorizationManager(ManagedObject):
         self.role_list = []
         ManagedObject.__init__(self, mo_ref, vim)
 
-class Folder(ManagedEntity):
-    def __init__(self, mo_ref, vim):
-        self.childEntity = []
-        self.childType = []
-        ManagedEntity.__init__(self, mo_ref=mo_ref, vim=vim)
-
-class PropertyCollector(ManagedObject):
-    def __init__(self, mo_ref, vim):
-        self.filter = None
-        ManagedObject.__init__(self, mo_ref=mo_ref, vim=vim)
 
 class ComputeResource(ManagedEntity):
     def __init__(self, mo_ref, vim):
@@ -506,6 +499,7 @@ class ComputeResource(ManagedEntity):
 
         raise ObjectNotFoundError(error='No datastore matching %s' % name)
 
+
 class ClusterComputeResource(ComputeResource):
     def __init__(self, mo_ref, vim):
         self.actionHistory = []
@@ -515,6 +509,7 @@ class ClusterComputeResource(ComputeResource):
         self.migrationHistory = []
         self.recommendation = []
         ComputeResource.__init__(self, mo_ref, vim)
+
 
 class Datacenter(ManagedEntity):
     def __init__(self, mo_ref, vim):
@@ -538,6 +533,62 @@ class Datastore(ManagedEntity):
         self.vm = []
         ManagedEntity.__init__(self, mo_ref, vim)
 
+
+class Folder(ManagedEntity):
+    def __init__(self, mo_ref, vim):
+        self.childEntity = []
+        self.childType = []
+        ManagedEntity.__init__(self, mo_ref=mo_ref, vim=vim)
+
+
+class HostSystem(ManagedEntity):
+    def __init__(self, mo_ref, vim):
+        self.capability = None
+        self.config = None
+        self.configManager = None
+        self.datastore = []
+        self.datastoreBrowser = None
+        self.hardware = None
+        self.network = []
+        self.runtime = None
+        self.summary = None
+        self.systemResources = None
+        self.vm = []
+        ManagedEntity.__init__(self, mo_ref, vim)
+
+
+class Network(ManagedEntity):
+    def __init__(self, mo_ref, vim):
+        self.host = []
+        self.name = None
+        self.summary = None
+        self.vm = []
+        ManagedEntity.__init__(self, mo_ref, vim)
+
+
+class PropertyCollector(ManagedObject):
+    def __init__(self, mo_ref, vim):
+        self.filter = None
+        ManagedObject.__init__(self, mo_ref=mo_ref, vim=vim)
+
+
+class ResourcePool(ManagedEntity):
+    def __init__(self, mo_ref, vim):
+        self.config = None
+        self.owner = None
+        self.resource_pool = []
+        self.runtime = None
+        self.summary = None
+        self.vm = []
+        ManagedEntity.__init__(self, mo_ref=mo_ref, vim=vim)
+
+
+class Task(ExtensibleManagedObject):
+    def __init__(self, mo_ref, vim):
+        self.info = None
+        ExtensibleManagedObject.__init__(self, mo_ref=mo_ref, vim=vim)
+
+
 class VirtualMachine(ManagedEntity):
     def __init__(self, mo_ref, vim):
         self.capability = None
@@ -559,43 +610,6 @@ class VirtualMachine(ManagedEntity):
         self.summary = None
         ManagedEntity.__init__(self, mo_ref, vim)
 
-class HostSystem(ManagedEntity):
-    def __init__(self, mo_ref, vim):
-        self.capability = None
-        self.config = None
-        self.configManager = None
-        self.datastore = []
-        self.datastoreBrowser = None
-        self.hardware = None
-        self.network = []
-        self.runtime = None
-        self.summary = None
-        self.systemResources = None
-        self.vm = []
-        ManagedEntity.__init__(self, mo_ref, vim)
-
-class Network(ManagedEntity):
-    def __init__(self, mo_ref, vim):
-        self.host = []
-        self.name = None
-        self.summary = None
-        self.vm = []
-        ManagedEntity.__init__(self, mo_ref, vim)
-
-class Task(ExtensibleManagedObject):
-    def __init__(self, mo_ref, vim):
-        self.info = None
-        ExtensibleManagedObject.__init__(self, mo_ref=mo_ref, vim=vim)
-
-class ResourcePool(ManagedEntity):
-    def __init__(self, mo_ref, vim):
-        self.config = None
-        self.owner = None
-        self.resource_pool = []
-        self.runtime = None
-        self.summary = None
-        self.vm = []
-        ManagedEntity.__init__(self, mo_ref=mo_ref, vim=vim)
 
 classmap = {
     'Folder': Folder,
