@@ -243,6 +243,43 @@ class Vim(object):
             time.sleep(2)
             task.update_view_data(properties=['info'])
 
+    def find_entity_list(self, view_type, begin_entity=None, properties=[]):
+        """
+        Return a list of entities of the given type.
+
+        Parameters
+        ----------
+        view_type : str
+            The object for which we are retrieving the view.
+        begin_entity : ManagedObjectReference
+            If specified, the traversal is started at this MOR. If not
+            specified the search is started at the root folder.
+        """
+        kls = classmapper(view_type)
+        # Start the search at the root folder if no begin_entity was given
+        if not begin_entity:
+            begin_entity = self.service_content.rootFolder
+
+        property_spec = self.create_object('PropertySpec')
+        property_spec.type = view_type
+        property_spec.all = False
+        property_spec.pathSet = properties
+
+        pfs = self.get_search_filter_spec(begin_entity, property_spec)
+
+        # Retrieve properties from server and update entity
+        obj_contents = self.invoke('RetrieveProperties',
+                                   _this=self.property_collector,
+                                   specSet=pfs)
+
+        views = []
+        for obj_content in obj_contents:
+            view = kls(mo_ref=obj_content.obj, vim=self)
+            view.update_view_data(properties=properties)
+            views.append(view)
+
+        return views
+
     def find_entity_view(self, view_type, begin_entity=None, filter={},
                          properties=[]):
         """Return a new instance based on the search filter.
