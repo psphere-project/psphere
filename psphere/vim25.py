@@ -14,19 +14,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
+
 from psphere.soap import VimSoap, ManagedObjectReference
 
+
 class ObjectNotFoundError(Exception):
-    def __init__(self, error):
-        self.error = error
-    def __str__(self):
-        return repr(self.error)
+    pass
 
 class TaskFailed(Exception):
-    def __init__(self, error):
-        self.error = error
-    def __str__(self):
-        return repr(self.error)
+    pass
+
 
 class Vim(object):
     def __init__(self, url, auto_populate=True, debug=False):
