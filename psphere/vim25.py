@@ -590,13 +590,12 @@ class Task(ExtensibleManagedObject):
 class ResourcePool(ManagedEntity):
     def __init__(self, mo_ref, vim):
         self.config = None
-        self.name = None
         self.owner = None
         self.resource_pool = []
         self.runtime = None
         self.summary = None
         self.vm = []
-        ExtensibleManagedObject.__init__(self, mo_ref=mo_ref, vim=vim)
+        ManagedEntity.__init__(self, mo_ref=mo_ref, vim=vim)
 
 classmap = {
     'Folder': Folder,
