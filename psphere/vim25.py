@@ -331,6 +331,7 @@ class ServiceInstance(object):
         self.content = None
         self.serverClock = None
 
+
 class ManagedObject(object):
     """The base class which all managed object's derive from."""
     def __init__(self, mo_ref, vim):
@@ -399,6 +400,7 @@ class ManagedObject(object):
             else:
                 setattr(self, dynprop.name, dynprop.val)
 
+
 class ExtensibleManagedObject(ManagedObject):
     def __init__(self, mo_ref, vim):
         # Set the properties for this object
@@ -406,6 +408,7 @@ class ExtensibleManagedObject(ManagedObject):
         self.value = []
         # Init the base class
         ManagedObject.__init__(self, mo_ref, vim)
+
 
 class ManagedEntity(ExtensibleManagedObject):
     def __init__(self, mo_ref, vim):
