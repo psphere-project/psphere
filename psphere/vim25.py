@@ -54,9 +54,12 @@ class Vim(object):
         result = self.vsoap.invoke(method, _this=_this, **kwargs)
         return result
 
-    def create_object(self, type_):
+    def create_object(self, type_, **kwargs):
         """Create a SOAP object of the requested type."""
-        return self.vsoap.create(type_)
+        obj =  self.vsoap.create(type_)
+        for key, value in kwargs.items():
+            setattr(obj, key, value)
+        return obj
 
 #        Notes
 #        -----
