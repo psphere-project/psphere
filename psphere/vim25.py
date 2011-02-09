@@ -432,13 +432,13 @@ class ManagedEntity(ExtensibleManagedObject):
         # If the parent hasn't been set, use the parent of the
         # calling instance, if it exists
         if not parent:
-            if self.parent:
-                # Establish the type of object we need to create
-                kls = classmapper(self.parent._type)
-                parent = kls(mo_ref=self.parent, vim=self.vim)
-                parent.update_view_data(properties=['name', 'parent'])
-            else:
+            if not self.parent:
                 raise ObjectNotFoundError('No parent found for this instance')
+
+            # Establish the type of object we need to create
+            kls = classmapper(self.parent._type)
+            parent = kls(mo_ref=self.parent, vim=self.vim)
+            parent.update_view_data(properties=['name', 'parent'])
 
         if not parent.__class__.__name__ == 'Datacenter':
             # Create an instance of the parent class
