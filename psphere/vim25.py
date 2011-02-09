@@ -155,11 +155,10 @@ class Vim(object):
                       'host_vm_traversal_spec']
 
         # Create a selection spec for each of the strings specified above
-        selection_specs = []
-        for ss_string in ss_strings:
-            selection_spec = self.create_object('SelectionSpec')
-            selection_spec.name = ss_string
-            selection_specs.append(selection_spec)
+        selection_specs = [
+            self.create_object('SelectionSpec', name=ss_string)
+            for ss_string in ss_strings
+        ]
 
         # A traversal spec for deriving ResourcePool's from found VMs
         rpts = self.create_object('TraversalSpec')
