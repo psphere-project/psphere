@@ -233,7 +233,7 @@ class Vim(object):
         # TODO: This returns true when there is an error
         while True:
             if task.info.state == 'success':
-                return True
+                return task
             elif task.info.state == 'error':
                 # TODO: Handle error checking properly
                 raise TaskFailed(error=task.info.error.localizedMessage)
