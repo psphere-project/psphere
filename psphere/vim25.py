@@ -319,13 +319,14 @@ class Vim(object):
             if matched:
                 break
 
-        if matched:
-            view = kls(mo_ref=filtered_obj_content.obj, vim=self)
-            view.update_view_data(properties=properties)
-            return view
-        else:
+        if not matched:
             # There were no matches
             raise ObjectNotFoundError(error="No matching objects for filter")
+
+        view = kls(mo_ref=filtered_obj_content.obj, vim=self)
+        view.update_view_data(properties=properties)
+        return view
+
 
 class ServiceInstance(object):
     def __init__(self):
