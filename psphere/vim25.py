@@ -610,18 +610,18 @@ class VirtualMachine(ManagedEntity):
         ManagedEntity.__init__(self, mo_ref, vim)
 
 
-classmap = {
-    'Folder': Folder,
-    'ClusterComputeResource': ClusterComputeResource,
-    'ComputeResource': ComputeResource,
-    'Datacenter': Datacenter,
-    'Datastore': Datastore,
-    'HostSystem': HostSystem,
-    'Network': Network,
-    'ResourcePool': ResourcePool,
-    'VirtualMachine': VirtualMachine,
-}
+classmap = dict((x.__name__, x) for x in (
+    ClusterComputeResource,
+    ComputeResource,
+    Datacenter,
+    Datastore,
+    Folder,
+    HostSystem,
+    Network,
+    ResourcePool,
+    VirtualMachine,
+))
+
 
 def classmapper(name):
     return classmap[name]
-
