@@ -560,7 +560,6 @@ class HostSystem(ManagedEntity):
 class Network(ManagedEntity):
     def __init__(self, mo_ref, vim):
         self.host = []
-        self.name = None
         self.summary = None
         self.vm = []
         ManagedEntity.__init__(self, mo_ref, vim)
