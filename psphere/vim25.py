@@ -514,14 +514,13 @@ class ClusterComputeResource(ComputeResource):
 class Datacenter(ManagedEntity):
     def __init__(self, mo_ref, vim):
         self.datastore = []
-        # TODO: vSphere API 4.0
         self.datastoreFolder = None
         self.hostFolder = None
         self.network = []
-        # TODO: vSphere API 4.0
         self.networkFolder = None
         self.vmFolder = None
         ManagedEntity.__init__(self, mo_ref, vim)
+
 
 class Datastore(ManagedEntity):
     def __init__(self, mo_ref, vim):
@@ -597,14 +596,12 @@ class VirtualMachine(ManagedEntity):
         self.guest = None
         self.guestHeartbeatStatus = None
         self.layout = None
-        # TODO: vSphere API 4.0
         self.layoutEx = None
         self.network = []
         self.resourceConfig = None
         self.resourcePool = None
         self.runtime = None
         self.snapshot = None
-        # TODO: vSphere API 4.0
         self.storage = None
         self.summary = None
         ManagedEntity.__init__(self, mo_ref, vim)
