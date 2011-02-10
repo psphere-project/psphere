@@ -238,7 +238,7 @@ class Vim(object):
                 return task
             elif task.info.state == 'error':
                 # TODO: Handle error checking properly
-                raise TaskFailed(error=task.info.error.localizedMessage)
+                raise TaskFailed(task.info.error.localizedMessage)
 
             # TODO: Implement progresscallbackfunc
             # Sleep two seconds and then refresh the data from the server
