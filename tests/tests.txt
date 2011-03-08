@@ -1,0 +1,1 @@
+# Test that when the session hasn't been authenticated that a search fails.
