@@ -69,7 +69,7 @@ class VsphereServer(object):
 
     def get_view(self, mo_ref, properties=None):
         kls = classmapper(mo_ref._type)
-        view = kls(mo_ref=mo_ref, vim=self)
+        view = kls(mo_ref, self)
         # Update the instance with the data in object_content
         view.update_view_data(properties=properties)
 
@@ -123,8 +123,8 @@ class VsphereServer(object):
         views = []
         for object_content in object_contents:
             # Instantiate the class in the obj_content
-            view = (eval(str(object_content.obj._type))
-                    mo_ref=object_content.obj, vim=self))
+            view = (eval(str(object_content.obj._type)),
+                    object_content.obj, self)
             # Update the instance with the data in object_content
             view.set_view_data(object_content=object_content)
             views.append(view)
@@ -224,7 +224,7 @@ class VsphereServer(object):
             return None
 
         task_mo_ref = self.invoke(method=method, **kwargs)
-        task = Task(mo_ref=task_mo_ref, vim=self)
+        task = Task(task_mo_ref, self)
         task.update_view_data(properties=['info'])
         # TODO: This returns true when there is an error
         while True:
@@ -270,7 +270,7 @@ class VsphereServer(object):
 
         views = []
         for obj_content in obj_contents:
-            view = kls(mo_ref=obj_content.obj, vim=self)
+            view = kls(obj_content.obj, self)
             view.update_view_data(properties=properties)
             views.append(view)
 
@@ -322,7 +322,7 @@ class VsphereServer(object):
             print('WARNING: No filter specified, returning first match.')
             # If no filter is specified we just return the first item
             # in the list of returned objects
-            view = kls(mo_ref=obj_contents[0].obj, vim=self)
+            view = kls(obj_contents[0].obj, self)
             view.update_view_data(properties)
             return view
 
@@ -353,6 +353,6 @@ class VsphereServer(object):
             # There were no matches
             raise ObjectNotFoundError(error="No matching objects for filter")
 
-        view = kls(mo_ref=filtered_obj_content.obj, vim=self)
+        view = kls(filtered_obj_content.obj, self)
         view.update_view_data(properties=properties)
         return view
