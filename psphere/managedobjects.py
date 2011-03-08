@@ -129,7 +129,7 @@ class ManagedObject(object):
                 # At this point we should walk the entire "tree" and set
                 # any MOR's to Python classes
                 
-                if (dynprop.val.__class__.__class__ in classmap or
+                if (dynprop.val.__class__.__name__ in classmap or
                     dynprop.val.__class__.__name__ ==
                     "ManagedObjectReference" or 
                     dynprop.val.__class__.__name__ == "val"):
@@ -295,12 +295,12 @@ class ManagedEntity(ExtensibleManagedObject):
 
     @ReadOnlyCachedAttribute
     def parent(self):
-        result = self.vim.get_views(mo_refs=self._parent)
+        result = self.vim.get_views(self._parent)
         return result
 
     @ReadOnlyCachedAttribute
     def recentTask(self):
-        result = self.vim.get_views(mo_refs=self._recentTask)
+        result = self.vim.get_views(self._recentTask)
         return result
 
     def find_datacenter(self, parent=None):
@@ -395,7 +395,7 @@ class Datastore(ManagedEntity):
 
     @ReadOnlyCachedAttribute
     def vm(self):
-        result = self.vim.get_views(mo_refs=self._vm)
+        result = self.vim.get_views(self._vm)
         return result
 
 
@@ -445,22 +445,22 @@ class HostSystem(ManagedEntity):
 
     @ReadOnlyCachedAttribute
     def datastore(self):
-        result = self.vim.get_views(mo_refs=self._datastore)
+        result = self.vim.get_views(self._datastore)
         return result
 
     @ReadOnlyCachedAttribute
     def datastoreBrowser(self):
-        result = self.vim.get_views(mo_refs=self._datastoreBrowser)
+        result = self.vim.get_views(self._datastoreBrowser)
         return result
 
     @ReadOnlyCachedAttribute
     def network(self):
-        result = self.vim.get_views(mo_refs=self._network)
+        result = self.vim.get_views(self._network)
         return result
 
     @ReadOnlyCachedAttribute
     def vm(self):
-        result = self.vim.get_views(mo_refs=self._vm)
+        result = self.vim.get_views(self._vm)
         return result
 
 
@@ -513,22 +513,22 @@ class VirtualApp(ResourcePool):
 
     @ReadOnlyCachedAttribute
     def datastore(self):
-        result = self.vim.get_views(mo_refs=self._datastore)
+        result = self.vim.get_views(self._datastore)
         return result
 
     @ReadOnlyCachedAttribute
     def network(self):
-        result = self.vim.get_views(mo_refs=self._network)
+        result = self.vim.get_views(self._network)
         return result
 
     @ReadOnlyCachedAttribute
     def parentFolder(self):
-        result = self.vim.get_view(mo_refs=self._parentFolder)
+        result = self.vim.get_view(self._parentFolder)
         return result
 
     @ReadOnlyCachedAttribute
     def parentVApp(self):
-        result = self.vim.get_view(mo_refs=self._parentVApp)
+        result = self.vim.get_view(self._parentVApp)
         return result
 
 
