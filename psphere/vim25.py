@@ -21,9 +21,46 @@ from psphere.soap import VimSoap, ManagedObjectReference
 class ObjectNotFoundError(Exception):
     pass
 
+
 class TaskFailed(Exception):
     pass
 
+
+class ReadOnlyCachedAttribute(object):
+    """Retrieves attribute value from server and caches it in the instance.
+    Source: Python Cookbook
+    Author: Denis Otkidach http://stackoverflow.com/users/168352/denis-otkidach
+    This decorator allows you to create a property which can be computed once
+    and accessed many times.
+    """
+    def __init__(self, method, name=None):
+        self.method = method
+        self.name = name or method.__name__
+        self.__doc__ = method.__doc__
+
+    def __get__(self, inst, cls):
+        # If we're being accessed from the class itself, not from an object
+        if inst is None:
+            print("inst is None")
+            return self
+        # Else if the attribute already exists, return the existing value
+        elif self.name in inst.__dict__:
+            print("Using cached value for %s" % self.name)
+            return inst.__dict__[self.name]
+        # Else, calculate the desired value and set it
+        else:
+            print("Retrieving and caching value for %s" % self.name)
+            # TODO: Check if it's an array or a single value
+            result = self.method(inst)
+            # Set the object value to desired value
+            inst.__dict__[self.name] = result
+            return result
+
+    def __set__(self, inst, value):
+        raise AttributeError("%s is read-only" % self.name)
+
+    def __delete__(self, inst):
+        del inst.__dict__[self.name]
 
 class Vim(object):
     def __init__(self, url, auto_populate=True, debug=False):
@@ -435,9 +472,18 @@ class ManagedObject(object):
             if dynprop.val.__class__.__name__.startswith('Array'):
                 # suds returns a list containing a single item, which
                 # is another list. Use the first item which is the real list
-                setattr(self, dynprop.name, dynprop.val[0])
+                print(dynprop.val.__class__.__name__)
+                if dynprop.val.__class__.__name__ == 'ArrayOfManagedObjectReference':
+                    setattr(self, '_%s' % dynprop.name, dynprop.val[0])
+                else:
+                    setattr(self, dynprop.name, dynprop.val[0])
             else:
-                setattr(self, dynprop.name, dynprop.val)
+                if (dynprop.val.__class__.__name__ ==
+                    "ManagedObjectReference" or
+                    dynprop.val.__class__.__name__ == "val"):
+                    setattr(self, '_%s' % dynprop.name, dynprop.val)
+                else:
+                    setattr(self, dynprop.name, dynprop.val)
 
 
 class ExtensibleManagedObject(ManagedObject):
@@ -460,12 +506,22 @@ class ManagedEntity(ExtensibleManagedObject):
         self.effectiveRole = []
         self.name = None
         self.overallStatus = None
-        self.parent = None
+        self._parent = None
         self.permission = []
-        self.recentTask = []
+        self._recentTask = []
         self.tag = []
         self.triggeredAlarmState = []
         ExtensibleManagedObject.__init__(self, mo_ref=mo_ref, vim=vim)
+
+    @ReadOnlyCachedAttribute
+    def parent(self):
+        result = self.vim.get_views(mo_refs=self._parent)
+        return result
+
+    @ReadOnlyCachedAttribute
+    def recentTask(self):
+        result = self.vim.get_views(mo_refs=self._recentTask)
+        return result
 
     def find_datacenter(self, parent=None):
         """Find the datacenter which this ManagedEntity belongs to."""
@@ -510,8 +566,8 @@ class AlarmManager(ManagedObject):
 class AuthorizationManager(ManagedObject):
     def __init__(self, mo_ref, vim):
         self.description = None
-        self.privilege_list = []
-        self.role_list = []
+        self.privilegeList = []
+        self.roleList = []
         ManagedObject.__init__(self, mo_ref, vim)
 
 
@@ -564,13 +620,23 @@ class Datacenter(ManagedEntity):
 
 class Datastore(ManagedEntity):
     def __init__(self, mo_ref, vim):
-        self.browser = None
+        self._browser = None
         self.capability = None
         self.host = []
         self.info = None
         self.summary = None
-        self.vm = []
+        self._vm = []
         ManagedEntity.__init__(self, mo_ref, vim)
+
+    @ReadOnlyCachedAttribute
+    def browser(self):
+        result = self.vim.get_view(mo_ref=self._browser)
+        return result
+
+    @ReadOnlyCachedAttribute
+    def vm(self):
+        result = self.vim.get_views(mo_refs=self._vm)
+        return result
 
 
 class Folder(ManagedEntity):
@@ -585,15 +651,35 @@ class HostSystem(ManagedEntity):
         self.capability = None
         self.config = None
         self.configManager = None
-        self.datastore = []
-        self.datastoreBrowser = None
+        self._datastore = []
+        self._datastoreBrowser = None
         self.hardware = None
-        self.network = []
+        self._network = []
         self.runtime = None
         self.summary = None
         self.systemResources = None
-        self.vm = []
+        self._vm = []
         ManagedEntity.__init__(self, mo_ref, vim)
+
+    @ReadOnlyCachedAttribute
+    def datastore(self):
+        result = self.vim.get_views(mo_refs=self._datastore)
+        return result
+
+    @ReadOnlyCachedAttribute
+    def datastoreBrowser(self):
+        result = self.vim.get_views(mo_refs=self._datastoreBrowser)
+        return result
+
+    @ReadOnlyCachedAttribute
+    def network(self):
+        result = self.vim.get_views(mo_refs=self._network)
+        return result
+
+    @ReadOnlyCachedAttribute
+    def vm(self):
+        result = self.vim.get_views(mo_refs=self._vm)
+        return result
 
 
 class Network(ManagedEntity):
