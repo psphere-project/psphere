@@ -1,3 +1,5 @@
+# Copyright 2010 Jonathan Kinred <jonathan.kinred@gmail.com>
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # he Free Software Foundation, either version 3 of the License, or
@@ -15,7 +17,7 @@ import time
 
 from psphere.soap import VimSoap, ManagedObjectReference
 from psphere.exceptions import TaskFailed
-from psphere.objects import *
+from psphere.managedobjects import *
 
 class VsphereServer(object):
     def __init__(self, url, auto_populate=True, debug=False):
@@ -26,8 +28,8 @@ class VsphereServer(object):
             logging.getLogger('suds.client').setLevel(logging.DEBUG)
         self.auto_populate = auto_populate
         self.vsoap = VimSoap(url)
-        self.service_instance = ManagedObjectReference(_type='ServiceInstance',
-                                                       value='ServiceInstance')
+        self.service_instance = ManagedObjectReference(
+            _type='ServiceInstance', value='ServiceInstance')
         self.service_content = self.vsoap.invoke('RetrieveServiceContent',
                                                  _this=self.service_instance)
         self.property_collector = self.service_content.propertyCollector
@@ -121,8 +123,8 @@ class VsphereServer(object):
         views = []
         for object_content in object_contents:
             # Instantiate the class in the obj_content
-            view = eval(str(object_content.obj._type))(mo_ref=object_content.obj,
-                                                       vim=self)
+            view = (eval(str(object_content.obj._type))
+                    mo_ref=object_content.obj, vim=self))
             # Update the instance with the data in object_content
             view.set_view_data(object_content=object_content)
             views.append(view)
