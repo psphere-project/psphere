@@ -207,7 +207,7 @@ class ExtensibleManagedObject(ManagedObject):
 class Alarm(ExtensibleManagedObject):
     def __init__(self, mo_ref, vim):
         self.info = None
-        ExtensibleManagedObject.__init__(self, mo_ref=mo_ref, vim=vim)
+        ExtensibleManagedObject.__init__(self, mo_ref, vim)
 
 
 class HostCpuSchedulerSystem(ExtensibleManagedObject):
@@ -291,7 +291,7 @@ class ManagedEntity(ExtensibleManagedObject):
         self._recentTask = []
         self.tag = []
         self.triggeredAlarmState = []
-        ExtensibleManagedObject.__init__(self, mo_ref=mo_ref, vim=vim)
+        ExtensibleManagedObject.__init__(self, mo_ref, vim)
 
     @ReadOnlyCachedAttribute
     def parent(self):
@@ -313,13 +313,13 @@ class ManagedEntity(ExtensibleManagedObject):
 
             # Establish the type of object we need to create
             kls = classmapper(self.parent._type)
-            parent = kls(mo_ref=self.parent, vim=self.vim)
+            parent = kls(self.parent, self.vim)
             parent.update_view_data(properties=['name', 'parent'])
 
         if not parent.__class__.__name__ == 'Datacenter':
             # Create an instance of the parent class
             kls = classmapper(parent.parent._type)
-            next_parent = kls(mo_ref=parent.parent, vim=self.vim)
+            next_parent = kls(parent.parent, self.vim)
             next_parent.update_view_data(properties=['name', 'parent'])
             # ...and recursively call this method
             parent = self.find_datacenter(parent=next_parent)
@@ -390,7 +390,7 @@ class Datastore(ManagedEntity):
 
     @ReadOnlyCachedAttribute
     def browser(self):
-        result = self.vim.get_view(mo_ref=self._browser)
+        result = self.vim.get_view(self._browser)
         return result
 
     @ReadOnlyCachedAttribute
@@ -425,7 +425,7 @@ class Folder(ManagedEntity):
     def __init__(self, mo_ref, vim):
         self.childEntity = []
         self.childType = []
-        ManagedEntity.__init__(self, mo_ref=mo_ref, vim=vim)
+        ManagedEntity.__init__(self, mo_ref, vim)
 
 
 class HostSystem(ManagedEntity):
@@ -498,7 +498,7 @@ class ResourcePool(ManagedEntity):
         self.runtime = None
         self.summary = None
         self.vm = []
-        ManagedEntity.__init__(self, mo_ref=mo_ref, vim=vim)
+        ManagedEntity.__init__(self, mo_ref, vim)
 
 
 class VirtualApp(ResourcePool):
@@ -587,20 +587,20 @@ class VirtualMachine(ManagedEntity):
 class ScheduledTask(ExtensibleManagedObject):
     def __init__(self, mo_ref, vim):
         self.info = None
-        ExtensibleManagedObject.__init__(self, mo_ref=mo_ref, vim=vim)
+        ExtensibleManagedObject.__init__(self, mo_ref, vim)
 
 
 class Task(ExtensibleManagedObject):
     def __init__(self, mo_ref, vim):
         self.info = None
-        ExtensibleManagedObject.__init__(self, mo_ref=mo_ref, vim=vim)
+        ExtensibleManagedObject.__init__(self, mo_ref, vim)
 
 
 class VirtualMachineSnapshot(ExtensibleManagedObject):
     def __init__(self, mo_ref, vim):
         self._childSnapshot = []
         self.config = None
-        ExtensibleManagedObject.__init__(self, mo_ref=mo_ref, vim=vim)
+        ExtensibleManagedObject.__init__(self, mo_ref, vim)
 
     @ReadOnlyCachedAttribute
     def childSnapshot(self):
@@ -839,7 +839,7 @@ class HostProfileManager(ProfileManager):
 class PropertyCollector(ManagedObject):
     def __init__(self, mo_ref, vim):
         self._filter = []
-        ManagedObject.__init__(self, mo_ref=mo_ref, vim=vim)
+        ManagedObject.__init__(self, mo_ref, vim)
 
     @ReadOnlyCachedAttribute
     def filter(self):
