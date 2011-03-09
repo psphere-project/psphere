@@ -295,7 +295,7 @@ class ManagedEntity(ExtensibleManagedObject):
 
     @ReadOnlyCachedAttribute
     def parent(self):
-        result = self.vim.get_views(self._parent)
+        result = self.vim.get_view(self._parent)
         return result
 
     @ReadOnlyCachedAttribute
