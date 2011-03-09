@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from psphere.exceptions import ObjectNotFoundError
+from psphere.errors import ObjectNotFoundError
 
 class ReadOnlyCachedAttribute(object):
     """Retrieves attribute value from server and caches it in the instance.
