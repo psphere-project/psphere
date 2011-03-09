@@ -16,7 +16,7 @@
 import time
 
 from psphere.soap import VimSoap, ManagedObjectReference
-from psphere.exceptions import TaskFailed
+from psphere.errors import TaskFailedError
 from psphere.managedobjects import *
 
 class VsphereServer(object):
@@ -68,9 +68,11 @@ class VsphereServer(object):
 #        costly to retrieve.
 
     def get_view(self, mo_ref, properties=None):
+        """Get a view of a vSphere managed object."""
+        # This maps the mo_ref into a psphere class and then instantiates it
         kls = classmapper(mo_ref._type)
         view = kls(mo_ref, self)
-        # Update the instance with the data in object_content
+        # Update the requested properties of the instance
         view.update_view_data(properties=properties)
 
         return view
@@ -122,9 +124,11 @@ class VsphereServer(object):
                                       specSet=pfs)
         views = []
         for object_content in object_contents:
-            # Instantiate the class in the obj_content
-            view = (eval(str(object_content.obj._type)),
-                    object_content.obj, self)
+            # This maps the type of managed object in object_content into
+            # a psphere class and then instantiates it with the mo_ref
+            # inside the object_content
+            kls = classmapper(object_content.obj._type)
+            view = kls(mo_ref, self)
             # Update the instance with the data in object_content
             view.set_view_data(object_content=object_content)
             views.append(view)
@@ -232,7 +236,7 @@ class VsphereServer(object):
                 return task
             elif task.info.state == 'error':
                 # TODO: Handle error checking properly
-                raise TaskFailed(task.info.error.localizedMessage)
+                raise TaskFailedError(task.info.error.localizedMessage)
 
             # TODO: Implement progresscallbackfunc
             # Sleep two seconds and then refresh the data from the server
@@ -313,6 +317,7 @@ class VsphereServer(object):
         pfs = self.get_search_filter_spec(begin_entity, property_spec)
 
         # Retrieve properties from server and update entity
+        #obj_contents = self.propertyCollector.RetrieveProperties(specSet=pfs)
         obj_contents = self.invoke('RetrieveProperties',
                                    _this=self.property_collector,
                                    specSet=pfs)
@@ -351,7 +356,7 @@ class VsphereServer(object):
 
         if not matched:
             # There were no matches
-            raise ObjectNotFoundError(error="No matching objects for filter")
+            raise ObjectNotFoundError("No matching objects for filter")
 
         view = kls(filtered_obj_content.obj, self)
         view.update_view_data(properties=properties)
