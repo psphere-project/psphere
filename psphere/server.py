@@ -15,11 +15,11 @@
 
 import time
 
-from psphere.soap import VimSoap, ManagedObjectReference
+from psphere import soap
 from psphere.errors import TaskFailedError
 from psphere.managedobjects import *
 
-class VsphereServer(object):
+class Server(object):
     def __init__(self, url, auto_populate=True, debug=False):
         self.debug = debug
         if self.debug:
@@ -27,25 +27,40 @@ class VsphereServer(object):
             logging.basicConfig(level=logging.INFO)
             logging.getLogger('suds.client').setLevel(logging.DEBUG)
         self.auto_populate = auto_populate
-        self.vsoap = VimSoap(url)
-        self.service_instance = ManagedObjectReference(
-            _type='ServiceInstance', value='ServiceInstance')
-        self.service_content = self.vsoap.invoke('RetrieveServiceContent',
-                                                 _this=self.service_instance)
-        self.property_collector = self.service_content.propertyCollector
+        self.client = soap.get_client(url)
+        mo_ref = soap.ManagedObjectReference(_type='ServiceInstance',
+                                             value='ServiceInstance')
+        self.si = ServiceInstance(mo_ref, self) 
+        self.sc = self.si.RetrieveServiceContent()
 
     def login(self, username, password):
-        self.vsoap.invoke('Login', _this=self.service_content.sessionManager,
-                          userName=username, password=password)
+        self.sc.sessionManager.Login(userName=username, password=password)
 
     def logout(self):
-        self.vsoap.invoke('Logout', _this=self.service_content.sessionManager)
+        self.sc.sessionManager.Logout()
 
     def invoke(self, method, _this, **kwargs):
-        if issubclass(_this.__class__, ManagedObject):
-            _this = _this.mo_ref
+        result = soap.invoke(self.client, method, _this=_this, **kwargs)
+        print(result.__class__)
+        # Return the resultant errrr.. to the caller
+        # For each property
+        if not hasattr(result, '__iter__'):
+            print("Result is not iterable")
+            return result
 
-        result = self.vsoap.invoke(method, _this=_this, **kwargs)
+        for (counter, property) in enumerate(result):
+            # Check if it's a subclass of ManagedObject
+            print('--------------')
+            print(property)
+            print('--------------')
+            if hasattr(property[1], '_type'):
+                print("It has _type attribute")
+                # If it is, then instantiate and populate a class of that type
+                kls = classmapper(property[1]._type)
+                replacement = kls(property[1], self)
+                # ...and replace the property in the result
+                result[property[0]] = replacement
+        print result
         return result
 
     def create_object(self, type_, **kwargs):
@@ -99,7 +114,7 @@ class VsphereServer(object):
         get_view : Get the view for a single managed object.
 
         """
-        property_spec = self.create_object('PropertySpec')
+        property_spec = soap.create(self.client, 'PropertySpec')
         # FIXME: Makes assumption about mo_refs being a list
         property_spec.type = str(mo_refs[0]._type)
         if not properties and self.auto_populate:
@@ -111,17 +126,19 @@ class VsphereServer(object):
 
         object_specs = []
         for mo_ref in mo_refs:
-            object_spec = self.create_object('ObjectSpec')
+            object_spec = soap.create(self.client, 'ObjectSpec')
             object_spec.obj = mo_ref
             object_specs.append(object_spec)
 
-        pfs = self.create_object('PropertyFilterSpec')
+        pfs = soap.create(self.client, 'PropertyFilterSpec')
         pfs.propSet = [property_spec]
         pfs.objectSet = object_specs
 
-        object_contents = self.invoke('RetrieveProperties',
-                                      _this=self.property_collector,
-                                      specSet=pfs)
+        object_contents = self.sc.propertyCollector.RetrieveProperties(
+            specSet=pfs)
+        print('@@@@@@@@@@@@@')
+        print(object_contents)
+        print('@@@@@@@@@@@@@')
         views = []
         for object_content in object_contents:
             # This maps the type of managed object in object_content into
@@ -154,53 +171,53 @@ class VsphereServer(object):
 
         # Create a selection spec for each of the strings specified above
         selection_specs = [
-            self.create_object('SelectionSpec', name=ss_string)
+            soap.create(self.client, 'SelectionSpec', name=ss_string)
             for ss_string in ss_strings
         ]
 
         # A traversal spec for deriving ResourcePool's from found VMs
-        rpts = self.create_object('TraversalSpec')
+        rpts = soap.create(self.client, 'TraversalSpec')
         rpts.name = 'resource_pool_traversal_spec'
         rpts.type = 'ResourcePool'
         rpts.path = 'resourcePool'
         rpts.selectSet = [selection_specs[0], selection_specs[1]]
 
         # A traversal spec for deriving ResourcePool's from found VMs
-        rpvts = self.create_object('TraversalSpec')
+        rpvts = soap.create(self.client, 'TraversalSpec')
         rpvts.name = 'resource_pool_vm_traversal_spec'
         rpvts.type = 'ResourcePool'
         rpvts.path = 'vm'
 
-        crrts = self.create_object('TraversalSpec')
+        crrts = soap.create(self.client ,'TraversalSpec')
         crrts.name = 'compute_resource_rp_traversal_spec'
         crrts.type = 'ComputeResource'
         crrts.path = 'resourcePool'
         crrts.selectSet = [selection_specs[0], selection_specs[1]]
 
-        crhts = self.create_object('TraversalSpec')
+        crhts = soap.create(self.client, 'TraversalSpec')
         crhts.name = 'compute_resource_host_traversal_spec'
         crhts.type = 'ComputeResource'
         crhts.path = 'host'
          
-        dhts = self.create_object('TraversalSpec')
+        dhts = soap.create(self.client, 'TraversalSpec')
         dhts.name = 'datacenter_host_traversal_spec'
         dhts.type = 'Datacenter'
         dhts.path = 'hostFolder'
         dhts.selectSet = [selection_specs[2]]
 
-        dvts = self.create_object('TraversalSpec')
+        dvts = soap.create(self.client, 'TraversalSpec')
         dvts.name = 'datacenter_vm_traversal_spec'
         dvts.type = 'Datacenter'
         dvts.path = 'vmFolder'
         dvts.selectSet = [selection_specs[2]]
 
-        hvts = self.create_object('TraversalSpec')
+        hvts = soap.create(self.client, 'TraversalSpec')
         hvts.name = 'host_vm_traversal_spec'
         hvts.type = 'HostSystem'
         hvts.path = 'vm'
         hvts.selectSet = [selection_specs[2]]
       
-        fts = self.create_object('TraversalSpec')
+        fts = soap.create(self.client, 'TraversalSpec')
         fts.name = 'folder_traversal_spec'
         fts.type = 'Folder'
         fts.path = 'childEntity'
@@ -209,12 +226,12 @@ class VsphereServer(object):
                           selection_specs[6], selection_specs[7],
                           selection_specs[1]]
 
-        obj_spec = self.create_object('ObjectSpec')
+        obj_spec = soap.create(self.client, 'ObjectSpec')
         obj_spec.obj = begin_entity
         obj_spec.selectSet = [fts, dvts, dhts, crhts, crrts,
                                rpts, hvts, rpvts]
 
-        pfs = self.create_object('PropertyFilterSpec')
+        pfs = soap.create(self.client, 'PropertyFilterSpec')
         pfs.propSet = [property_spec]
         pfs.objectSet = [obj_spec]
         return pfs
@@ -258,9 +275,9 @@ class VsphereServer(object):
         kls = classmapper(view_type)
         # Start the search at the root folder if no begin_entity was given
         if not begin_entity:
-            begin_entity = self.service_content.rootFolder
+            begin_entity = self.sc.rootFolder.mo_ref
 
-        property_spec = self.create_object('PropertySpec')
+        property_spec = soap.create(self.client, 'PropertySpec')
         property_spec.type = view_type
         property_spec.all = False
         property_spec.pathSet = properties
@@ -268,9 +285,7 @@ class VsphereServer(object):
         pfs = self.get_search_filter_spec(begin_entity, property_spec)
 
         # Retrieve properties from server and update entity
-        obj_contents = self.invoke('RetrieveProperties',
-                                   _this=self.property_collector,
-                                   specSet=pfs)
+        obj_contents = self.sc.propertyCollector.RetrieveProperties(specSet=pfs)
 
         views = []
         for obj_content in obj_contents:
@@ -307,9 +322,9 @@ class VsphereServer(object):
         kls = classmapper(view_type)
         # Start the search at the root folder if no begin_entity was given
         if not begin_entity:
-            begin_entity = self.service_content.rootFolder
+            begin_entity = self.sc.rootFolder.mo_ref
 
-        property_spec = self.create_object('PropertySpec')
+        property_spec = soap.create(self.client, 'PropertySpec')
         property_spec.type = view_type
         property_spec.all = False
         property_spec.pathSet = filter.keys()
@@ -318,9 +333,7 @@ class VsphereServer(object):
 
         # Retrieve properties from server and update entity
         #obj_contents = self.propertyCollector.RetrieveProperties(specSet=pfs)
-        obj_contents = self.invoke('RetrieveProperties',
-                                   _this=self.property_collector,
-                                   specSet=pfs)
+        obj_contents = self.sc.propertyCollector.RetrieveProperties(specSet=pfs)
 
         # TODO: Implement filtering
         if not filter:

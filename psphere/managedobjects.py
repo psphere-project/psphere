@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from psphere import soap
 from psphere.errors import ObjectNotFoundError
 
 class ReadOnlyCachedAttribute(object):
@@ -54,40 +55,39 @@ class ReadOnlyCachedAttribute(object):
 
 class ManagedObject(object):
     """The base class which all managed object's derive from."""
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         """Create a new instance.
         
         Parameters
         ----------
         mo_ref : ManagedObjectReference
             The managed object reference used to create this instance
-        vim: Vim
-            A reference back to the Vim object, which we use to make calls
+        server: server
+            A reference back to the server object, which we use to make calls
 
         """
         self.mo_ref = mo_ref
-        self.vim = vim
+        self.server = server
 
     def update_view_data(self, properties=None):
         """Update the local object from the server-side object."""
-        property_spec = self.vim.create_object('PropertySpec')
+        property_spec = soap.create(self.server.client, 'PropertySpec')
         property_spec.type = str(self.mo_ref._type)
-        if not properties and self.vim.auto_populate:
+        if not properties and self.server.auto_populate:
             property_spec.all = True
         else:
             property_spec.all = False
             property_spec.pathSet = properties
 
-        object_spec = self.vim.create_object('ObjectSpec')
+        object_spec = soap.create(self.server.client, 'ObjectSpec')
         object_spec.obj = self.mo_ref
 
-        pfs = self.vim.create_object('PropertyFilterSpec')
+        pfs = soap.create(self.server.client, 'PropertyFilterSpec')
         pfs.propSet = [property_spec]
         pfs.objectSet = [object_spec]
 
-        object_contents = self.vim.invoke('RetrieveProperties',
-                                          _this=self.vim.property_collector,
-                                          specSet=pfs)
+        object_contents = self.server.sc.propertyCollector.RetrieveProperties(
+            specSet=pfs)
         if not object_contents:
             # TODO: Improve error checking and reporting
             print('The view could not be updated.')
@@ -107,7 +107,7 @@ class ManagedObject(object):
                 continue
 
             if not len(dynprop.val):
-                if self.vim.debug:
+                if self.server.debug:
                     print('DEBUG: Skipping %s with empty value' % dynprop.name)
                 continue
 
@@ -140,47 +140,47 @@ class ManagedObject(object):
 
 # First list the classes which directly inherit from ManagedObject
 class AlarmManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.defaultExpression = []
         self.description = None
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class AuthorizationManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.description = None
         self.privilegeList = []
         self.roleList = []
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class CustomFieldsManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.field = []
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class CustomizationSpecManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.encryptionKey = None
         self.info = []
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class DiagnosticManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
-        ManagedObject.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class DistributedVirtualSwitchManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
-        ManagedObject.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class EnvironmentBrowser(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self._datastoreBrowser = None
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def datastoreBrowser(self):
@@ -189,48 +189,48 @@ class EnvironmentBrowser(ManagedObject):
 
 
 class EventManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.description = None
         self.latestEvent = None
         self.maxCollector = None
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class ExtensibleManagedObject(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         # Set the properties for this object
         self.availableField = []
         self.value = []
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class Alarm(ExtensibleManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.info = None
-        ExtensibleManagedObject.__init__(self, mo_ref, vim)
+        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class HostCpuSchedulerSystem(ExtensibleManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.hyperthreadInfo = None
-        ExtensibleManagedObject.__init__(self, mo_ref, vim)
+        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class HostFirewallSystem(ExtensibleManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.firewallInfo = None
-        ExtensibleManagedObject.__init__(self, mo_ref, vim)
+        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class HostMemorySystem(ExtensibleManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.consoleReservationInfo = None
         self.virtualMachineReservationInfo = None
-        ExtensibleManagedObject.__init__(self, mo_ref, vim)
+        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class HostNetworkSystem(ExtensibleManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.capabilites = None
         self.consoleIpRouteConfig = None
         self.dnsConfig = None
@@ -238,45 +238,45 @@ class HostNetworkSystem(ExtensibleManagedObject):
         self.networkConfig = None
         self.networkInfo = None
         self.offloadCapabilities = None
-        ExtensibleManagedObject.__init__(self, mo_ref, vim)
+        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class HostPciPassthruSystem(ExtensibleManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.pciPassthruInfo = []
-        ExtensibleManagedObject.__init__(self, mo_ref, vim)
+        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class HostServiceSystem(ExtensibleManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.serviceInfo = None
-        ExtensibleManagedObject.__init__(self, mo_ref, vim)
+        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class HostStorageSystem(ExtensibleManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.fileSystemVolumeInfo = None
         self.multipathStateInfo = None
         self.storageDeviceInfo = None
         self.systemFile = None
-        ExtensibleManagedObject.__init__(self, mo_ref, vim)
+        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class HostVirtualNicManager(ExtensibleManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.info = None
-        ExtensibleManagedObject.__init__(self, mo_ref, vim)
+        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class HostVMotionSystem(ExtensibleManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.ipConfig = None
         self.netConfig = None
-        ExtensibleManagedObject.__init__(self, mo_ref, vim)
+        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class ManagedEntity(ExtensibleManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.alarmActionsEnabled = []
         self.configIssue = []
         self.configStatus = None
@@ -291,16 +291,24 @@ class ManagedEntity(ExtensibleManagedObject):
         self._recentTask = []
         self.tag = []
         self.triggeredAlarmState = []
-        ExtensibleManagedObject.__init__(self, mo_ref, vim)
+        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def parent(self):
-        result = self.vim.get_view(self._parent)
+        if not self._parent:
+            self.update_view_data(properties=['parent'])
+            # If it is still empty, the server isn't giving us a value and
+            # we return the empty type of the property (None or [])
+            if not self._parent:
+                return self._parent
+
+        # At this stage we have something to work with
+        result = self.si.get_view(self._parent)
         return result
 
     @ReadOnlyCachedAttribute
     def recentTask(self):
-        result = self.vim.get_views(self._recentTask)
+        result = self.server.get_views(self._recentTask)
         return result
 
     def find_datacenter(self, parent=None):
@@ -313,13 +321,13 @@ class ManagedEntity(ExtensibleManagedObject):
 
             # Establish the type of object we need to create
             kls = classmapper(self.parent._type)
-            parent = kls(self.parent, self.vim)
+            parent = kls(self.parent, self.server)
             parent.update_view_data(properties=['name', 'parent'])
 
         if not parent.__class__.__name__ == 'Datacenter':
             # Create an instance of the parent class
             kls = classmapper(parent.parent._type)
-            next_parent = kls(parent.parent, self.vim)
+            next_parent = kls(parent.parent, self.server)
             next_parent.update_view_data(properties=['name', 'parent'])
             # ...and recursively call this method
             parent = self.find_datacenter(parent=next_parent)
@@ -331,7 +339,7 @@ class ManagedEntity(ExtensibleManagedObject):
 
 
 class ComputeResource(ManagedEntity):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.configurationEx = None
         self.datastore = []
         self.environmentBrowser = None
@@ -339,16 +347,17 @@ class ComputeResource(ManagedEntity):
         self.network = []
         self.resourcePool = None
         self.summary = None
-        ManagedEntity.__init__(self, mo_ref, vim)
+        ManagedEntity.__init__(self, mo_ref, server)
 
     def find_datastore(self, name):
         if not self.datastore:
             self.update_view_data(self.datastore)
 
-        datastores = self.vim.get_views(self.datastore, properties=['summary'])
+        datastores = self.server.get_views(self.datastore,
+                                           properties=['summary'])
         for datastore in datastores:
             if datastore.summary.name == name:
-                if self.vim.auto_populate:
+                if self.server.auto_populate:
                     datastore.update_view_data()
                 return datastore
 
@@ -356,29 +365,29 @@ class ComputeResource(ManagedEntity):
 
 
 class ClusterComputeResource(ComputeResource):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.actionHistory = []
         self.configuration = None
         self.drsFault = []
         self.drsRecommendation = []
         self.migrationHistory = []
         self.recommendation = []
-        ComputeResource.__init__(self, mo_ref, vim)
+        ComputeResource.__init__(self, mo_ref, server)
 
 
 class Datacenter(ManagedEntity):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.datastore = []
         self.datastoreFolder = None
         self.hostFolder = None
         self.network = []
         self.networkFolder = None
         self.vmFolder = None
-        ManagedEntity.__init__(self, mo_ref, vim)
+        ManagedEntity.__init__(self, mo_ref, server)
 
 
 class Datastore(ManagedEntity):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self._browser = None
         self.capability = None
         self.host = []
@@ -386,28 +395,28 @@ class Datastore(ManagedEntity):
         self.iormConfiguration = None
         self.summary = None
         self._vm = []
-        ManagedEntity.__init__(self, mo_ref, vim)
+        ManagedEntity.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def browser(self):
-        result = self.vim.get_view(self._browser)
+        result = self.server.get_view(self._browser)
         return result
 
     @ReadOnlyCachedAttribute
     def vm(self):
-        result = self.vim.get_views(self._vm)
+        result = self.server.get_views(self._vm)
         return result
 
 
 class DistributedVirtualSwitch(ManagedEntity):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.capability = None
         self.config = None
         self.networkResourcePool = []
         self._portgroup = []
         self.summary = None
         self.uuid = None
-        ManagedEntity.__init__(self, mo_ref, vim)
+        ManagedEntity.__init__(self, mo_ref, server)
 
 
     @ReadOnlyCachedAttribute
@@ -417,19 +426,19 @@ class DistributedVirtualSwitch(ManagedEntity):
 
 
 class VmwareDistributedVirtualSwitch(DistributedVirtualSwitch):
-    def __init__(self, mo_ref, vim):
-        DistributedVirtualSwitch.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        DistributedVirtualSwitch.__init__(self, mo_ref, server)
 
 
 class Folder(ManagedEntity):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.childEntity = []
         self.childType = []
-        ManagedEntity.__init__(self, mo_ref, vim)
+        ManagedEntity.__init__(self, mo_ref, server)
 
 
 class HostSystem(ManagedEntity):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.capability = None
         self.config = None
         self.configManager = None
@@ -441,99 +450,99 @@ class HostSystem(ManagedEntity):
         self.summary = None
         self.systemResources = None
         self._vm = []
-        ManagedEntity.__init__(self, mo_ref, vim)
+        ManagedEntity.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def datastore(self):
-        result = self.vim.get_views(self._datastore)
+        result = self.server.get_views(self._datastore)
         return result
 
     @ReadOnlyCachedAttribute
     def datastoreBrowser(self):
-        result = self.vim.get_views(self._datastoreBrowser)
+        result = self.server.get_view(self._datastoreBrowser)
         return result
 
     @ReadOnlyCachedAttribute
     def network(self):
-        result = self.vim.get_views(self._network)
+        result = self.server.get_views(self._network)
         return result
 
     @ReadOnlyCachedAttribute
     def vm(self):
-        result = self.vim.get_views(self._vm)
+        result = self.server.get_views(self._vm)
         return result
 
 
 class Network(ManagedEntity):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self._host = []
         self.summary = None
         self._vm = []
-        ManagedEntity.__init__(self, mo_ref, vim)
+        ManagedEntity.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def host(self):
-        result = self.vim.get_views(self._host)
+        result = self.server.get_views(self._host)
         return result
 
     @ReadOnlyCachedAttribute
     def vm(self):
-        result = self.vim.get_views(self._vm)
+        result = self.server.get_views(self._vm)
         return result
 
 
 class DistributedVirtualPortgroup(Network):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.config = None
         self.key = None
         self.portKeys = None
-        Network.__init__(self, mo_ref, vim)
+        Network.__init__(self, mo_ref, server)
 
 
 class ResourcePool(ManagedEntity):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.config = None
         self.owner = None
         self.resource_pool = []
         self.runtime = None
         self.summary = None
         self.vm = []
-        ManagedEntity.__init__(self, mo_ref, vim)
+        ManagedEntity.__init__(self, mo_ref, server)
 
 
 class VirtualApp(ResourcePool):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.childLink = []
         self._datastore = []
         self._network = []
         self._parentFolder = None
         self._parentVApp = None
         self.vAppConfig = None
-        ResourcePool.__init__(self, mo_ref, vim)
+        ResourcePool.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def datastore(self):
-        result = self.vim.get_views(self._datastore)
+        result = self.server.get_views(self._datastore)
         return result
 
     @ReadOnlyCachedAttribute
     def network(self):
-        result = self.vim.get_views(self._network)
+        result = self.server.get_views(self._network)
         return result
 
     @ReadOnlyCachedAttribute
     def parentFolder(self):
-        result = self.vim.get_view(self._parentFolder)
+        result = self.server.get_view(self._parentFolder)
         return result
 
     @ReadOnlyCachedAttribute
     def parentVApp(self):
-        result = self.vim.get_view(self._parentVApp)
+        result = self.server.get_view(self._parentVApp)
         return result
 
 
 class VirtualMachine(ManagedEntity):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.capability = None
         self.config = None
         self._datastore = []
@@ -551,108 +560,108 @@ class VirtualMachine(ManagedEntity):
         self.snapshot = None
         self.storage = None
         self.summary = None
-        ManagedEntity.__init__(self, mo_ref, vim)
+        ManagedEntity.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def datastore(self):
-        result = self.vim.get_views(self._datastore)
+        result = self.server.get_views(self._datastore)
         return result
 
     @ReadOnlyCachedAttribute
     def environmentBrowser(self):
-        result = self.vim.get_view(self._environmentBrowser)
+        result = self.server.get_view(self._environmentBrowser)
         return result
 
     @ReadOnlyCachedAttribute
     def network(self):
-        result = self.vim.get_views(self._network)
+        result = self.server.get_views(self._network)
         return result
 
     @ReadOnlyCachedAttribute
     def parentVApp(self):
-        result = self.vim.get_view(self._parentVApp)
+        result = self.server.get_view(self._parentVApp)
         return result
 
     @ReadOnlyCachedAttribute
     def resourcePool(self):
-        result = self.vim.get_view(self._resourcePool)
+        result = self.server.get_view(self._resourcePool)
         return result
 
     @ReadOnlyCachedAttribute
     def rootSnapshot(self):
-        result = self.vim.get_views(self._rootSnapshot)
+        result = self.server.get_views(self._rootSnapshot)
         return result
 
 
 class ScheduledTask(ExtensibleManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.info = None
-        ExtensibleManagedObject.__init__(self, mo_ref, vim)
+        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class Task(ExtensibleManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.info = None
-        ExtensibleManagedObject.__init__(self, mo_ref, vim)
+        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class VirtualMachineSnapshot(ExtensibleManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self._childSnapshot = []
         self.config = None
-        ExtensibleManagedObject.__init__(self, mo_ref, vim)
+        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def childSnapshot(self):
-        result = self.vim.get_views(self._childSnapshot)
+        result = self.server.get_views(self._childSnapshot)
         return result
 
 
 class ExtensionManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.extensionList = []
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class FileManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
-        ManagedObject.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class HistoryCollector(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.filter = None
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class EventHistoryCollector(HistoryCollector):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.latestPage = []
-        HistoryCollector.__init__(self, mo_ref, vim)
+        HistoryCollector.__init__(self, mo_ref, server)
 
 
 class TaskHistoryCollector(HistoryCollector):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.latestPage = []
-        HistoryCollector.__init__(self, mo_ref, vim)
+        HistoryCollector.__init__(self, mo_ref, server)
 
 
 class HostAutoStartManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.config = None
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class HostBootDeviceSystem(ManagedObject):
-    def __init__(self, mo_ref, vim):
-        ManagedObject.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class HostDatastoreBrowser(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self._datastore = []
         self.supportedType = []
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def datastore(self):
@@ -661,10 +670,10 @@ class HostDatastoreBrowser(ManagedObject):
 
 
 class HostDatastoreSystem(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.capabilities = None
         self._datastore = []
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def datastore(self):
@@ -673,71 +682,71 @@ class HostDatastoreSystem(ManagedObject):
 
 
 class HostDateTimeSystem(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.dateTimeInfo = None
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class HostDiagnosticSystem(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.activePartition = None
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class HostFirmwareSystem(ManagedObject):
-    def __init__(self, mo_ref, vim):
-        ManagedObject.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class HostHealthStatusSystem(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.runtime = None
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class HostKernelModuleSystem(ManagedObject):
-    def __init__(self, mo_ref, vim):
-        ManagedObject.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class HostLocalAccountManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
-        ManagedObject.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class HostPatchManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
-        ManagedObject.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class HostSnmpSystem(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.configuration = None
         self.limits = None
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class HttpNfcLease(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.error = None
         self.info = None
         self.initializeProgress = None
         self.state = None
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class IpPoolManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
-        ManagedObject.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class LicenseAssignmentManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
-        ManagedObject.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class LicenseManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.diagnostics = None
         self.evaluation = None
         self.featureInfo = []
@@ -746,7 +755,7 @@ class LicenseManager(ManagedObject):
         self.licenses = []
         self.source = None
         self.sourceAvailable = None
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def licenseAssignmentManager(self):
@@ -755,30 +764,30 @@ class LicenseManager(ManagedObject):
 
 
 class LocalizationManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.catalog = []
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class OptionManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.setting = []
         self.supportedOptions = []
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class OvfManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
-        ManagedObject.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class PerformanceManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
-        ManagedObject.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class Profile(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.complianceStatus = None
         self.config = None
         self.createdTime = None
@@ -786,7 +795,7 @@ class Profile(ManagedObject):
         self._entity = []
         self.modifiedTime = None
         self.name = None
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def entity(self):
@@ -795,14 +804,14 @@ class Profile(ManagedObject):
 
 
 class ClusterProfile(Profile):
-    def __init__(self, mo_ref, vim):
-        Profile.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        Profile.__init__(self, mo_ref, server)
 
 
 class HostProfile(Profile):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self._referenceHost = None
-        Profile.__init__(self, mo_ref, vim)
+        Profile.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def referenceHost(self):
@@ -811,14 +820,14 @@ class HostProfile(Profile):
 
 
 class ProfileComplianceManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
-        ManagedObject.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class ProfileManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self._profile = []
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def profile(self):
@@ -827,19 +836,26 @@ class ProfileManager(ManagedObject):
 
 
 class ClusterProfileManager(ProfileManager):
-    def __init__(self, mo_ref, vim):
-        ProfileManager.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ProfileManager.__init__(self, mo_ref, server)
 
 
 class HostProfileManager(ProfileManager):
-    def __init__(self, mo_ref, vim):
-        ProfileManager.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ProfileManager.__init__(self, mo_ref, server)
 
 
 class PropertyCollector(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self._filter = []
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
+
+    def __getattr__(self, name):
+        def func(**kwargs):
+            result = self.server.invoke(name, self.mo_ref, **kwargs)
+            return result
+
+        return func
 
     @ReadOnlyCachedAttribute
     def filter(self):
@@ -848,22 +864,22 @@ class PropertyCollector(ManagedObject):
 
 
 class PropertyFilter(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.partialUpdates = None
         self.spec = None
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class ResourcePlanningManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
-        ManagedObject.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class ScheduledTaskManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.description = None
         self._scheduledTask = []
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def scheduledTask(self):
@@ -872,45 +888,48 @@ class ScheduledTaskManager(ManagedObject):
 
 
 class SearchIndex(ManagedObject):
-    def __init__(self, mo_ref, vim):
-        ManagedObject.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class ServiceInstance(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.capability = None
         self.content = None
         self.serverClock = None
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
+
+    def __getattr__(self, name):
+        def func(**kwargs):
+            result = self.server.invoke(name, self.mo_ref, **kwargs)
+            return result
+
+        return func
 
 
 class SessionManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.currentSession = None
         self.defaultLocale = None
         self.message = None
         self.messageLocaleList = None
         self.sessionList = None
         self.supportedLocaleList = None
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
     def __getattr__(self, name):
-        # All vsphere methods start in uppercase
-        if not name.istitle():
-            return
-
-        def func(*args, **kwargs):
-            self.vim.invoke(name, self, *args, **kwargs)
+        def func(**kwargs):
+            self.server.invoke(name, self.mo_ref, **kwargs)
 
         return func
 
 
 class TaskManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.description = None
         self.maxCollector = None
         self._recentTask = []
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def recentTask(self):
@@ -919,44 +938,44 @@ class TaskManager(ManagedObject):
 
 
 class UserDirectory(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.domainList = None
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class View(ManagedObject):
-    def __init__(self, mo_ref, vim):
-        ManagedObject.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class ManagedObjectView(View):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self.view = []
-        View.__init__(self, mo_ref, vim)
+        View.__init__(self, mo_ref, server)
 
 
 class ContainerView(ManagedObjectView):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self._container = None
         self.recursive = None
         self.type = None
-        ManagedObjectView.__init__(self, mo_ref, vim)
+        ManagedObjectView.__init__(self, mo_ref, server)
 
 
 class InventoryView(ManagedObjectView):
-    def __init__(self, mo_ref, vim):
-        ManagedObjectView.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ManagedObjectView.__init__(self, mo_ref, server)
 
 
 class ListView(ManagedObjectView):
-    def __init__(self, mo_ref, vim):
-        ManagedObjectView.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ManagedObjectView.__init__(self, mo_ref, server)
 
 
 class ViewManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         self._viewList = []
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def viewList(self):
@@ -965,24 +984,24 @@ class ViewManager(ManagedObject):
 
 
 class VirtualDiskManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
-        ManagedObject.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class VirtualizationManager(ManagedObject):
-    def __init__(self, mo_ref, vim):
+    def __init__(self, mo_ref, server):
         # TODO: raise DeprecatedWarning
-        ManagedObject.__init__(self, mo_ref, vim)
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class VirtualMachineCompatibilityChecker(ManagedObject):
-    def __init__(self, mo_ref, vim):
-        ManagedObject.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 class VirtualMachineProvisioningChecker(ManagedObject):
-    def __init__(self, mo_ref, vim):
-        ManagedObject.__init__(self, mo_ref, vim)
+    def __init__(self, mo_ref, server):
+        ManagedObject.__init__(self, mo_ref, server)
 
 
 classmap = dict((x.__name__, x) for x in (
@@ -1057,7 +1076,7 @@ classmap = dict((x.__name__, x) for x in (
     ScheduledTask,
     ScheduledTaskManager,
     SearchIndex,
-    ServiceInstance,
+    #ServiceInstance,
     SessionManager,
     Task,
     TaskHistoryCollector,
