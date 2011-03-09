@@ -15,5 +15,5 @@ class ObjectNotFoundError(Exception):
     pass
 
 
-class TaskFailed(Exception):
+class TaskFailedError(Exception):
     pass
