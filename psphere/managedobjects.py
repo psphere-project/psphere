@@ -108,7 +108,8 @@ class ManagedObject(object):
 
             if not len(dynprop.val):
                 if self.server.debug:
-                    print('DEBUG: Skipping %s with empty value' % dynprop.name)
+                    print('DEBUG: Skipping %s with empty value' %
+                          dynprop.name)
                 continue
 
             # Values which contain classes starting with Array need
@@ -141,46 +142,46 @@ class ManagedObject(object):
 # First list the classes which directly inherit from ManagedObject
 class AlarmManager(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(AlarmManager, self).__init__(self, mo_ref, server)
         self.defaultExpression = []
         self.description = None
-        ManagedObject.__init__(self, mo_ref, server)
 
 
 class AuthorizationManager(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(AuthorizationManager, self).__init__(self, mo_ref, server)
         self.description = None
         self.privilegeList = []
         self.roleList = []
-        ManagedObject.__init__(self, mo_ref, server)
 
 
 class CustomFieldsManager(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(CustomFieldsManager, self).__init__(self, mo_ref, server)
         self.field = []
-        ManagedObject.__init__(self, mo_ref, server)
 
 
 class CustomizationSpecManager(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(CustomizationSpecManager, self).__init__(self, mo_ref, server)
         self.encryptionKey = None
         self.info = []
-        ManagedObject.__init__(self, mo_ref, server)
 
 
 class DiagnosticManager(ManagedObject):
     def __init__(self, mo_ref, server):
-        ManagedObject.__init__(self, mo_ref, server)
+        super(DiagnosticManager, self).__init__(self, mo_ref, server)
 
 
 class DistributedVirtualSwitchManager(ManagedObject):
     def __init__(self, mo_ref, server):
-        ManagedObject.__init__(self, mo_ref, server)
+        super(DistributedVirtualSwitchManager, self).__init__(self, mo_ref, server)
 
 
 class EnvironmentBrowser(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(EnvironmentBrowser, self).__init__(self, mo_ref, server)
         self._datastoreBrowser = None
-        ManagedObject.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def datastoreBrowser(self):
@@ -190,47 +191,47 @@ class EnvironmentBrowser(ManagedObject):
 
 class EventManager(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(EventManager, self).__init__(self, mo_ref, server)
         self.description = None
         self.latestEvent = None
         self.maxCollector = None
-        ManagedObject.__init__(self, mo_ref, server)
 
 
 class ExtensibleManagedObject(ManagedObject):
     def __init__(self, mo_ref, server):
-        # Set the properties for this object
+        super(ExtensibleManagedObject, self).__init__(self, mo_ref, server)
         self.availableField = []
         self.value = []
-        ManagedObject.__init__(self, mo_ref, server)
 
 
 class Alarm(ExtensibleManagedObject):
     def __init__(self, mo_ref, server):
+        super(Alarm, self).__init__(self, mo_ref, server)
         self.info = None
-        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class HostCpuSchedulerSystem(ExtensibleManagedObject):
     def __init__(self, mo_ref, server):
+        super(HostCpuSchedulerSystem, self).__init__(self, mo_ref, server)
         self.hyperthreadInfo = None
-        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class HostFirewallSystem(ExtensibleManagedObject):
     def __init__(self, mo_ref, server):
+        super(HostFirewallSystem, self).__init__(self, mo_ref, server)
         self.firewallInfo = None
-        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class HostMemorySystem(ExtensibleManagedObject):
     def __init__(self, mo_ref, server):
+        super(HostMemorySystem, self).__init__(self, mo_ref, server)
         self.consoleReservationInfo = None
         self.virtualMachineReservationInfo = None
-        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class HostNetworkSystem(ExtensibleManagedObject):
     def __init__(self, mo_ref, server):
+        super(HostNetworkSystem, self).__init__(self, mo_ref, server)
         self.capabilites = None
         self.consoleIpRouteConfig = None
         self.dnsConfig = None
@@ -238,45 +239,45 @@ class HostNetworkSystem(ExtensibleManagedObject):
         self.networkConfig = None
         self.networkInfo = None
         self.offloadCapabilities = None
-        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class HostPciPassthruSystem(ExtensibleManagedObject):
     def __init__(self, mo_ref, server):
+        super(HostPciPassthruSystem, self).__init__(self, mo_ref, server)
         self.pciPassthruInfo = []
-        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class HostServiceSystem(ExtensibleManagedObject):
     def __init__(self, mo_ref, server):
+        super(HostServiceSystem, self).__init__(self, mo_ref, server)
         self.serviceInfo = None
-        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class HostStorageSystem(ExtensibleManagedObject):
     def __init__(self, mo_ref, server):
+        super(HostStorageSystem, self).__init__(self, mo_ref, server)
         self.fileSystemVolumeInfo = None
         self.multipathStateInfo = None
         self.storageDeviceInfo = None
         self.systemFile = None
-        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class HostVirtualNicManager(ExtensibleManagedObject):
     def __init__(self, mo_ref, server):
+        super(HostVirtualNicManager, self).__init__(self, mo_ref, server)
         self.info = None
-        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class HostVMotionSystem(ExtensibleManagedObject):
     def __init__(self, mo_ref, server):
+        super(HostVMotionSystem, self).__init__(self, mo_ref, server)
         self.ipConfig = None
         self.netConfig = None
-        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class ManagedEntity(ExtensibleManagedObject):
     def __init__(self, mo_ref, server):
+        super(ManagedEntity, self).__init__(self, mo_ref, server)
         self.alarmActionsEnabled = []
         self.configIssue = []
         self.configStatus = None
@@ -291,7 +292,6 @@ class ManagedEntity(ExtensibleManagedObject):
         self._recentTask = []
         self.tag = []
         self.triggeredAlarmState = []
-        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def parent(self):
@@ -595,21 +595,21 @@ class VirtualMachine(ManagedEntity):
 
 class ScheduledTask(ExtensibleManagedObject):
     def __init__(self, mo_ref, server):
+        super(ScheduledTask, self).__init__(self, mo_ref, server)
         self.info = None
-        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class Task(ExtensibleManagedObject):
     def __init__(self, mo_ref, server):
+        super(Task, self).__init__(self, mo_ref, server)
         self.info = None
-        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
 
 class VirtualMachineSnapshot(ExtensibleManagedObject):
     def __init__(self, mo_ref, server):
+        super(VirtualMachineSnapshot, self).__init__(self, mo_ref, server)
         self._childSnapshot = []
         self.config = None
-        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def childSnapshot(self):
@@ -619,19 +619,19 @@ class VirtualMachineSnapshot(ExtensibleManagedObject):
 
 class ExtensionManager(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(ExtensionManager, self).__init__(self, mo_ref, server)
         self.extensionList = []
-        ManagedObject.__init__(self, mo_ref, server)
 
 
 class FileManager(ManagedObject):
     def __init__(self, mo_ref, server):
-        ManagedObject.__init__(self, mo_ref, server)
+        super(FileManager, self).__init__(self, mo_ref, server)
 
 
 class HistoryCollector(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(HistoryCollector, self).__init__(self, mo_ref, server)
         self.filter = None
-        ManagedObject.__init__(self, mo_ref, server)
 
 
 class EventHistoryCollector(HistoryCollector):
@@ -649,19 +649,19 @@ class TaskHistoryCollector(HistoryCollector):
 class HostAutoStartManager(ManagedObject):
     def __init__(self, mo_ref, server):
         self.config = None
-        ManagedObject.__init__(self, mo_ref, server)
+        super(HostAutoStartManager, self).__init__(self, mo_ref, server)
 
 
 class HostBootDeviceSystem(ManagedObject):
     def __init__(self, mo_ref, server):
-        ManagedObject.__init__(self, mo_ref, server)
+        super(HostBootDeviceSystem, self).__init__(self, mo_ref, server)
 
 
 class HostDatastoreBrowser(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(HostDatastoreBrowser, self).__init__(self, mo_ref, server)
         self._datastore = []
         self.supportedType = []
-        ManagedObject.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def datastore(self):
@@ -671,9 +671,9 @@ class HostDatastoreBrowser(ManagedObject):
 
 class HostDatastoreSystem(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(HostDatastoreSystem, self).__init__(self, mo_ref, server)
         self.capabilities = None
         self._datastore = []
-        ManagedObject.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def datastore(self):
@@ -683,70 +683,71 @@ class HostDatastoreSystem(ManagedObject):
 
 class HostDateTimeSystem(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(HostDateTimeSystem, self).__init__(self, mo_ref, server)
         self.dateTimeInfo = None
-        ManagedObject.__init__(self, mo_ref, server)
 
 
 class HostDiagnosticSystem(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(HostDiagnosticSystem, self).__init__(self, mo_ref, server)
         self.activePartition = None
-        ManagedObject.__init__(self, mo_ref, server)
 
 
 class HostFirmwareSystem(ManagedObject):
     def __init__(self, mo_ref, server):
-        ManagedObject.__init__(self, mo_ref, server)
+        super(HostFirmwareSystem, self).__init__(self, mo_ref, server)
 
 
 class HostHealthStatusSystem(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(HostHealthStatusSystem, self).__init__(self, mo_ref, server)
         self.runtime = None
-        ManagedObject.__init__(self, mo_ref, server)
 
 
 class HostKernelModuleSystem(ManagedObject):
     def __init__(self, mo_ref, server):
-        ManagedObject.__init__(self, mo_ref, server)
+        super(HostKernelModuleSystem, self).__init__(self, mo_ref, server)
 
 
 class HostLocalAccountManager(ManagedObject):
     def __init__(self, mo_ref, server):
-        ManagedObject.__init__(self, mo_ref, server)
+        super(HostLocalAccountManager, self).__init__(self, mo_ref, server)
 
 
 class HostPatchManager(ManagedObject):
     def __init__(self, mo_ref, server):
-        ManagedObject.__init__(self, mo_ref, server)
+        super(HostPatchManager, self).__init__(self, mo_ref, server)
 
 
 class HostSnmpSystem(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(HostSnmpSystem, self).__init__(self, mo_ref, server)
         self.configuration = None
         self.limits = None
-        ManagedObject.__init__(self, mo_ref, server)
 
 
 class HttpNfcLease(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(HttpNfcLease, self).__init__(self, mo_ref, server)
         self.error = None
         self.info = None
         self.initializeProgress = None
         self.state = None
-        ManagedObject.__init__(self, mo_ref, server)
 
 
 class IpPoolManager(ManagedObject):
     def __init__(self, mo_ref, server):
-        ManagedObject.__init__(self, mo_ref, server)
+        super(IpPoolManager, self).__init__(self, mo_ref, server)
 
 
 class LicenseAssignmentManager(ManagedObject):
     def __init__(self, mo_ref, server):
-        ManagedObject.__init__(self, mo_ref, server)
+        super(LicenseAssignmentManager, self).__init__(self, mo_ref, server)
 
 
 class LicenseManager(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(LicenseManager, self).__init__(self, mo_ref, server)
         self.diagnostics = None
         self.evaluation = None
         self.featureInfo = []
@@ -755,7 +756,6 @@ class LicenseManager(ManagedObject):
         self.licenses = []
         self.source = None
         self.sourceAvailable = None
-        ManagedObject.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def licenseAssignmentManager(self):
@@ -765,29 +765,30 @@ class LicenseManager(ManagedObject):
 
 class LocalizationManager(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(LocalizationManager, self).__init__(self, mo_ref, server)
         self.catalog = []
-        ManagedObject.__init__(self, mo_ref, server)
 
 
 class OptionManager(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(OptionManager, self).__init__(self, mo_ref, server)
         self.setting = []
         self.supportedOptions = []
-        ManagedObject.__init__(self, mo_ref, server)
 
 
 class OvfManager(ManagedObject):
     def __init__(self, mo_ref, server):
-        ManagedObject.__init__(self, mo_ref, server)
+        super(OvfManager, self).__init__(self, mo_ref, server)
 
 
 class PerformanceManager(ManagedObject):
     def __init__(self, mo_ref, server):
-        ManagedObject.__init__(self, mo_ref, server)
+        super(PerformanceManager, self).__init__(self, mo_ref, server)
 
 
 class Profile(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(Profile, self).__init__(self, mo_ref, server)
         self.complianceStatus = None
         self.config = None
         self.createdTime = None
@@ -795,7 +796,6 @@ class Profile(ManagedObject):
         self._entity = []
         self.modifiedTime = None
         self.name = None
-        ManagedObject.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def entity(self):
@@ -821,13 +821,13 @@ class HostProfile(Profile):
 
 class ProfileComplianceManager(ManagedObject):
     def __init__(self, mo_ref, server):
-        ManagedObject.__init__(self, mo_ref, server)
+        super(ProfileComplianceManager, self).__init__(self, mo_ref, server)
 
 
 class ProfileManager(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(ProfileManager, self).__init__(self, mo_ref, server)
         self._profile = []
-        ManagedObject.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def profile(self):
@@ -847,8 +847,8 @@ class HostProfileManager(ProfileManager):
 
 class PropertyCollector(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(PropertyCollector, self).__init__(self, mo_ref, server)
         self._filter = []
-        ManagedObject.__init__(self, mo_ref, server)
 
     def __getattr__(self, name):
         def func(**kwargs):
@@ -865,21 +865,21 @@ class PropertyCollector(ManagedObject):
 
 class PropertyFilter(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(PropertyFilter, self).__init__(self, mo_ref, server)
         self.partialUpdates = None
         self.spec = None
-        ManagedObject.__init__(self, mo_ref, server)
 
 
 class ResourcePlanningManager(ManagedObject):
     def __init__(self, mo_ref, server):
-        ManagedObject.__init__(self, mo_ref, server)
+        super(ResourcePlanningManager, self).__init__(self, mo_ref, server)
 
 
 class ScheduledTaskManager(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(ScheduledTaskManager, self).__init__(self, mo_ref, server)
         self.description = None
         self._scheduledTask = []
-        ManagedObject.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def scheduledTask(self):
@@ -889,15 +889,15 @@ class ScheduledTaskManager(ManagedObject):
 
 class SearchIndex(ManagedObject):
     def __init__(self, mo_ref, server):
-        ManagedObject.__init__(self, mo_ref, server)
+        super(SearchIndex, self).__init__(self, mo_ref, server)
 
 
 class ServiceInstance(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(ServiceInstance, self).__init__(self, mo_ref, server)
         self.capability = None
         self.content = None
         self.serverClock = None
-        ManagedObject.__init__(self, mo_ref, server)
 
     def __getattr__(self, name):
         def func(**kwargs):
@@ -909,13 +909,13 @@ class ServiceInstance(ManagedObject):
 
 class SessionManager(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(SessionManager, self).__init__(self, mo_ref, server)
         self.currentSession = None
         self.defaultLocale = None
         self.message = None
         self.messageLocaleList = None
         self.sessionList = None
         self.supportedLocaleList = None
-        ManagedObject.__init__(self, mo_ref, server)
 
     def __getattr__(self, name):
         def func(**kwargs):
@@ -926,10 +926,10 @@ class SessionManager(ManagedObject):
 
 class TaskManager(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(TaskManager, self).__init__(self, mo_ref, server)
         self.description = None
         self.maxCollector = None
         self._recentTask = []
-        ManagedObject.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def recentTask(self):
@@ -939,13 +939,13 @@ class TaskManager(ManagedObject):
 
 class UserDirectory(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(UserDirectory, self).__init__(self, mo_ref, server)
         self.domainList = None
-        ManagedObject.__init__(self, mo_ref, server)
 
 
 class View(ManagedObject):
     def __init__(self, mo_ref, server):
-        ManagedObject.__init__(self, mo_ref, server)
+        super(View, self).__init__(self, mo_ref, server)
 
 
 class ManagedObjectView(View):
@@ -974,8 +974,8 @@ class ListView(ManagedObjectView):
 
 class ViewManager(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(ViewManager, self).__init__(self, mo_ref, server)
         self._viewList = []
-        ManagedObject.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def viewList(self):
@@ -985,23 +985,25 @@ class ViewManager(ManagedObject):
 
 class VirtualDiskManager(ManagedObject):
     def __init__(self, mo_ref, server):
-        ManagedObject.__init__(self, mo_ref, server)
+        super(VirtualDiskManager, self).__init__(self, mo_ref, server)
 
 
 class VirtualizationManager(ManagedObject):
     def __init__(self, mo_ref, server):
+        super(VirtualizationManager, self).__init__(self, mo_ref, server)
         # TODO: raise DeprecatedWarning
-        ManagedObject.__init__(self, mo_ref, server)
 
 
 class VirtualMachineCompatibilityChecker(ManagedObject):
     def __init__(self, mo_ref, server):
-        ManagedObject.__init__(self, mo_ref, server)
+        super(VirtualMachineCompatibilityChecker, self).__init__(self, mo_ref,
+                                                                 server)
 
 
 class VirtualMachineProvisioningChecker(ManagedObject):
     def __init__(self, mo_ref, server):
-        ManagedObject.__init__(self, mo_ref, server)
+        super(VirtualMachineProvisioningChecker, self).__init__(self, mo_ref,
+                                                                server)
 
 
 classmap = dict((x.__name__, x) for x in (
