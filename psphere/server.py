@@ -19,7 +19,7 @@ from psphere import soap
 from psphere.errors import TaskFailedError
 from psphere.managedobjects import *
 
-class Server(object):
+class ServiceInstance(object):
     def __init__(self, url, auto_populate=True, debug=False):
         self.debug = debug
         if self.debug:
@@ -28,8 +28,8 @@ class Server(object):
             logging.getLogger('suds.client').setLevel(logging.DEBUG)
         self.auto_populate = auto_populate
         self.client = soap.get_client(url)
-        mo_ref = soap.ManagedObjectReference(_type='ServiceInstance',
-                                             value='ServiceInstance')
+        self.mo_ref = soap.ManagedObjectReference(_type='ServiceInstance',
+                                                  value='ServiceInstance')
         self.si = ServiceInstance(mo_ref, self) 
         self.sc = self.si.RetrieveServiceContent()
 
@@ -39,20 +39,14 @@ class Server(object):
     def logout(self):
         self.sc.sessionManager.Logout()
 
-    def invoke(self, method, _this, **kwargs):
-        result = soap.invoke(self.client, method, _this=_this, **kwargs)
-        print(result.__class__)
-        # Return the resultant errrr.. to the caller
-        # For each property
-        if not hasattr(result, '__iter__'):
-            print("Result is not iterable")
-            return result
+    def find_and_destroy(self, property):
+        if not hasattr(property, '__iter__'):
+            return property
 
-        for (counter, property) in enumerate(result):
-            # Check if it's a subclass of ManagedObject
-            print('--------------')
+        for subprop in property:
+            print('@@@@@@@@@@@@@@@')
             print(property)
-            print('--------------')
+            print('@@@@@@@@@@@@@@@')
             if hasattr(property[1], '_type'):
                 print("It has _type attribute")
                 # If it is, then instantiate and populate a class of that type
@@ -60,7 +54,18 @@ class Server(object):
                 replacement = kls(property[1], self)
                 # ...and replace the property in the result
                 result[property[0]] = replacement
+
+    def invoke(self, method, _this, **kwargs):
+        result = soap.invoke(self.client, method, _this=_this, **kwargs)
+        print(result.__class__)
+        if not hasattr(result, '__iter__'):
+            print("Result is not iterable")
+            return result
+
+        # For each property
+        property = self.find_and_destroy(property)
         print result
+        # Return the modified result to the caller
         return result
 
     def create_object(self, type_, **kwargs):
