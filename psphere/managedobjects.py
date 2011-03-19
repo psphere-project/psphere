@@ -562,6 +562,12 @@ class VirtualMachine(ManagedEntity):
         self.storage = None
         self.summary = None
 
+    @classmethod
+    def from_server(cls, server, name):
+        # The caller is expected to catch an ObjectNotFoundError
+        obj = server.find_entity_view(cls.__name__, filter={'name': name})
+        return obj
+
     @ReadOnlyCachedAttribute
     def datastore(self):
         result = self.server.get_views(self._datastore)
