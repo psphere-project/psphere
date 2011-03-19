@@ -28,10 +28,10 @@ class DatastoreFiles(BaseScript):
     def list_files(self):
         for o in self.vim.find_entity_list('Datacenter', properties=['name', 'datastore']):
             print "Datacenter:", o.name
-            ds = self.vim.get_views(o.datastore, properties=['info', 'browser'])
+            ds = self.vim.get_views(o.datastore, properties=['name', 'browser'])
             for d in ds:
-                print "Datastore:", d.info.name
-                root_folder = "[%s] /" % d.info.name
+                print "Datastore:", d.name
+                root_folder = "[%s] /" % d.name
                 task = self.vim.invoke_task('SearchDatastoreSubFolders_Task',
                         _this=d.browser,
                         datastorePath=root_folder)
@@ -41,11 +41,8 @@ class DatastoreFiles(BaseScript):
                     # not a data object, so skip over it
                     for result in array_of_results[1:]:
                         for r in result:
-                            try:
-                                for f in r.file:
-                                    print "%s%s" % (r.folderPath, f.path)
-                            except AttributeError:
-                                pass
+                            for f in r.file:
+                                print "%s%s" % (r.folderPath, f.path)
 
 
 def main():
