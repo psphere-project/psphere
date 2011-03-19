@@ -19,7 +19,7 @@ from psphere import soap
 from psphere.errors import TaskFailedError
 from psphere.managedobjects import *
 
-class ServiceInstance(object):
+class Vim(object):
     def __init__(self, url, auto_populate=True, debug=False):
         self.debug = debug
         if self.debug:
@@ -28,15 +28,17 @@ class ServiceInstance(object):
             logging.getLogger('suds.client').setLevel(logging.DEBUG)
         self.auto_populate = auto_populate
         self.client = soap.get_client(url)
-        self.mo_ref = soap.ManagedObjectReference(_type='ServiceInstance',
-                                                  value='ServiceInstance')
-        self.si = ServiceInstance(mo_ref, self) 
+        si_mo_ref = soap.ManagedObjectReference(_type='ServiceInstance',
+                                                value='ServiceInstance')
+        self.si = ServiceInstance(si_mo_ref, self) 
         self.sc = self.si.RetrieveServiceContent()
 
     def login(self, username, password):
+        """Login to a vSphere server."""
         self.sc.sessionManager.Login(userName=username, password=password)
 
     def logout(self):
+        """Logout of a vSphere server."""
         self.sc.sessionManager.Logout()
 
     def find_and_destroy(self, property):
@@ -70,7 +72,7 @@ class ServiceInstance(object):
 
     def create_object(self, type_, **kwargs):
         """Create a SOAP object of the requested type."""
-        obj = self.vsoap.create(type_)
+        obj = soap.create(self.client, type_)
         for key, value in kwargs.items():
             setattr(obj, key, value)
         return obj
