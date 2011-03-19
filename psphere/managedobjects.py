@@ -340,6 +340,7 @@ class ManagedEntity(ExtensibleManagedObject):
 
 class ComputeResource(ManagedEntity):
     def __init__(self, mo_ref, server):
+        super(ComputeResource, self).__init__(mo_ref, server)
         self.configurationEx = None
         self.datastore = []
         self.environmentBrowser = None
@@ -347,7 +348,6 @@ class ComputeResource(ManagedEntity):
         self.network = []
         self.resourcePool = None
         self.summary = None
-        ManagedEntity.__init__(self, mo_ref, server)
 
     def find_datastore(self, name):
         if not self.datastore:
@@ -366,28 +366,29 @@ class ComputeResource(ManagedEntity):
 
 class ClusterComputeResource(ComputeResource):
     def __init__(self, mo_ref, server):
+        super(ClusterComputeResource, self).__init__(mo_ref, server)
         self.actionHistory = []
         self.configuration = None
         self.drsFault = []
         self.drsRecommendation = []
         self.migrationHistory = []
         self.recommendation = []
-        ComputeResource.__init__(self, mo_ref, server)
 
 
 class Datacenter(ManagedEntity):
     def __init__(self, mo_ref, server):
+        super(Datacenter, self).__init__(mo_ref, server)
         self.datastore = []
         self.datastoreFolder = None
         self.hostFolder = None
         self.network = []
         self.networkFolder = None
         self.vmFolder = None
-        ManagedEntity.__init__(self, mo_ref, server)
 
 
 class Datastore(ManagedEntity):
     def __init__(self, mo_ref, server):
+        super(Datastore, self).__init__(mo_ref, server)
         self._browser = None
         self.capability = None
         self.host = []
@@ -395,7 +396,6 @@ class Datastore(ManagedEntity):
         self.iormConfiguration = None
         self.summary = None
         self._vm = []
-        ManagedEntity.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def browser(self):
@@ -410,13 +410,13 @@ class Datastore(ManagedEntity):
 
 class DistributedVirtualSwitch(ManagedEntity):
     def __init__(self, mo_ref, server):
+        super(DistributedVirtualSwitch, self).__init__(mo_ref, server)
         self.capability = None
         self.config = None
         self.networkResourcePool = []
         self._portgroup = []
         self.summary = None
         self.uuid = None
-        ManagedEntity.__init__(self, mo_ref, server)
 
 
     @ReadOnlyCachedAttribute
@@ -427,18 +427,19 @@ class DistributedVirtualSwitch(ManagedEntity):
 
 class VmwareDistributedVirtualSwitch(DistributedVirtualSwitch):
     def __init__(self, mo_ref, server):
-        DistributedVirtualSwitch.__init__(self, mo_ref, server)
+        super(VmwareDistributedVirtualSwitch, self).__init__(mo_ref, server)
 
 
 class Folder(ManagedEntity):
     def __init__(self, mo_ref, server):
+        super(Folder, self).__init__(mo_ref, server)
         self.childEntity = []
         self.childType = []
-        ManagedEntity.__init__(self, mo_ref, server)
 
 
 class HostSystem(ManagedEntity):
     def __init__(self, mo_ref, server):
+        super(HostSystem, self).__init__(mo_ref, server)
         self.capability = None
         self.config = None
         self.configManager = None
@@ -450,7 +451,6 @@ class HostSystem(ManagedEntity):
         self.summary = None
         self.systemResources = None
         self._vm = []
-        ManagedEntity.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def datastore(self):
@@ -475,10 +475,10 @@ class HostSystem(ManagedEntity):
 
 class Network(ManagedEntity):
     def __init__(self, mo_ref, server):
+        super(Network, self).__init__(mo_ref, server)
         self._host = []
         self.summary = None
         self._vm = []
-        ManagedEntity.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def host(self):
@@ -493,32 +493,32 @@ class Network(ManagedEntity):
 
 class DistributedVirtualPortgroup(Network):
     def __init__(self, mo_ref, server):
+        super(DistributedVirtualPortgroup, self).__init__(mo_ref, server)
         self.config = None
         self.key = None
         self.portKeys = None
-        Network.__init__(self, mo_ref, server)
 
 
 class ResourcePool(ManagedEntity):
     def __init__(self, mo_ref, server):
+        super(ResourcePool, self).__init__(mo_ref, server)
         self.config = None
         self.owner = None
         self.resource_pool = []
         self.runtime = None
         self.summary = None
         self.vm = []
-        ManagedEntity.__init__(self, mo_ref, server)
 
 
 class VirtualApp(ResourcePool):
     def __init__(self, mo_ref, server):
+        super(VirtualApp, self).__init__(mo_ref, server)
         self.childLink = []
         self._datastore = []
         self._network = []
         self._parentFolder = None
         self._parentVApp = None
         self.vAppConfig = None
-        ResourcePool.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def datastore(self):
@@ -543,6 +543,7 @@ class VirtualApp(ResourcePool):
 
 class VirtualMachine(ManagedEntity):
     def __init__(self, mo_ref, server):
+        super(VirtualMachine, self).__init__(mo_ref, server)
         self.capability = None
         self.config = None
         self._datastore = []
@@ -560,7 +561,6 @@ class VirtualMachine(ManagedEntity):
         self.snapshot = None
         self.storage = None
         self.summary = None
-        ManagedEntity.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def datastore(self):
@@ -636,20 +636,20 @@ class HistoryCollector(ManagedObject):
 
 class EventHistoryCollector(HistoryCollector):
     def __init__(self, mo_ref, server):
+        super(EventHistoryCollector, self).__init__(mo_ref, server)
         self.latestPage = []
-        HistoryCollector.__init__(self, mo_ref, server)
 
 
 class TaskHistoryCollector(HistoryCollector):
     def __init__(self, mo_ref, server):
+        super(TaskHistoryCollector, self).__init__(mo_ref, server)
         self.latestPage = []
-        HistoryCollector.__init__(self, mo_ref, server)
 
 
 class HostAutoStartManager(ManagedObject):
     def __init__(self, mo_ref, server):
-        self.config = None
         super(HostAutoStartManager, self).__init__(self, mo_ref, server)
+        self.config = None
 
 
 class HostBootDeviceSystem(ManagedObject):
@@ -805,13 +805,13 @@ class Profile(ManagedObject):
 
 class ClusterProfile(Profile):
     def __init__(self, mo_ref, server):
-        Profile.__init__(self, mo_ref, server)
+        super(ClusterProfile, self).__init__(mo_ref, server)
 
 
 class HostProfile(Profile):
     def __init__(self, mo_ref, server):
+        super(HostProfile, self).__init__(mo_ref, server)
         self._referenceHost = None
-        Profile.__init__(self, mo_ref, server)
 
     @ReadOnlyCachedAttribute
     def referenceHost(self):
@@ -837,12 +837,12 @@ class ProfileManager(ManagedObject):
 
 class ClusterProfileManager(ProfileManager):
     def __init__(self, mo_ref, server):
-        ProfileManager.__init__(self, mo_ref, server)
+        super(ClusterProfileManager, self).__init__(mo_ref, server)
 
 
 class HostProfileManager(ProfileManager):
     def __init__(self, mo_ref, server):
-        ProfileManager.__init__(self, mo_ref, server)
+        super(HostProfileManager, self).__init__(mo_ref, server)
 
 
 class PropertyCollector(ManagedObject):
@@ -950,26 +950,26 @@ class View(ManagedObject):
 
 class ManagedObjectView(View):
     def __init__(self, mo_ref, server):
+        super(ManagedObjectView, self).__init__(mo_ref, server)
         self.view = []
-        View.__init__(self, mo_ref, server)
 
 
 class ContainerView(ManagedObjectView):
     def __init__(self, mo_ref, server):
+        super(ContainerView, self).__init__(mo_ref, server)
         self._container = None
         self.recursive = None
         self.type = None
-        ManagedObjectView.__init__(self, mo_ref, server)
 
 
 class InventoryView(ManagedObjectView):
     def __init__(self, mo_ref, server):
-        ManagedObjectView.__init__(self, mo_ref, server)
+        super(InventoryView, self).__init__(mo_ref, server)
 
 
 class ListView(ManagedObjectView):
     def __init__(self, mo_ref, server):
-        ManagedObjectView.__init__(self, mo_ref, server)
+        super(ListView, self).__init__(mo_ref, server)
 
 
 class ViewManager(ManagedObject):
