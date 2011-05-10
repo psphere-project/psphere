@@ -12,6 +12,7 @@ pSphere documentation contents
     errors
     datastore
     hostsystem
+    api
 
 
 Indices and tables

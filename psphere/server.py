@@ -1,18 +1,16 @@
-# Copyright 2010 Jonathan Kinred <jonathan.kinred@gmail.com>
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# he Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""                                                                             
+:mod:`psphere.server` - vSphere server access
+=============================================
 
+.. module:: server
+
+The main module for accessing a vSphere server.
+
+.. moduleauthor:: Jonathan Kinred <jonathan.kinred@gmail.com>
+.. copyright:: Copyright 2010-2011 Jonathan Kinred <jonathan.kinred@gmail.com>
+.. license: GPL, see LICENSE for details.
+
+"""
 import time
 
 from psphere import soap
@@ -21,6 +19,10 @@ from psphere.managedobjects import *
 
 class Vim(object):
     """Represents a VirtualCenter/ESX/ESXi server instance.
+
+    >>> from psphere.server import Vim
+    >>> vim = Vim(url="http//esx.foo.com/sdk")
+
     :param url: The url of the server. e.g. https://esx.foo.com/sdk
     :type url: str
     :param auto_populate: Whether to auto-populate all MOB properties.
@@ -44,6 +46,8 @@ class Vim(object):
 
     def login(self, username, password):
         """Login to a vSphere server.
+
+        >>> vim.login(username='Administrator', password='strongpass')
 
         :param username: The username to authenticate as.
         :type username: str
@@ -75,13 +79,17 @@ class Vim(object):
 
     def invoke(self, method, _this, **kwargs):
         """Invoke a method on the server.
+
+        >>> vim.invoke('CurrentTime', vim.si)
+
         :param method: The method to invoke, as found in the SDK.
         :type method: str
         :param _this: The managed object against which to invoke the \
         method.
         :type _this: ManagedObject
-        :param **kwargs: The arguments to pass to the method, as \
+        :param kwargs: The arguments to pass to the method, as \
         found in the SDK.
+        :type kwargs: TODO
 
         """
         result = soap.invoke(self.client, method, _this=_this, **kwargs)
@@ -99,10 +107,12 @@ class Vim(object):
     def create_object(self, type_, **kwargs):
         """Create a SOAP object of the requested type.
 
+        >>> vim.create_object('VirtualE1000')
+
         :param type_: The type of SOAP object to create.
         :type type_: str
-        :param **kwargs: TODO
-        :type **kwargs: TODO
+        :param kwargs: TODO
+        :type kwargs: TODO
 
         """
         obj = soap.create(self.client, type_)
@@ -151,8 +161,8 @@ class Vim(object):
         :param properties: The properties to retrieve in the views.
         :type properties: list
         :returns: A list of local instances representing the server-side \
-        :rtype: list of ManagedObject's
         managed objects.
+        :rtype: list of ManagedObject's
 
         """
         property_spec = soap.create(self.client, 'PropertySpec')
@@ -286,12 +296,12 @@ class Vim(object):
         return pfs
 
     def invoke_task(self, method, **kwargs):
-        """Execute a *_Task method and wait for it to complete.
+        """Execute a \*_Task method and wait for it to complete.
         
-        :param method: The *_Task method to invoke.
+        :param method: The \*_Task method to invoke.
         :type method: str
-        :param **kwargs: The arguments to pass to the method.
-        :type **kwargs: TODO
+        :param kwargs: The arguments to pass to the method.
+        :type kwargs: TODO
 
         """
         # Don't execute methods which don't return a Task object
@@ -317,13 +327,16 @@ class Vim(object):
             task.update_view_data(properties=['info'])
 
     def find_entity_list(self, view_type, begin_entity=None, properties=[]):
-        """Return a list of entities of the given type.
+        """Find all ManagedEntity's of the requested type.
 
-        view_type : str
-            The object for which we are retrieving the view.
-        begin_entity : ManagedObjectReference
-            If specified, the traversal is started at this MOR. If not
-            specified the search is started at the root folder.
+        :param view_type: The type of ManagedEntity's to find.
+        :type view_type: str
+        :param begin_entity: The MOR to start searching for the entity. \
+        The default is to start the search at the root folder.
+        :type begin_entity: ManagedObjectReference or None
+        :returns: A list of ManagedEntity's
+        :rtype: list
+
         """
         kls = classmapper(view_type)
         # Start the search at the root folder if no begin_entity was given
@@ -350,7 +363,7 @@ class Vim(object):
 
     def find_entity_view(self, view_type, begin_entity=None, filter={},
                          properties=[]):
-        """Return a new instance based on the search filter.
+        """Find a ManagedEntity of the requested type.
 
         Traverses the MOB looking for an entity matching the filter.
 
