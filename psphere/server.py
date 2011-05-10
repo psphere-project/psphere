@@ -20,6 +20,15 @@ from psphere.errors import TaskFailedError
 from psphere.managedobjects import *
 
 class Vim(object):
+    """Represents a VirtualCenter/ESX/ESXi server instance.
+    :param url: The url of the server. e.g. https://esx.foo.com/sdk
+    :type url: str
+    :param auto_populate: Whether to auto-populate all MOB properties.
+    :type auto_populate: bool
+    :param debug: Turn debug logging on.
+    :type debug: bool
+
+    """
     def __init__(self, url, auto_populate=True, debug=False):
         self.debug = debug
         if self.debug:
@@ -34,30 +43,47 @@ class Vim(object):
         self.sc = self.si.RetrieveServiceContent()
 
     def login(self, username, password):
-        """Login to a vSphere server."""
+        """Login to a vSphere server.
+
+        :param username: The username to authenticate as.
+        :type username: str
+        :param password: The password to authenticate with.
+        :type password: str
+
+        """
         self.sc.sessionManager.Login(userName=username, password=password)
 
     def logout(self):
         """Logout of a vSphere server."""
         self.sc.sessionManager.Logout()
 
-    def find_and_destroy(self, property):
-        if not hasattr(property, '__iter__'):
-            return property
-
-        for subprop in property:
-            print('@@@@@@@@@@@@@@@')
-            print(property)
-            print('@@@@@@@@@@@@@@@')
-            if hasattr(property[1], '_type'):
-                print("It has _type attribute")
-                # If it is, then instantiate and populate a class of that type
-                kls = classmapper(property[1]._type)
-                replacement = kls(property[1], self)
-                # ...and replace the property in the result
-                result[property[0]] = replacement
+#    def find_and_destroy(self, property):
+#        if not hasattr(property, '__iter__'):
+#            return property
+#
+#        for subprop in property:
+#            print('@@@@@@@@@@@@@@@')
+#            print(property)
+#            print('@@@@@@@@@@@@@@@')
+#            if hasattr(property[1], '_type'):
+#                print("It has _type attribute")
+#                # If it is, then instantiate and populate a class of that type
+#                kls = classmapper(property[1]._type)
+#                replacement = kls(property[1], self)
+#                # ...and replace the property in the result
+#                result[property[0]] = replacement
 
     def invoke(self, method, _this, **kwargs):
+        """Invoke a method on the server.
+        :param method: The method to invoke, as found in the SDK.
+        :type method: str
+        :param _this: The managed object against which to invoke the \
+        method.
+        :type _this: ManagedObject
+        :param **kwargs: The arguments to pass to the method, as \
+        found in the SDK.
+
+        """
         result = soap.invoke(self.client, method, _this=_this, **kwargs)
         print(result.__class__)
         if not hasattr(result, '__iter__'):
@@ -71,7 +97,14 @@ class Vim(object):
         return result
 
     def create_object(self, type_, **kwargs):
-        """Create a SOAP object of the requested type."""
+        """Create a SOAP object of the requested type.
+
+        :param type_: The type of SOAP object to create.
+        :type type_: str
+        :param **kwargs: TODO
+        :type **kwargs: TODO
+
+        """
         obj = soap.create(self.client, type_)
         for key, value in kwargs.items():
             setattr(obj, key, value)
@@ -90,7 +123,17 @@ class Vim(object):
 #        costly to retrieve.
 
     def get_view(self, mo_ref, properties=None):
-        """Get a view of a vSphere managed object."""
+        """Get a view of a vSphere managed object.
+        
+        :param mo_ref: The MOR to get a view of
+        :type mo_ref: ManagedObjectReference
+        :param properties: A list of properties to retrieve from the \
+        server
+        :type properties: list
+        :returns: A view representing the ManagedObjectReference.
+        :rtype: ManagedObject
+
+        """
         # This maps the mo_ref into a psphere class and then instantiates it
         kls = classmapper(mo_ref._type)
         view = kls(mo_ref, self)
@@ -102,23 +145,14 @@ class Vim(object):
     def get_views(self, mo_refs, properties=None):
         """Get a list of local view's for multiple managed objects.
 
-        Parameters
-        ----------
-        mo_refs : ManagedObjectReference
-            The list of ManagedObjectReference's that views are to
-            be created for.
-        properties : list
-            The properties to retrieve in the views.
-
-        Returns
-        -------
-        entities : list of instances (ManagedObject subclasses)
-            A list of local instances representing the server-side
-            managed objects.
-
-        See also
-        --------
-        get_view : Get the view for a single managed object.
+        :param mo_refs: The list of ManagedObjectReference's that views are \
+        to be created for.
+        :type mo_refs: ManagedObjectReference
+        :param properties: The properties to retrieve in the views.
+        :type properties: list
+        :returns: A list of local instances representing the server-side \
+        :rtype: list of ManagedObject's
+        managed objects.
 
         """
         property_spec = soap.create(self.client, 'PropertySpec')
@@ -163,7 +197,15 @@ class Vim(object):
         """Build a PropertyFilterSpec capable of full inventory traversal.
         
         By specifying all valid traversal specs we are creating a PFS that
-        can recursively select any object under the given enitity.
+        can recursively select any object under the given entity.
+
+        :param begin_entity: The place in the MOB to start the search.
+        :type begin_entity: ManagedEntity
+        :param property_spec: TODO
+        :type property_spec: TODO
+        :returns: A PropertyFilterSpec, suitable for recursively searching \
+        under the given ManagedEntity.
+        :rtype: PropertyFilterSpec
 
         """
         # The selection spec for additional objects we want to filter
@@ -244,7 +286,14 @@ class Vim(object):
         return pfs
 
     def invoke_task(self, method, **kwargs):
-        """Execute a task and wait for it to complete."""
+        """Execute a *_Task method and wait for it to complete.
+        
+        :param method: The *_Task method to invoke.
+        :type method: str
+        :param **kwargs: The arguments to pass to the method.
+        :type **kwargs: TODO
+
+        """
         # Don't execute methods which don't return a Task object
         if not method.endswith('_Task'):
             print('ERROR: invoke_task can only be used for methods which '
@@ -268,11 +317,8 @@ class Vim(object):
             task.update_view_data(properties=['info'])
 
     def find_entity_list(self, view_type, begin_entity=None, properties=[]):
-        """
-        Return a list of entities of the given type.
+        """Return a list of entities of the given type.
 
-        Parameters
-        ----------
         view_type : str
             The object for which we are retrieving the view.
         begin_entity : ManagedObjectReference
@@ -308,22 +354,17 @@ class Vim(object):
 
         Traverses the MOB looking for an entity matching the filter.
 
-        Parameters
-        ----------
-        view_type : str
-            The object for which we are retrieving the view.
-        begin_entity : ManagedObjectReference
-            If specified, the traversal is started at this MOR. If not
-            specified the search is started at the root folder.
-        filter : dict
-            Key/value pairs to filter the results. The key is a valid
-            parameter of the object type. The value is what that
-            parameter should match.
-
-        Returns
-        -------
-        object : object
-            A new instance of the requested object.
+        :param view_type: The type of ManagedEntity to find.
+        :type view_type: str
+        :param begin_entity: The MOR to start searching for the entity. \
+        The default is to start the search at the root folder.
+        :type begin_entity: ManagedObjectReference or None
+        :param filter: Key/value pairs to filter the results. The key is \
+        a valid parameter of the ManagedEntity type. The value is what \
+        that parameter should match.
+        :type filter: dict
+        :returns: If an entity is found, a ManagedEntity matching the search.
+        :rtype: ManagedEntity
 
         """
         kls = classmapper(view_type)
