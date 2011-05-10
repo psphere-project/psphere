@@ -326,7 +326,7 @@ class Vim(object):
             time.sleep(2)
             task.update_view_data(properties=['info'])
 
-    def find_entity_list(self, view_type, begin_entity=None, properties=[]):
+    def find_entity_list(self, view_type, begin_entity=None, properties=None):
         """Find all ManagedEntity's of the requested type.
 
         :param view_type: The type of ManagedEntity's to find.
@@ -338,6 +338,9 @@ class Vim(object):
         :rtype: list
 
         """
+        if properties is None:
+            properties = []
+
         kls = classmapper(view_type)
         # Start the search at the root folder if no begin_entity was given
         if not begin_entity:
@@ -362,7 +365,7 @@ class Vim(object):
         return views
 
     def find_entity_view(self, view_type, begin_entity=None, filter={},
-                         properties=[]):
+                         properties=None):
         """Find a ManagedEntity of the requested type.
 
         Traverses the MOB looking for an entity matching the filter.
@@ -380,6 +383,9 @@ class Vim(object):
         :rtype: ManagedEntity
 
         """
+        if properties is None:
+            properties = []
+
         kls = classmapper(view_type)
         # Start the search at the root folder if no begin_entity was given
         if not begin_entity:
