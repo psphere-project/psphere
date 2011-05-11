@@ -35,7 +35,7 @@ class VMCreate(BaseScript):
                                                 filter={'name': host})
             # Retrieve the properties we're going to use
             target.update_view_data(['name', 'datastore', 'network', 'parent'])
-            host_cr = self.vim.get_view(mo_ref=target.parent, vim=self.vim)
+            host_cr = self.vim.get_view(mo_ref=target.parent)
             host_cr.update_view_data(properties=['resourcePool'])
             resource_pool = host_cr.resourcePool
 
@@ -144,6 +144,7 @@ class VMCreate(BaseScript):
 
                 nic_spec = self.vim.create_object('VirtualDeviceConfigSpec')
                 nic_spec.device = new_nic
+                nic_spec.fileOperation = None
                 operation = (self.vim.
                              create_object('VirtualDeviceConfigSpecOperation'))
                 nic_spec.operation = (operation.add)
@@ -160,6 +161,7 @@ class VMCreate(BaseScript):
 
         spec = self.vim.create_object('VirtualDeviceConfigSpec')
         spec.device = controller
+        spec.fileOperation = None
         spec.operation = (self.vim.
                           create_object('VirtualDeviceConfigSpecOperation').add)
 
@@ -167,13 +169,15 @@ class VMCreate(BaseScript):
 
     def create_disk(self, datastore, disksize_kb):
         backing = (self.vim.create_object('VirtualDiskFlatVer2BackingInfo'))
+        backing.datastore = None
         backing.diskMode = 'persistent'
         backing.fileName = '[%s]' % datastore.summary.name
+        backing.thinProvisioned = True
 
         disk = self.vim.create_object('VirtualDisk')
         disk.backing = backing
         disk.controllerKey = 0
-        disk.key = 1
+        disk.key = 0
         disk.unitNumber = 0
         disk.capacityInKB = disksize_kb
 
