@@ -2,16 +2,14 @@
 A leaky wrapper for the underlying suds library.
 """
 
+import logging
 import sys
 import urllib2
 import suds
+
 from pprint import pprint
 
-import logging
-logging.basicConfig(level=logging.INFO)
-logging.getLogger('suds.client').setLevel(logging.DEBUG)
-#logging.getLogger('suds.wsdl').setLevel(logging.DEBUG)
-debug = True
+log = logging.getLogger(__name__)
 
 class VimFault(Exception):
     def __init__(self, fault):
@@ -23,10 +21,19 @@ class VimFault(Exception):
 
         Exception.__init__(self, '%s: %s' % (self.fault_type, self._fault_dict))
 
+def _init_logging(level=logging.INFO, handler=logging.StreamHandler):
+    """Sets the logging level of underlying suds.client."""
+    logger = logging.getLogger('suds.client')
+    logger.addHandler(handler)
+    logger.setLevel(level)
+    #logging.getLogger('suds.wsdl').setLevel(logging.DEBUG)
+
+
 def get_client(url):
     client = suds.client.Client(url + '/vimService.wsdl')
     client.set_options(location=url)
     return client
+
 
 def create(client, _type, **kwargs):
     """Create a suds object of the requested _type."""
@@ -35,13 +42,14 @@ def create(client, _type, **kwargs):
         setattr(obj, key, value)
     return obj
 
+
 def invoke(client, method, **kwargs):
     """Invoke a method on the underlying soap service."""
     try:
         # Proxy the method to the suds service
         result = getattr(client.service, method)(**kwargs)
     except AttributeError, e:
-        print('Unknown method: %s' % method)
+        log.critical('Unknown method: %s' % method)
         sys.exit()
     except urllib2.URLError, e:
         if debug:
@@ -73,6 +81,7 @@ def invoke(client, method, **kwargs):
         raise VimFault(fault)
 
     return result
+
 
 class ManagedObjectReference(suds.sudsobject.Property):
     """Custom class to replace the suds generated class, which lacks _type."""

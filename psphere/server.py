@@ -7,15 +7,17 @@
 The main module for accessing a vSphere server.
 
 .. moduleauthor:: Jonathan Kinred <jonathan.kinred@gmail.com>
-.. copyright:: Copyright 2010-2011 Jonathan Kinred <jonathan.kinred@gmail.com>
-.. license: GPL, see LICENSE for details.
 
 """
 import time
+import logging
 
+from psphere import config
 from psphere import soap
 from psphere.errors import TaskFailedError
 from psphere.managedobjects import *
+
+logger = logging.getLogger("psphere")
 
 class Vim(object):
     """Represents a VirtualCenter/ESX/ESXi server instance.
@@ -32,17 +34,30 @@ class Vim(object):
 
     """
     def __init__(self, url, auto_populate=True, debug=False):
-        self.debug = debug
-        if self.debug:
-            import logging
-            logging.basicConfig(level=logging.INFO)
-            logging.getLogger('suds.client').setLevel(logging.DEBUG)
+        self.url = url
         self.auto_populate = auto_populate
+        self.debug = debug
+        self.config = config.get_config()
+        # Setup logging
+        self._init_logging()
         self.client = soap.get_client(url)
         si_mo_ref = soap.ManagedObjectReference(_type='ServiceInstance',
                                                 value='ServiceInstance')
         self.si = ServiceInstance(si_mo_ref, self) 
         self.sc = self.si.RetrieveServiceContent()
+
+    def _init_logging(self):
+        """Initialize logging."""
+        if self.config["logging"]["destination"] == "CONSOLE":
+            lh = logging.StreamHandler()
+        else:
+            lh = logging.FileHandler(self.config["logging"]["destination"])
+        lh.setLevel(self.config["logging"]["level"])
+        logger.setLevel(self.config["logging"]["level"])
+        logger.addHandler(lh)
+        # Initialise logging for the SOAP module
+        soap._init_logging(self.config["logging"]["level"], lh)
+        logger.debug("Initialised logging")
 
     def login(self, username, password):
         """Login to a vSphere server.
@@ -55,27 +70,12 @@ class Vim(object):
         :type password: str
 
         """
+        logger.debug("Logging into server")
         self.sc.sessionManager.Login(userName=username, password=password)
 
     def logout(self):
         """Logout of a vSphere server."""
         self.sc.sessionManager.Logout()
-
-#    def find_and_destroy(self, property):
-#        if not hasattr(property, '__iter__'):
-#            return property
-#
-#        for subprop in property:
-#            print('@@@@@@@@@@@@@@@')
-#            print(property)
-#            print('@@@@@@@@@@@@@@@')
-#            if hasattr(property[1], '_type'):
-#                print("It has _type attribute")
-#                # If it is, then instantiate and populate a class of that type
-#                kls = classmapper(property[1]._type)
-#                replacement = kls(property[1], self)
-#                # ...and replace the property in the result
-#                result[property[0]] = replacement
 
     def invoke(self, method, _this, **kwargs):
         """Invoke a method on the server.
@@ -93,16 +93,59 @@ class Vim(object):
 
         """
         result = soap.invoke(self.client, method, _this=_this, **kwargs)
-        print(result.__class__)
         if not hasattr(result, '__iter__'):
-            print("Result is not iterable")
+            logger.debug("Result is not iterable")
             return result
 
-        # For each property
-        property = self.find_and_destroy(property)
-        print result
+        # We must traverse the result and convert any ManagedObjectReference
+        # to a psphere class, this will then be lazy initialised on use
+        logger.debug(result.__class__)
+        logger.debug("Result: %s" % result)
+        logger.debug("Length: %s" % len(result))
+        if type(result) == list:
+            new_result = []
+            for item in result:
+                new_result.append(self.walk_and_convert_sudsobject(item))
+        else:
+            new_result = self.walk_and_convert_sudsobject(result)
+            
+        #property = self.find_and_destroy(property)
+        #print result
         # Return the modified result to the caller
-        return result
+        return new_result
+
+    def walk_and_convert_sudsobject(self, sudsobject):
+        """Walks a sudsobject and converts MORs to psphere objects."""
+        import suds
+        logger.debug("Processing:")
+        logger.debug(sudsobject)
+        logger.debug("...with keylist:")
+        logger.debug(sudsobject.__keylist__)
+        # If the sudsobject that we're looking at has a _type key
+        # then create a class of that type and return it immediately
+        if "_type" in sudsobject.__keylist__:
+            kls = classmapper(sudsobject._type)
+            new_object = kls(sudsobject[1], self)
+            return new_object
+
+        new_object = sudsobject.__class__()
+        for obj in sudsobject:
+            if not issubclass(obj[1].__class__, suds.sudsobject.Object):
+                logger.debug("Not a sudsobject subclass, skipping")
+                setattr(new_object, obj[0], obj[1])
+                continue
+            logger.debug("Obj keylist: %s" % obj[1].__keylist__)
+            if "_type" in obj[1].__keylist__:
+                logger.debug("Would convert this node:")
+                logger.debug(obj[1])
+                kls = classmapper(obj[1]._type)
+                setattr(new_object, obj[0], kls(obj[1], self))
+            else:
+                logger.debug("Didn't find _type in:")
+                logger.debug(obj[1])
+                setattr(new_object, obj[0], self.walk_and_convert_sudsobject(obj[1]))
+
+        return new_object
 
     def create_object(self, type_, **kwargs):
         """Create a SOAP object of the requested type.
@@ -390,6 +433,7 @@ class Vim(object):
         # Start the search at the root folder if no begin_entity was given
         if not begin_entity:
             begin_entity = self.sc.rootFolder.mo_ref
+            logger.debug("Using %s" % self.sc.rootFolder.mo_ref)
 
         property_spec = soap.create(self.client, 'PropertySpec')
         property_spec.type = view_type
