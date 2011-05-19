@@ -21,65 +21,15 @@ from psphere.errors import ObjectNotFoundError
 
 logger = logging.getLogger("psphere")
 
-class ReadOnlyCachedAttribute(object):
-    """Retrieves attribute value from server and caches it in the instance.
-    Source: Python Cookbook
-    Author: Denis Otkidach http://stackoverflow.com/users/168352/denis-otkidach
-    This decorator allows you to create a property which can be computed once
-    and accessed many times.
-    """
-    def __init__(self, method, name=None):
-        print("============== Calling for %s" % method.__name__)
-        print("==============%s" % name)
-        self.method = method
-        self.name = name or method.__name__
-        self.__doc__ = method.__doc__
-
-    def __get__(self, inst, cls):
-        # If we're being accessed from the class itself, not from an object
-        if inst is None:
-            print("inst is None")
-            return self
-        # Else if the attribute already exists, return the existing value
-        elif self.name in inst.__dict__:
-            print("Using cached value for %s" % self.name)
-            return inst.__dict__[self.name]
-        # Else, calculate the desired value and set it
-        else:
-            print("Retrieving and caching value for %s" % self.name)
-            # TODO: Check if it's an array or a single value
-            #result = self.method(inst)
-            if inst.properties[self.name]["MOR"] is True:
-                if isinstance(inst.properties[self.name]["value"], list):
-                    result = inst.server.get_views(inst.properties[self.name])
-                else:
-                    result = inst.server.get_view(inst.properties[self.name])
-            else:
-                # It's just a property, get it
-                result = inst.properties[self.name]["value"]
-                
-            # Set the object value to returned value
-            inst.__dict__[self.name] = result
-            return result
-
-#    def __set__(self, inst, value):
-        #raise AttributeError("%s is read-only" % self.name)
-
-    def __delete__(self, inst):
-        del inst.__dict__[self.name]
-
-
 class ManagedObject(object):
     """The base class which all managed object's derive from.
     
-       Create a new instance.
-       
-       Parameters
-       ----------
-       mo_ref : ManagedObjectReference
-           The managed object reference used to create this instance
-       server: server
-           A reference back to the server object, which we use to make calls
+       :param mo_ref: The managed object reference used to create this instance
+       :type mo_ref: ManagedObjectReference
+       :param server: A reference back to the psphere server object, which \
+       we use to make calls.
+       :type server: Vim
+
     """
     attrs = {}
     def __init__(self, mo_ref, server):
@@ -87,54 +37,80 @@ class ManagedObject(object):
         self.mo_ref = mo_ref
         self.server = server
         self.properties = {}
+        if self.__class__.__name__ != "ManagedObject":
+            parent_attrs = super(self.__class__, self).attrs
+            self.properties = dict(self.attrs.items() + parent_attrs.items())
+            print("Merged property list for %s: %s" % (self.__class__.__name__, self.properties))
 
     def update_view_data(self, properties=None):
-        """Update the local object from the server-side object."""
+        """Update the local object from the server-side object.
+        
+        >>> vm = VirtualMachine.from_server(server, "genesis")
+        >>> # Update all properties
+        >>> vm.update_view_data()
+        >>> # Update the config and summary properties
+        >>> vm.update_view_data(properties=["config", "summary"]
+
+        :param properties: A list of properties to update.
+        :type properties: list
+
+        """
+        if properties is None:
+            properties = []
+        logger.info("Updating view data for object of type %s" % self.mo_ref._type)
         property_spec = soap.create(self.server.client, 'PropertySpec')
-        logger.debug("3Using: %s" % self.mo_ref._type)
         property_spec.type = str(self.mo_ref._type)
+        # Determine which properties to retrieve from the server
         if not properties and self.server.auto_populate:
+            logger.debug("Retrieving all properties of the object")
             property_spec.all = True
         else:
+            logger.debug("Retrieving %s properties" % len(properties))
             property_spec.all = False
             property_spec.pathSet = properties
 
         object_spec = soap.create(self.server.client, 'ObjectSpec')
-        logger.debug("2Using: %s" % self.mo_ref)
         object_spec.obj = self.mo_ref
 
         pfs = soap.create(self.server.client, 'PropertyFilterSpec')
         pfs.propSet = [property_spec]
         pfs.objectSet = [object_spec]
 
-        object_contents = self.server.sc.propertyCollector.RetrieveProperties(
-            specSet=pfs)
-        if not object_contents:
+        # Create a copy of the property collector and call the method
+        pc = self.server.sc.propertyCollector
+        object_content = pc.RetrieveProperties(specSet=pfs)[0]
+        if not object_content:
             # TODO: Improve error checking and reporting
-            print('The view could not be updated.')
-        for object_content in object_contents:
-            self.set_view_data(object_content)
+            logger.error("Nothing returned from RetrieveProperties!")
+
+        self.set_view_data(object_content)
 
     def set_view_data(self, object_content):
-        """Update the local object from the passed in list."""
-        # This is a debugging entry that allows one to view the
-        # ObjectContent that this instance was created from
+        """Update the local object from the passed in object_content."""
+        # A debugging convenience, allows inspection of the object_content
+        # that was used to create the object
+        logger.info("Setting view data for a %s" % self.__class__.__name__)
         self._object_content = object_content
+
         for dynprop in object_content.propSet:
             # If the class hasn't defined the property, don't use it
-            if dynprop.name not in self.properties:
-                print('WARNING: Skipping undefined property "%s" '
-                      'with value "%s"' % (dynprop.name, dynprop.val))
+            if dynprop.name not in self.properties.keys():
+                logger.error("Server returned a property '%s' but the object"
+                             "hasn't defined it so it is being ignored." %
+                             dynprop.name)
                 continue
 
             try:
                 if not len(dynprop.val):
-                    logging.debug("DEBUG: Skipping %s with empty value" %
-                                  dynprop.name)
+                    logger.info("Server returned empty value for %s" %
+                                dynprop.name)
                     continue
             except TypeError:
                 # This except allows us to pass over:
                 # TypeError: object of type 'datetime.datetime' has no len()
+                # It will be processed in the next code block
+                logger.error("%s of type %s has no len!" % (dynprop.name,
+                                                            type(dynprop.val)))
                 pass
 
             # Values which contain classes starting with Array need
@@ -142,68 +118,26 @@ class ManagedObject(object):
             if dynprop.val.__class__.__name__.startswith('Array'):
                 # suds returns a list containing a single item, which
                 # is another list. Use the first item which is the real list
+                logger.info("Setting value of an Array* property")
+                logger.debug("%s being set to %s" % (dynprop.name,
+                                                     dynprop.val[0]))
                 self.properties[dynprop.name]["value"] = dynprop.val[0]
             else:
-                print("-----------------")
-                print(dynprop.val.__class__.__name__)
-                print("-----------------")
-                # At this point we should walk the entire "tree" and set
-                # any MOR's to Python classes
+                logger.info("Setting value of a single-valued property")
+                logger.debug("DynamicProperty value is a: " %
+                             dynprop.val.__class__.__name__)
+                logger.debug("%s being set to %s" % (dynprop.name,
+                                                     dynprop.val))
                 self.properties[dynprop.name]["value"] = dynprop.val
-
-#    def set_view_data(self, object_content):
-#        """Update the local object from the passed in list."""
-#        # This is a debugging entry that allows one to view the
-#        # ObjectContent that this instance was created from
-#        self._object_content = object_content
-#        for dynprop in object_content.propSet:
-#            # If the class hasn't defined the property, don't use it
-#            if dynprop.name not in dir(self):
-#                print('WARNING: Skipping undefined property "%s" '
-#                      'with value "%s"' % (dynprop.name, dynprop.val))
-#                continue
-#
-#            try:
-#                if not len(dynprop.val):
-#                    logging.debug("DEBUG: Skipping %s with empty value" %
-#                                  dynprop.name)
-#                    continue
-#            except TypeError:
-#                # This except allows us to pass over:
-#                # TypeError: object of type 'datetime.datetime' has no len()
-#                pass
-#
-#            # Values which contain classes starting with Array need
-#            # to be converted into a nicer Python list
-#            if dynprop.val.__class__.__name__.startswith('Array'):
-#                # suds returns a list containing a single item, which
-#                # is another list. Use the first item which is the real list
-#                print(dynprop.val.__class__.__name__)
-#                if (dynprop.val.__class__.__name__ ==
-#                    'ArrayOfManagedObjectReference'):
-#                    setattr(self, '_%s' % dynprop.name, dynprop.val[0])
-#                else:
-#                    setattr(self, dynprop.name, dynprop.val[0])
-#            else:
-#                print("-----------------")
-#                print(dynprop.val.__class__.__name__)
-#                print("-----------------")
-#                # At this point we should walk the entire "tree" and set
-#                # any MOR's to Python classes
-#                
-#                if (dynprop.val.__class__.__name__ in classmap or
-#                    dynprop.val.__class__.__name__ ==
-#                    "ManagedObjectReference" or 
-#                    dynprop.val.__class__.__name__ == "val"):
-#                    setattr(self, '_%s' % dynprop.name, dynprop.val)
-#                else:
-#                    setattr(self, dynprop.name, dynprop.val)
 
     def __getattribute__(self, name):
         """Overridden so that SOAP methods can be proxied.
+
+        This is overridden for two reasons:
+        - To implement caching of ManagedObject properties
+        - To each SOAP method can be accessed through the object without having to explicitly define it.
         
-        This is achieved by checking if the method exists in the
-        SOAP service.
+        It is achieved by checking if the method exists in the SOAP service.
         
         If it doesn't then the exception is caught and the default
         behaviour is executed.
@@ -212,32 +146,44 @@ class ManagedObject(object):
         the method against the SOAP service with _this set to the
         current objects managed object reference.
         
+        :param name: The name of the method to call.
+        :param type: str
+
         """
+        logger.debug("Entering overriden built-in __getattribute__")
         # Built-ins always use the default behaviour
         if name.startswith("__"):
+            logger.debug("Returning built-in attribute %s" % name)
             return object.__getattribute__(self, name)
 
         properties = object.__getattribute__(self, "properties")
         if name in properties.keys():
             # See if the value has already been retrieved an saved
-            if name in self.__dict__:
-                print("Using cached value for %s" % name)
+            logger.debug("%s is a property of this object, checking if "
+                         "attribute is already cached")
+            if name in self.__dict__.keys():
+                logger.debug("Using cached value for %s" % name)
                 return object.__getattribute__(self, name)
             # Else, calculate the desired value and set it
             else:
-                print("Retrieving and caching value for %s" % name)
+                logger.debug("No cached value for %s. Retrieving..." % name)
                 # TODO: Check if it's an array or a single value
                 #result = self.method(inst)
                 if self.properties[name]["MOR"] is True:
+                    logger.debug("%s is a MOR" % name)
                     if isinstance(self.properties[name]["value"], list):
+                        logger.debug("%s is a list of MORs" % name)
                         result = self.server.get_views(self.properties[name]["value"])
                     else:
+                        logger.debug("%s is single-valued" % name)
                         result = self.server.get_view(self.properties[name]["value"])
                 else:
                     # It's just a property, get it
+                    logger.debug("%s is not a MOR" % name)
                     result = self.properties[name]["value"]
                     
                 # Set the object value to returned value
+                logger.debug("Retrieved %s for %s" % (result, name))
                 self.__dict__[name] = result
                 return result            
         else:
@@ -255,6 +201,9 @@ class ManagedObject(object):
             except MethodNotFound:
                 return object.__getattribute__(self, name)
 
+        def __set__(self, name, value):
+            print("Setting %s to %s" % (name, value))
+            self.__set__(name, value)
 
 # First list the classes which directly inherit from ManagedObject
 class AlarmManager(ManagedObject):
@@ -300,11 +249,6 @@ class EnvironmentBrowser(ManagedObject):
         super(EnvironmentBrowser, self).__init__(mo_ref, server)
         self._datastoreBrowser = None
 
-    @ReadOnlyCachedAttribute
-    def datastoreBrowser(self):
-        # TODO: Implement
-        pass
-
 
 class EventManager(ManagedObject):
     def __init__(self, mo_ref, server):
@@ -319,8 +263,6 @@ class ExtensibleManagedObject(ManagedObject):
              "value": {"MOR": False, "value": list()}}
     def __init__(self, mo_ref, server):
         super(ExtensibleManagedObject, self).__init__(mo_ref, server)
-        parent_attrs = super(ExtensibleManagedObject, self).attrs
-        self.properties = dict(self.attrs.items() + parent_attrs.items())
 
 
 class Alarm(ExtensibleManagedObject):
@@ -411,9 +353,6 @@ class ManagedEntity(ExtensibleManagedObject):
               "triggeredAlarmState": {"MOR": False, "value": list()}}
     def __init__(self, mo_ref, server):
         super(ManagedEntity, self).__init__(mo_ref, server)
-        parent_attrs = super(ManagedEntity, self).attrs
-        self.properties = dict(self.attrs.items() + parent_attrs.items())
-        print("New properties: %s" % self.properties.keys())
 
     def find_datacenter(self, parent=None):
         """Find the datacenter which this ManagedEntity belongs to."""
@@ -501,17 +440,6 @@ class Datastore(ManagedEntity):
         self.summary = None
         self._vm = []
 
-    @ReadOnlyCachedAttribute
-    def browser(self):
-        result = self.server.get_view(self._browser)
-        return result
-
-    @ReadOnlyCachedAttribute
-    def vm(self):
-        result = self.server.get_views(self._vm)
-        return result
-
-
 class DistributedVirtualSwitch(ManagedEntity):
     def __init__(self, mo_ref, server):
         super(DistributedVirtualSwitch, self).__init__(mo_ref, server)
@@ -523,27 +451,17 @@ class DistributedVirtualSwitch(ManagedEntity):
         self.uuid = None
 
 
-    @ReadOnlyCachedAttribute
-    def portgroup(self):
-        # TODO
-        pass
-
-
 class VmwareDistributedVirtualSwitch(DistributedVirtualSwitch):
     def __init__(self, mo_ref, server):
         super(VmwareDistributedVirtualSwitch, self).__init__(mo_ref, server)
 
 
 class Folder(ManagedEntity):
+    attrs = {"childEntity": {"MOR": True, "value": list()},
+             "childType": {"MOR": False, "value": list()}}
     def __init__(self, mo_ref, server):
         super(Folder, self).__init__(mo_ref, server)
-        self._childEntity = []
-        self.childType = []
 
-    @ReadOnlyCachedAttribute
-    def childEntity(self):
-        result = self.server.get_views(self._childEntity)
-        return result
 
 class HostSystem(ManagedEntity):
     def __init__(self, mo_ref, server):
@@ -560,26 +478,6 @@ class HostSystem(ManagedEntity):
         self.systemResources = None
         self._vm = []
 
-    @ReadOnlyCachedAttribute
-    def datastore(self):
-        result = self.server.get_views(self._datastore)
-        return result
-
-    @ReadOnlyCachedAttribute
-    def datastoreBrowser(self):
-        result = self.server.get_view(self._datastoreBrowser)
-        return result
-
-    @ReadOnlyCachedAttribute
-    def network(self):
-        result = self.server.get_views(self._network)
-        return result
-
-    @ReadOnlyCachedAttribute
-    def vm(self):
-        result = self.server.get_views(self._vm)
-        return result
-
 
 class Network(ManagedEntity):
     attrs = {"host": {"MOR": True, "value": list()},
@@ -587,8 +485,6 @@ class Network(ManagedEntity):
              "vm": {"MOR": True, "value": list()}}
     def __init__(self, mo_ref, server):
         super(Network, self).__init__(mo_ref, server)
-        parent_attrs = super(Network, self).attrs
-        self.properties = dict(self.attrs.items() + parent_attrs.items())
 
 
 class DistributedVirtualPortgroup(Network):
@@ -620,26 +516,6 @@ class VirtualApp(ResourcePool):
         self._parentVApp = None
         self.vAppConfig = None
 
-    @ReadOnlyCachedAttribute
-    def datastore(self):
-        result = self.server.get_views(self._datastore)
-        return result
-
-    @ReadOnlyCachedAttribute
-    def network(self):
-        result = self.server.get_views(self._network)
-        return result
-
-    @ReadOnlyCachedAttribute
-    def parentFolder(self):
-        result = self.server.get_view(self._parentFolder)
-        return result
-
-    @ReadOnlyCachedAttribute
-    def parentVApp(self):
-        result = self.server.get_view(self._parentVApp)
-        return result
-
 
 class VirtualMachine(ManagedEntity):
     attrs = {}
@@ -662,8 +538,6 @@ class VirtualMachine(ManagedEntity):
     attrs["summary"] = {"MOR": False, "value": None}
     def __init__(self, mo_ref, server):
         super(VirtualMachine, self).__init__(mo_ref, server)
-        parent_attrs = super(VirtualMachine, self).attrs
-        self.properties = dict(self.attrs.items() + parent_attrs.items())
 
     @classmethod
     def from_server(cls, server, name):
@@ -679,21 +553,15 @@ class ScheduledTask(ExtensibleManagedObject):
 
 
 class Task(ExtensibleManagedObject):
+    attrs = {"info": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(Task, self).__init__(mo_ref, server)
-        self.info = None
-
 
 class VirtualMachineSnapshot(ExtensibleManagedObject):
     def __init__(self, mo_ref, server):
         super(VirtualMachineSnapshot, self).__init__(mo_ref, server)
         self._childSnapshot = []
         self.config = None
-
-    @ReadOnlyCachedAttribute
-    def childSnapshot(self):
-        result = self.server.get_views(self._childSnapshot)
-        return result
 
 
 class ExtensionManager(ManagedObject):
@@ -742,22 +610,12 @@ class HostDatastoreBrowser(ManagedObject):
         self._datastore = []
         self.supportedType = []
 
-    @ReadOnlyCachedAttribute
-    def datastore(self):
-        # TODO
-        pass
-
 
 class HostDatastoreSystem(ManagedObject):
     def __init__(self, mo_ref, server):
         super(HostDatastoreSystem, self).__init__(mo_ref, server)
         self.capabilities = None
         self._datastore = []
-
-    @ReadOnlyCachedAttribute
-    def datastore(self):
-        # TODO
-        pass
 
 
 class HostDateTimeSystem(ManagedObject):
@@ -836,11 +694,6 @@ class LicenseManager(ManagedObject):
         self.source = None
         self.sourceAvailable = None
 
-    @ReadOnlyCachedAttribute
-    def licenseAssignmentManager(self):
-        # TODO
-        pass
-
 
 class LocalizationManager(ManagedObject):
     def __init__(self, mo_ref, server):
@@ -876,11 +729,6 @@ class Profile(ManagedObject):
         self.modifiedTime = None
         self.name = None
 
-    @ReadOnlyCachedAttribute
-    def entity(self):
-        # TODO
-        pass
-
 
 class ClusterProfile(Profile):
     def __init__(self, mo_ref, server):
@@ -892,11 +740,6 @@ class HostProfile(Profile):
         super(HostProfile, self).__init__(mo_ref, server)
         self._referenceHost = None
 
-    @ReadOnlyCachedAttribute
-    def referenceHost(self):
-        # TODO
-        pass
-
 
 class ProfileComplianceManager(ManagedObject):
     def __init__(self, mo_ref, server):
@@ -907,11 +750,6 @@ class ProfileManager(ManagedObject):
     def __init__(self, mo_ref, server):
         super(ProfileManager, self).__init__(mo_ref, server)
         self._profile = []
-
-    @ReadOnlyCachedAttribute
-    def profile(self):
-        # TODO
-        pass
 
 
 class ClusterProfileManager(ProfileManager):
@@ -928,11 +766,6 @@ class PropertyCollector(ManagedObject):
     def __init__(self, mo_ref, server):
         super(PropertyCollector, self).__init__(mo_ref, server)
         self._filter = []
-
-    @ReadOnlyCachedAttribute
-    def filter(self):
-        # TODO
-        pass
 
 
 class PropertyFilter(ManagedObject):
@@ -953,11 +786,6 @@ class ScheduledTaskManager(ManagedObject):
         self.description = None
         self._scheduledTask = []
 
-    @ReadOnlyCachedAttribute
-    def scheduledTask(self):
-        # TODO
-        pass
-
 
 class SearchIndex(ManagedObject):
     def __init__(self, mo_ref, server):
@@ -970,8 +798,6 @@ class ServiceInstance(ManagedObject):
              "serverClock": {"MOR": True, "value": None}}
     def __init__(self, mo_ref, server):
         super(ServiceInstance, self).__init__(mo_ref, server)
-        parent_attrs = super(ServiceInstance, self).attrs
-        self.properties = dict(self.attrs.items() + parent_attrs.items())
 
 
 class SessionManager(ManagedObject):
@@ -983,8 +809,6 @@ class SessionManager(ManagedObject):
              "supportedLocaleList": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(SessionManager, self).__init__(mo_ref, server)
-        parent_attrs = super(SessionManager, self).attrs
-        self.properties = dict(self.attrs.items() + parent_attrs.items())
 
 
 class TaskManager(ManagedObject):
@@ -993,11 +817,6 @@ class TaskManager(ManagedObject):
         self.description = None
         self.maxCollector = None
         self._recentTask = []
-
-    @ReadOnlyCachedAttribute
-    def recentTask(self):
-        # TODO
-        pass
 
 
 class UserDirectory(ManagedObject):
@@ -1039,11 +858,6 @@ class ViewManager(ManagedObject):
     def __init__(self, mo_ref, server):
         super(ViewManager, self).__init__(mo_ref, server)
         self._viewList = []
-
-    @ReadOnlyCachedAttribute
-    def viewList(self):
-        # TODO
-        pass
 
 
 class VirtualDiskManager(ManagedObject):

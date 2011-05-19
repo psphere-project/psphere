@@ -125,7 +125,7 @@ class Vim(object):
         # If the sudsobject that we're looking at has a _type key
         # then create a class of that type and return it immediately
         if "_type" in sudsobject.__keylist__:
-            logger.debug("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ sudsobject is a MOR, converting to psphere class")
+            logger.debug("sudsobject is a MOR, converting to psphere class")
             kls = classmapper(sudsobject._type)
             new_object = kls(sudsobject, self)
             return new_object
