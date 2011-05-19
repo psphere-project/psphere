@@ -109,6 +109,7 @@ class Vim(object):
         else:
             new_result = self.walk_and_convert_sudsobject(result)
             
+        logger.debug("Finished in invoke.")
         #property = self.find_and_destroy(property)
         #print result
         # Return the modified result to the caller
@@ -124,8 +125,9 @@ class Vim(object):
         # If the sudsobject that we're looking at has a _type key
         # then create a class of that type and return it immediately
         if "_type" in sudsobject.__keylist__:
+            logger.debug("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ sudsobject is a MOR, converting to psphere class")
             kls = classmapper(sudsobject._type)
-            new_object = kls(sudsobject[1], self)
+            new_object = kls(sudsobject, self)
             return new_object
 
         new_object = sudsobject.__class__()
@@ -134,6 +136,7 @@ class Vim(object):
                 logger.debug("Not a sudsobject subclass, skipping")
                 setattr(new_object, obj[0], obj[1])
                 continue
+
             logger.debug("Obj keylist: %s" % obj[1].__keylist__)
             if "_type" in obj[1].__keylist__:
                 logger.debug("Would convert this node:")
@@ -238,7 +241,7 @@ class Vim(object):
             # This maps the type of managed object in object_content into
             # a psphere class and then instantiates it with the mo_ref
             # inside the object_content
-            kls = classmapper(object_content.obj._type)
+            kls = classmapper(object_content.obj.mo_ref._type)
             view = kls(mo_ref, self)
             # Update the instance with the data in object_content
             view.set_view_data(object_content=object_content)
@@ -451,7 +454,9 @@ class Vim(object):
             print('WARNING: No filter specified, returning first match.')
             # If no filter is specified we just return the first item
             # in the list of returned objects
+            logger.debug("Creating class in find_entity_view (filter)")
             view = kls(obj_contents[0].obj, self)
+            logger.debug("Completed creating class in find_entity_view (filter)")
             view.update_view_data(properties)
             return view
 
@@ -482,6 +487,8 @@ class Vim(object):
             # There were no matches
             raise ObjectNotFoundError("No matching objects for filter")
 
-        view = kls(filtered_obj_content.obj, self)
+        logger.debug("Creating class in find_entity_view")
+        view = kls(filtered_obj_content.obj.mo_ref, self)
+        logger.debug("Completed creating class in find_entity_view")
         view.update_view_data(properties=properties)
         return view

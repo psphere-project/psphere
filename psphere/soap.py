@@ -19,25 +19,25 @@ class VimFault(Exception):
         for attr in fault:
             self._fault_dict[attr[0]] = attr[1]
 
-        Exception.__init__(self, '%s: %s' % (self.fault_type, self._fault_dict))
+        Exception.__init__(self, "%s: %s" % (self.fault_type, self._fault_dict))
 
 def _init_logging(level=logging.INFO, handler=logging.StreamHandler):
     """Sets the logging level of underlying suds.client."""
-    logger = logging.getLogger('suds.client')
+    logger = logging.getLogger("suds.client")
     logger.addHandler(handler)
     logger.setLevel(level)
-    #logging.getLogger('suds.wsdl').setLevel(logging.DEBUG)
+    #logging.getLogger("suds.wsdl").setLevel(logging.DEBUG)
 
 
 def get_client(url):
-    client = suds.client.Client(url + '/vimService.wsdl')
+    client = suds.client.Client(url + "/vimService.wsdl")
     client.set_options(location=url)
     return client
 
 
 def create(client, _type, **kwargs):
     """Create a suds object of the requested _type."""
-    obj = client.factory.create('ns0:%s' % _type)
+    obj = client.factory.create("ns0:%s" % _type)
     for key, value in kwargs.items():
         setattr(obj, key, value)
     return obj
@@ -49,34 +49,32 @@ def invoke(client, method, **kwargs):
         # Proxy the method to the suds service
         result = getattr(client.service, method)(**kwargs)
     except AttributeError, e:
-        log.critical('Unknown method: %s' % method)
+        log.critical("Unknown method: %s" % method)
         sys.exit()
     except urllib2.URLError, e:
-        if debug:
-            pprint(e)
-        print('A URL related error occurred while invoking the "%s" '
-              'method on the VIM server, this can be caused by '
-              'name resolution or connection problems.' % method)
-        print('The underlying error is: %s' % e.reason[1])
+        logging.debug(pprint(e))
+        logging.debug("A URL related error occurred while invoking the '%s' "
+              "method on the VIM server, this can be caused by "
+              "name resolution or connection problems." % method)
+        logging.debug("The underlying error is: %s" % e.reason[1])
         sys.exit()
     except suds.client.TransportError, e:
-        if debug:
-            pprint(e)
-        print('TransportError: %s' % e)
+        logging.debug(pprint(e))
+        logging.debug("TransportError: %s" % e)
     except suds.WebFault, e:
         # Get the type of fault
-        print('Fault: %s' % e.fault.faultstring)
+        print("Fault: %s" % e.fault.faultstring)
         if len(e.fault.faultstring) > 0:
             raise
 
-        detail = e.document.childAtPath('/Envelope/Body/Fault/detail')
+        detail = e.document.childAtPath("/Envelope/Body/Fault/detail")
         fault_type = detail.getChildren()[0].name
         fault = create(fault_type)
         if isinstance(e.fault.detail[0], list):
             for attr in e.fault.detail[0]:
                 setattr(fault, attr[0], attr[1])
         else:
-            fault['text'] = e.fault.detail[0]
+            fault["text"] = e.fault.detail[0]
 
         raise VimFault(fault)
 
