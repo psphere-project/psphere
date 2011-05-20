@@ -33,7 +33,7 @@ def _config_from_file(path):
 def get_config():
     # Load the default configuration values
     config = {"general": {},
-               "logging": {"destination": "~/.psphere/psphere.log",
+               "logging": {"destination": os.path.expanduser("~/.psphere/psphere.log"),
                            "level": "INFO"}}
     # Load configuration from files, if they exist
     if os.path.isfile(system_config):
