@@ -477,7 +477,7 @@ class Folder(ManagedEntity):
 
 
 class HostSystem(ManagedEntity):
-    attrs = {"capability": {"MOR": False, "value": None}}
+    attrs = {"capability": {"MOR": False, "value": None},
              "config": {"MOR": False, "value": None},
              "configManager": {"MOR": False, "value": None},
              "datastore": {"MOR": True, "value": list()},
