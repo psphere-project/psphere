@@ -561,13 +561,13 @@ class VirtualMachine(ManagedEntity):
 
 
 class ScheduledTask(ExtensibleManagedObject):
-    attrs = {}
+    attrs = {"info": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(ScheduledTask, self).__init__(mo_ref, server)
 
 
 class Task(ExtensibleManagedObject):
-    attrs = {}
+    attrs = {"info": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(Task, self).__init__(mo_ref, server)
 
