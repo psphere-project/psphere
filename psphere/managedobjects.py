@@ -360,6 +360,30 @@ class ManagedEntity(ExtensibleManagedObject):
     def __init__(self, mo_ref, server):
         super(ManagedEntity, self).__init__(mo_ref, server)
 
+    @classmethod
+    def find(self, filter=None):
+        """Find ManagedEntity's of this type using the given filter.
+        
+        :param filter: Find ManagedEntity's matching these key/value pairs
+        :type filter: dict
+        :returns: A list of ManagedEntity's matching the filter or None
+        :rtype: list
+        """
+        return self.vim.find_entity_view(view_type=self.__class__.__name__,
+                                         filter=filter)
+    @classmethod
+    def find_one(self, filter=None):
+        """Find a ManagedEntity of this type using the given filter.
+        
+        If multiple ManagedEntity's are found, only the first is returned.
+        
+        :param filter: Find ManagedEntity's matching these key/value pairs
+        :type filter: dict
+        :returns: A ManagedEntity's matching the filter or None
+        :rtype: ManagedEntity
+        """
+        return self.find(filter=filter)[0]
+
     def find_datacenter(self, parent=None):
         """Find the datacenter which this ManagedEntity belongs to."""
         # If the parent hasn't been set, use the parent of the
