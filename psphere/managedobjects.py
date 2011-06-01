@@ -361,7 +361,7 @@ class ManagedEntity(ExtensibleManagedObject):
         super(ManagedEntity, self).__init__(mo_ref, server)
 
     @classmethod
-    def find(self, filter=None):
+    def find(cls, vim, filter=None):
         """Find ManagedEntity's of this type using the given filter.
         
         :param filter: Find ManagedEntity's matching these key/value pairs
@@ -369,10 +369,10 @@ class ManagedEntity(ExtensibleManagedObject):
         :returns: A list of ManagedEntity's matching the filter or None
         :rtype: list
         """
-        return self.vim.find_entity_view(view_type=self.__class__.__name__,
-                                         filter=filter)
+        return vim.find_entity_views(view_type=cls.__name__, filter=filter)
+
     @classmethod
-    def find_one(self, filter=None):
+    def find_one(cls, vim, filter=None):
         """Find a ManagedEntity of this type using the given filter.
         
         If multiple ManagedEntity's are found, only the first is returned.
@@ -382,7 +382,7 @@ class ManagedEntity(ExtensibleManagedObject):
         :returns: A ManagedEntity's matching the filter or None
         :rtype: ManagedEntity
         """
-        return self.find(filter=filter)[0]
+        return vim.find_entity_view(view_type=cls.__name__, filter=filter)
 
     def find_datacenter(self, parent=None):
         """Find the datacenter which this ManagedEntity belongs to."""
