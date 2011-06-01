@@ -501,7 +501,7 @@ class Folder(ManagedEntity):
 
 
 class HostSystem(ManagedEntity):
-    attrs = {"capability": {"MOR": False, "value": None}}
+    attrs = {"capability": {"MOR": False, "value": None},
              "config": {"MOR": False, "value": None},
              "configManager": {"MOR": False, "value": None},
              "datastore": {"MOR": True, "value": list()},
@@ -585,13 +585,13 @@ class VirtualMachine(ManagedEntity):
 
 
 class ScheduledTask(ExtensibleManagedObject):
-    attrs = {}
+    attrs = {"info": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(ScheduledTask, self).__init__(mo_ref, server)
 
 
 class Task(ExtensibleManagedObject):
-    attrs = {}
+    attrs = {"info": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(Task, self).__init__(mo_ref, server)
 
