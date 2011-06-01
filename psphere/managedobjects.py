@@ -24,11 +24,11 @@ logger = logging.getLogger("psphere")
 class ManagedObject(object):
     """The base class which all managed object's derive from.
     
-       :param mo_ref: The managed object reference used to create this instance
-       :type mo_ref: ManagedObjectReference
-       :param server: A reference back to the psphere server object, which \
-       we use to make calls.
-       :type server: Vim
+   :param mo_ref: The managed object reference used to create this instance
+   :type mo_ref: ManagedObjectReference
+   :param server: A reference back to the psphere server object, which \
+   we use to make calls.
+   :type server: Vim
 
     """
     attrs = {}
@@ -45,7 +45,7 @@ class ManagedObject(object):
     def update_view_data(self, properties=None):
         """Update the local object from the server-side object.
         
-        >>> vm = VirtualMachine.from_server(server, "genesis")
+        >>> vm = VirtualMachine.find_one(vim, filter={"name": "genesis"})
         >>> # Update all properties
         >>> vm.update_view_data()
         >>> # Update the config and summary properties
@@ -576,12 +576,6 @@ class VirtualMachine(ManagedEntity):
     attrs["summary"] = {"MOR": False, "value": None}
     def __init__(self, mo_ref, server):
         super(VirtualMachine, self).__init__(mo_ref, server)
-
-    @classmethod
-    def from_server(cls, server, name):
-        # The caller is expected to catch an ObjectNotFoundError
-        obj = server.find_entity_view(cls.__name__, filter={'name': name})
-        return obj
 
 
 class ScheduledTask(ExtensibleManagedObject):
