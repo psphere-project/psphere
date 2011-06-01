@@ -651,11 +651,10 @@ class HostBootDeviceSystem(ManagedObject):
 
 
 class HostDatastoreBrowser(ManagedObject):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"datastore": {"MOR": True, "value": list()},
+             "supportedType": {"MOR": False, "value": list()}}
     def __init__(self, mo_ref, server):
         super(HostDatastoreBrowser, self).__init__(mo_ref, server)
-        self._datastore = []
-        self.supportedType = []
 
 
 class HostDatastoreSystem(ManagedObject):
