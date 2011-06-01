@@ -372,7 +372,7 @@ class Vim(object):
             time.sleep(2)
             task.update_view_data(properties=['info'])
 
-    def find_entity_list(self, view_type, begin_entity=None, properties=None):
+    def find_entity_views(self, view_type, begin_entity=None, properties=None):
         """Find all ManagedEntity's of the requested type.
 
         :param view_type: The type of ManagedEntity's to find.
