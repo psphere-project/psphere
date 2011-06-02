@@ -160,7 +160,7 @@ class ManagedObject(object):
         if name in properties.keys():
             # See if the value has already been retrieved an saved
             logger.debug("%s is a property of this object, checking if "
-                         "attribute is already cached")
+                         "attribute is already cached" % name)
             if name in self.__dict__.keys():
                 logger.debug("Using cached value for %s" % name)
                 return object.__getattribute__(self, name)
