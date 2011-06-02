@@ -201,9 +201,6 @@ class ManagedObject(object):
             except MethodNotFound:
                 return object.__getattribute__(self, name)
 
-        def __set__(self, name, value):
-            print("Setting %s to %s" % (name, value))
-            self.__set__(name, value)
 
 # First list the classes which directly inherit from ManagedObject
 class AlarmManager(ManagedObject):
