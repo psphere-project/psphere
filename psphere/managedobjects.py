@@ -205,7 +205,7 @@ class ManagedObject(object):
 # First list the classes which directly inherit from ManagedObject
 class AlarmManager(ManagedObject):
     attrs = {"defaultExpression": {"MOR": False, "value": list()},
-             "description": {"MOR": False, "value": list()}}
+             "description": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(AlarmManager, self).__init__(mo_ref, server)
 
@@ -222,11 +222,10 @@ class CustomFieldsManager(ManagedObject):
     attrs = {"field": {"MOR": False, "value": list()}}
     def __init__(self, mo_ref, server):
         super(CustomFieldsManager, self).__init__(mo_ref, server)
-        self.field = []
 
 
 class CustomizationSpecManager(ManagedObject):
-    attrs = {"encryptionKey": {"MOR": False, "value": None},
+    attrs = {"encryptionKey": {"MOR": False, "value": list()},
              "info": {"MOR": False, "value": list()}}
     def __init__(self, mo_ref, server):
         super(CustomizationSpecManager, self).__init__(mo_ref, server)
@@ -317,8 +316,7 @@ class HostServiceSystem(ExtensibleManagedObject):
 class HostStorageSystem(ExtensibleManagedObject):
     attrs = {"fileSystemVolumeInfo": {"MOR": False, "value": None},
              "multipathStateInfo": {"MOR": False, "value": None},
-             "storageDeviceInfo": {"MOR": False, "value": None},
-             "systemFile": {"MOR": False, "value": None}}
+             "storageDeviceInfo": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(HostStorageSystem, self).__init__(mo_ref, server)
 
@@ -327,7 +325,6 @@ class HostVirtualNicManager(ExtensibleManagedObject):
     attrs = {"info": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(HostVirtualNicManager, self).__init__(mo_ref, server)
-        self.info = None
 
 
 class HostVMotionSystem(ExtensibleManagedObject):
@@ -335,8 +332,6 @@ class HostVMotionSystem(ExtensibleManagedObject):
              "netConfig": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(HostVMotionSystem, self).__init__(mo_ref, server)
-        self.ipConfig = None
-        self.netConfig = None
 
 
 class ManagedEntity(ExtensibleManagedObject):
@@ -410,11 +405,11 @@ class ManagedEntity(ExtensibleManagedObject):
 
 class ComputeResource(ManagedEntity):
     attrs = {"configurationEx": {"MOR": False, "value": None},
-             "datastore": {"MOR": False, "value": list()},
-             "environmentBrowser": {"MOR": False, "value": None},
-             "host": {"MOR": False, "value": list()},
-             "network": {"MOR": False, "value": list()},
-             "resourcePool": {"MOR": False, "value": None},
+             "datastore": {"MOR": True, "value": list()},
+             "environmentBrowser": {"MOR": True, "value": None},
+             "host": {"MOR": True, "value": list()},
+             "network": {"MOR": True, "value": list()},
+             "resourcePool": {"MOR": True, "value": None},
              "summary": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(ComputeResource, self).__init__(mo_ref, server)
@@ -446,12 +441,12 @@ class ClusterComputeResource(ComputeResource):
 
 
 class Datacenter(ManagedEntity):
-    attrs = {"datastore": {"MOR": False, "value": list()},
-             "datastoreFolder": {"MOR": False, "value": None},
-             "hostFolder": {"MOR": False, "value": None},
-             "network": {"MOR": False, "value": list()},
-             "networkFolder": {"MOR": False, "value": None},
-             "vmFolder": {"MOR": False, "value": None}}
+    attrs = {"datastore": {"MOR": True, "value": list()},
+             "datastoreFolder": {"MOR": True, "value": None},
+             "hostFolder": {"MOR": True, "value": None},
+             "network": {"MOR": True, "value": list()},
+             "networkFolder": {"MOR": True, "value": None},
+             "vmFolder": {"MOR": True, "value": None}}
     def __init__(self, mo_ref, server):
         super(Datacenter, self).__init__(mo_ref, server)
 
@@ -470,18 +465,11 @@ class Datastore(ManagedEntity):
 class DistributedVirtualSwitch(ManagedEntity):
     attrs = {"capability": {"MOR": False, "value": None},
              "config": {"MOR": False, "value": None},
-             "networkResourcePool": {"MOR": False, "value": list()},
              "portgroup": {"MOR": True, "value": list()},
              "summary": {"MOR": False, "value": None},
              "uuid": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(DistributedVirtualSwitch, self).__init__(mo_ref, server)
-        self.capability = None
-        self.config = None
-        self.networkResourcePool = []
-        self._portgroup = []
-        self.summary = None
-        self.uuid = None
 
 
 class VmwareDistributedVirtualSwitch(DistributedVirtualSwitch):
@@ -515,6 +503,7 @@ class HostSystem(ManagedEntity):
 
 class Network(ManagedEntity):
     attrs = {"host": {"MOR": True, "value": list()},
+             "name": {"MOR": False, "value": None},
              "summary": {"MOR": False, "value": None},
              "vm": {"MOR": True, "value": list()}}
     def __init__(self, mo_ref, server):
@@ -524,7 +513,7 @@ class Network(ManagedEntity):
 class DistributedVirtualPortgroup(Network):
     attrs = {"config": {"MOR": False, "value": None},
              "key": {"MOR": False, "value": None},
-             "portKeys": {"MOR": False, "value": None}}
+             "portKeys": {"MOR": False, "value": list()}}
     def __init__(self, mo_ref, server):
         super(DistributedVirtualPortgroup, self).__init__(mo_ref, server)
 
@@ -532,7 +521,7 @@ class DistributedVirtualPortgroup(Network):
 class ResourcePool(ManagedEntity):
     attrs = {"childConfiguration": {"MOR": False, "value": list()},
              "config": {"MOR": False, "value": None},
-             "owner": {"MOR": True, "value": list()},
+             "owner": {"MOR": True, "value": None},
              "resourcePool": {"MOR": True, "value": list()},
              "runtime": {"MOR": False, "value": None},
              "summary": {"MOR": False, "value": None},
@@ -542,12 +531,10 @@ class ResourcePool(ManagedEntity):
 
 
 class VirtualApp(ResourcePool):
-    attrs = {"childLink": {"MOR": False, "value": list()},
-             "datastore": {"MOR": True, "value": None},
+    attrs = {"datastore": {"MOR": True, "value": list()},
              "network": {"MOR": True, "value": list()},
              "parentFolder": {"MOR": True, "value": None},
-             "parentVApp": {"MOR": True, "value": None},
-             "vAppConfig": {"MOR": True, "value": list()}}
+             "vAppConfig": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(VirtualApp, self).__init__(mo_ref, server)
 
@@ -587,18 +574,15 @@ class Task(ExtensibleManagedObject):
         super(Task, self).__init__(mo_ref, server)
 
 class VirtualMachineSnapshot(ExtensibleManagedObject):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"config": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(VirtualMachineSnapshot, self).__init__(mo_ref, server)
-        self._childSnapshot = []
-        self.config = None
 
 
 class ExtensionManager(ManagedObject):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"extensionList": {"MOR": False, "value": list()}}
     def __init__(self, mo_ref, server):
         super(ExtensionManager, self).__init__(mo_ref, server)
-        self.extensionList = []
 
 
 class FileManager(ManagedObject):
@@ -608,31 +592,27 @@ class FileManager(ManagedObject):
 
 
 class HistoryCollector(ManagedObject):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"filter": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(HistoryCollector, self).__init__(self, mo_ref, server)
-        self.filter = None
 
 
 class EventHistoryCollector(HistoryCollector):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"latestPage": {"MOR": False, "value": list()}}
     def __init__(self, mo_ref, server):
         super(EventHistoryCollector, self).__init__(mo_ref, server)
-        self.latestPage = []
 
 
 class TaskHistoryCollector(HistoryCollector):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"latestPage": {"MOR": False, "value": list()}}
     def __init__(self, mo_ref, server):
         super(TaskHistoryCollector, self).__init__(mo_ref, server)
-        self.latestPage = []
 
 
 class HostAutoStartManager(ManagedObject):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"config": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(HostAutoStartManager, self).__init__(mo_ref, server)
-        self.config = None
 
 
 class HostBootDeviceSystem(ManagedObject):
@@ -649,25 +629,22 @@ class HostDatastoreBrowser(ManagedObject):
 
 
 class HostDatastoreSystem(ManagedObject):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"capabilities": {"MOR": False, "value": None},
+             "datastore": {"MOR": True, "value": list()}}
     def __init__(self, mo_ref, server):
         super(HostDatastoreSystem, self).__init__(mo_ref, server)
-        self.capabilities = None
-        self._datastore = []
 
 
 class HostDateTimeSystem(ManagedObject):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"dateTimeInfo": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(HostDateTimeSystem, self).__init__(mo_ref, server)
-        self.dateTimeInfo = None
 
 
 class HostDiagnosticSystem(ManagedObject):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"activePartition": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(HostDiagnosticSystem, self).__init__(mo_ref, server)
-        self.activePartition = None
 
 
 class HostFirmwareSystem(ManagedObject):
@@ -677,10 +654,9 @@ class HostFirmwareSystem(ManagedObject):
 
 
 class HostHealthStatusSystem(ManagedObject):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"runtime": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(HostHealthStatusSystem, self).__init__(mo_ref, server)
-        self.runtime = None
 
 
 class HostKernelModuleSystem(ManagedObject):
@@ -702,21 +678,19 @@ class HostPatchManager(ManagedObject):
 
 
 class HostSnmpSystem(ManagedObject):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"configuration": {"MOR": False, "value": None},
+             "limits": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(HostSnmpSystem, self).__init__(mo_ref, server)
-        self.configuration = None
-        self.limits = None
 
 
 class HttpNfcLease(ManagedObject):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"error": {"MOR": False, "value": None},
+             "info": {"MOR": False, "value": None},
+             "initializeProgress": {"MOR": False, "value": None},
+             "state": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(HttpNfcLease, self).__init__(mo_ref, server)
-        self.error = None
-        self.info = None
-        self.initializeProgress = None
-        self.state = None
 
 
 class IpPoolManager(ManagedObject):
@@ -732,32 +706,29 @@ class LicenseAssignmentManager(ManagedObject):
 
 
 class LicenseManager(ManagedObject):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"diagnostics": {"MOR": False, "value": None},
+             "evaluation": {"MOR": False, "value": None},
+             "featureInfo": {"MOR": False, "value": list()},
+             "licenseAssignmentManager": {"MOR": True, "value": None},
+             "licensedEdition": {"MOR": False, "value": None},
+             "licenses": {"MOR": False, "value": list()},
+             "source": {"MOR": False, "value": None},
+             "sourceAvailable": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(LicenseManager, self).__init__(mo_ref, server)
-        self.diagnostics = None
-        self.evaluation = None
-        self.featureInfo = []
-        self._licenseAssignmentManager = None
-        self.licensedEdition = None
-        self.licenses = []
-        self.source = None
-        self.sourceAvailable = None
 
 
 class LocalizationManager(ManagedObject):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"catalog": {"MOR": False, "value": list()}}
     def __init__(self, mo_ref, server):
         super(LocalizationManager, self).__init__(mo_ref, server)
-        self.catalog = []
 
 
 class OptionManager(ManagedObject):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"setting": {"MOR": False, "value": list()},
+             "supportedOptions": {"MOR": False, "value": list()}}
     def __init__(self, mo_ref, server):
         super(OptionManager, self).__init__(mo_ref, server)
-        self.setting = []
-        self.supportedOptions = []
 
 
 class OvfManager(ManagedObject):
@@ -767,22 +738,23 @@ class OvfManager(ManagedObject):
 
 
 class PerformanceManager(ManagedObject):
-    attrs = {}
+    attrs = {"description": {"MOR": False, "value": None},
+             "historicalInterval": {"MOR": False, "value": list()},
+             "perfCounter": {"MOR": False, "value": list()}}
     def __init__(self, mo_ref, server):
         super(PerformanceManager, self).__init__(mo_ref, server)
 
 
 class Profile(ManagedObject):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"complianceStatus": {"MOR": False, "value": None},
+             "config": {"MOR": False, "value": None},
+             "createdTime": {"MOR": False, "value": None},
+             "description": {"MOR": False, "value": None},
+             "entity": {"MOR": True, "value": list()},
+             "modifiedTime": {"MOR": False, "value": None},
+             "name": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(Profile, self).__init__(mo_ref, server)
-        self.complianceStatus = None
-        self.config = None
-        self.createdTime = None
-        self.description = None
-        self._entity = []
-        self.modifiedTime = None
-        self.name = None
 
 
 class ClusterProfile(Profile):
@@ -792,10 +764,9 @@ class ClusterProfile(Profile):
 
 
 class HostProfile(Profile):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"referenceHost": {"MOR": True, "value": None}}
     def __init__(self, mo_ref, server):
         super(HostProfile, self).__init__(mo_ref, server)
-        self._referenceHost = None
 
 
 class ProfileComplianceManager(ManagedObject):
@@ -805,10 +776,9 @@ class ProfileComplianceManager(ManagedObject):
 
 
 class ProfileManager(ManagedObject):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"profile": {"MOR": True, "value": list()}}
     def __init__(self, mo_ref, server):
         super(ProfileManager, self).__init__(mo_ref, server)
-        self._profile = []
 
 
 class ClusterProfileManager(ProfileManager):
@@ -824,18 +794,16 @@ class HostProfileManager(ProfileManager):
 
 
 class PropertyCollector(ManagedObject):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"filter": {"MOR": True, "value": list()}}
     def __init__(self, mo_ref, server):
         super(PropertyCollector, self).__init__(mo_ref, server)
-        self._filter = []
 
 
 class PropertyFilter(ManagedObject):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"partialUpdates": {"MOR": False, "value": None},
+             "spec": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(PropertyFilter, self).__init__(mo_ref, server)
-        self.partialUpdates = None
-        self.spec = None
 
 
 class ResourcePlanningManager(ManagedObject):
@@ -845,11 +813,10 @@ class ResourcePlanningManager(ManagedObject):
 
 
 class ScheduledTaskManager(ManagedObject):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"description": {"MOR": False, "value": None},
+             "scheduledTask": {"MOR": True, "value": list()}}
     def __init__(self, mo_ref, server):
         super(ScheduledTaskManager, self).__init__(mo_ref, server)
-        self.description = None
-        self._scheduledTask = []
 
 
 class SearchIndex(ManagedObject):
@@ -859,9 +826,9 @@ class SearchIndex(ManagedObject):
 
 
 class ServiceInstance(ManagedObject):
-    attrs = {"capability": {"MOR": True, "value": None},
-             "content": {"MOR": True, "value": None},
-             "serverClock": {"MOR": True, "value": None}}
+    attrs = {"capability": {"MOR": False, "value": None},
+             "content": {"MOR": False, "value": None},
+             "serverClock": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(ServiceInstance, self).__init__(mo_ref, server)
 
@@ -870,27 +837,25 @@ class SessionManager(ManagedObject):
     attrs = {"currentSession": {"MOR": False, "value": None},
              "defaultLocale": {"MOR": False, "value": None},
              "message": {"MOR": False, "value": None},
-             "messageLocaleList": {"MOR": False, "value": None},
-             "sessionList": {"MOR": False, "value": None},
-             "supportedLocaleList": {"MOR": False, "value": None}}
+             "messageLocaleList": {"MOR": False, "value": list()},
+             "sessionList": {"MOR": False, "value": list()},
+             "supportedLocaleList": {"MOR": False, "value": list()}}
     def __init__(self, mo_ref, server):
         super(SessionManager, self).__init__(mo_ref, server)
 
 
 class TaskManager(ManagedObject):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"description": {"MOR": False, "value": None},
+             "maxCollector": {"MOR": False, "value": None},
+             "recentTask": {"MOR": True, "value": list()}}
     def __init__(self, mo_ref, server):
         super(TaskManager, self).__init__(mo_ref, server)
-        self.description = None
-        self.maxCollector = None
-        self._recentTask = []
 
 
 class UserDirectory(ManagedObject):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"domainList": {"MOR": False, "value": list()}}
     def __init__(self, mo_ref, server):
         super(UserDirectory, self).__init__(mo_ref, server)
-        self.domainList = None
 
 
 class View(ManagedObject):
@@ -900,19 +865,17 @@ class View(ManagedObject):
 
 
 class ManagedObjectView(View):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"view": {"MOR": True, "value": list()}}
     def __init__(self, mo_ref, server):
         super(ManagedObjectView, self).__init__(mo_ref, server)
-        self.view = []
 
 
 class ContainerView(ManagedObjectView):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    attrs = {"container": {"MOR": True, "value": None},
+             "recursive": {"MOR": False, "value": None},
+             "type": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
         super(ContainerView, self).__init__(mo_ref, server)
-        self._container = None
-        self.recursive = None
-        self.type = None
 
 
 class InventoryView(ManagedObjectView):
@@ -937,13 +900,6 @@ class VirtualDiskManager(ManagedObject):
     attrs = {}
     def __init__(self, mo_ref, server):
         super(VirtualDiskManager, self).__init__(mo_ref, server)
-
-
-class VirtualizationManager(ManagedObject):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(VirtualizationManager, self).__init__(mo_ref, server)
-        # TODO: raise DeprecatedWarning
 
 
 class VirtualMachineCompatibilityChecker(ManagedObject):
@@ -1040,7 +996,6 @@ classmap = dict((x.__name__, x) for x in (
     ViewManager,
     VirtualApp,
     VirtualDiskManager,
-    VirtualizationManager,
     VirtualMachine,
     VirtualMachineCompatibilityChecker,
     VirtualMachineProvisioningChecker,
