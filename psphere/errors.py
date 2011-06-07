@@ -17,3 +17,7 @@ class ObjectNotFoundError(Exception):
 
 class TaskFailedError(Exception):
     pass
+
+
+class NotImplementedError(Exception):
+    pass
