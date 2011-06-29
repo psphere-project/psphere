@@ -20,11 +20,11 @@ read predefined configuration from the users .visdkrc file.
 """
 
 import os, optparse
-from psphere.vim25 import Vim
+from psphere.server import Server
 
 class BaseScript(object):
     def __init__(self):
-        self.vim = None
+        self.server = None
         self.required_opts = []
         # The vars that are valid in the .visdkrc file
         self.config_vars = ['url', 'username', 'password']
@@ -55,8 +55,8 @@ class BaseScript(object):
         if password:
             self.options.password = password
 
-        self.vim = Vim(self.options.url)
-        self.vim.login(self.options.username, self.options.password)
+        self.server = Server(self.options.url)
+        self.server.login(self.options.username, self.options.password)
 
     def read_visdk(self):
         # Read the visdkrc file, use values that are in there or append
