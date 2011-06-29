@@ -46,7 +46,7 @@ class ManagedObject(object):
     def update_view_data(self, properties=None):
         """Update the local object from the server-side object.
         
-        >>> vm = VirtualMachine.find_one(vim, filter={"name": "genesis"})
+        >>> vm = VirtualMachine.find_one(server, filter={"name": "genesis"})
         >>> # Update all properties
         >>> vm.update_view_data()
         >>> # Update the config and summary properties
@@ -354,7 +354,7 @@ class ManagedEntity(ExtensibleManagedObject):
         super(ManagedEntity, self).__init__(mo_ref, server)
 
     @classmethod
-    def find(cls, vim, filter=None):
+    def find(cls, server, filter=None):
         """Find ManagedEntity's of this type using the given filter.
         
         :param filter: Find ManagedEntity's matching these key/value pairs
@@ -362,10 +362,10 @@ class ManagedEntity(ExtensibleManagedObject):
         :returns: A list of ManagedEntity's matching the filter or None
         :rtype: list
         """
-        return vim.find_entity_views(view_type=cls.__name__, filter=filter)
+        return server.find_entity_views(view_type=cls.__name__, filter=filter)
 
     @classmethod
-    def find_one(cls, vim, filter=None):
+    def find_one(cls, server, filter=None):
         """Find a ManagedEntity of this type using the given filter.
         
         If multiple ManagedEntity's are found, only the first is returned.
@@ -375,7 +375,7 @@ class ManagedEntity(ExtensibleManagedObject):
         :returns: A ManagedEntity's matching the filter or None
         :rtype: ManagedEntity
         """
-        return vim.find_entity_view(view_type=cls.__name__, filter=filter)
+        return server.find_entity_view(view_type=cls.__name__, filter=filter)
 
     def find_datacenter(self, parent=None):
         """Find the datacenter which this ManagedEntity belongs to."""
