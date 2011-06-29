@@ -903,6 +903,12 @@ class VirtualDiskManager(ManagedObject):
         super(VirtualDiskManager, self).__init__(mo_ref, server)
 
 
+class VirtualizationManager(ManagedObject):
+    attrs = {}
+    def __init__(self, mo_ref, server):
+        super(VirtualizationManager, self).__init__(mo_ref, server)
+
+
 class VirtualMachineCompatibilityChecker(ManagedObject):
     attrs = {}
     def __init__(self, mo_ref, server):
@@ -997,6 +1003,7 @@ classmap = dict((x.__name__, x) for x in (
     ViewManager,
     VirtualApp,
     VirtualDiskManager,
+    VirtualizationManager,
     VirtualMachine,
     VirtualMachineCompatibilityChecker,
     VirtualMachineProvisioningChecker,
