@@ -19,11 +19,11 @@ from psphere.managedobjects import *
 
 logger = logging.getLogger("psphere")
 
-class Vim(object):
+class Server(object):
     """Represents a VirtualCenter/ESX/ESXi server instance.
 
-    >>> from psphere.server import Vim
-    >>> vim = Vim(url="http//esx.foo.com/sdk")
+    >>> from psphere.server import Server
+    >>> server = Server(url="http//esx.foo.com/sdk")
 
     :param url: The url of the server. e.g. https://esx.foo.com/sdk
     :type url: str
@@ -62,7 +62,7 @@ class Vim(object):
     def login(self, username, password):
         """Login to a vSphere server.
 
-        >>> vim.login(username='Administrator', password='strongpass')
+        >>> server.login(username='Administrator', password='strongpass')
 
         :param username: The username to authenticate as.
         :type username: str
@@ -80,7 +80,7 @@ class Vim(object):
     def invoke(self, method, _this, **kwargs):
         """Invoke a method on the server.
 
-        >>> vim.invoke('CurrentTime', vim.si)
+        >>> server.invoke('CurrentTime', server.si)
 
         :param method: The method to invoke, as found in the SDK.
         :type method: str
@@ -153,7 +153,7 @@ class Vim(object):
     def create_object(self, type_, **kwargs):
         """Create a SOAP object of the requested type.
 
-        >>> vim.create_object('VirtualE1000')
+        >>> server.create_object('VirtualE1000')
 
         :param type_: The type of SOAP object to create.
         :type type_: str
