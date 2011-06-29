@@ -41,10 +41,8 @@ class Connect(BaseScript):
         """
         self.login()
         print('Successfully connected to %s' % self.options.url)
-        servertime = self.vim.invoke('CurrentTime',
-                                     _this=self.vim.service_instance)
-        print('Server time is %s' % servertime)
-        self.vim.logout()
+        print(self.server.si.CurrentTime())
+        self.server.logout()
 
 def main():
     c = Connect()
@@ -52,4 +50,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
