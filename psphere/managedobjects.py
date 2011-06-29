@@ -362,7 +362,8 @@ class ManagedEntity(ExtensibleManagedObject):
         :returns: A list of ManagedEntity's matching the filter or None
         :rtype: list
         """
-        return server.find_entity_views(view_type=cls.__name__, filter=filter)
+        # TODO: Implement filter for this find method
+        return server.find_entity_views(view_type=cls.__name__)
 
     @classmethod
     def find_one(cls, server, filter=None):
