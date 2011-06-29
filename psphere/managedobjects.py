@@ -40,7 +40,8 @@ class ManagedObject(object):
         if self.__class__.__name__ != "ManagedObject":
             parent_attrs = super(self.__class__, self).attrs
             self.properties = dict(self.attrs.items() + parent_attrs.items())
-            print("Merged property list for %s: %s" % (self.__class__.__name__, self.properties))
+            logger.debug("Merged property list for %s: %s" %
+                         (self.__class__.__name__, self.properties))
 
     def update_view_data(self, properties=None):
         """Update the local object from the server-side object.
