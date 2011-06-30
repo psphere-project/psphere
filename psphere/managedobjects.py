@@ -194,8 +194,10 @@ class ManagedObject(object):
                 # call looks for it
                 server = object.__getattribute__(self, "server")
                 getattr(server.client.service, name)
+                logger.debug("Constructing func for %s", name)
                 def func(**kwargs):
                     result = self.server.invoke(name, _this=self.mo_ref, **kwargs)
+                    logger.debug("Invoke returned %s" % result)
                     return result
         
                 return func
