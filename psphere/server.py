@@ -238,14 +238,9 @@ class Server(object):
         print('@@@@@@@@@@@@@')
         views = []
         for object_content in object_contents:
-            # This maps the type of managed object in object_content into
-            # a psphere class and then instantiates it with the mo_ref
-            # inside the object_content
-            kls = classmapper(object_content.obj.mo_ref._type)
-            view = kls(mo_ref, self)
             # Update the instance with the data in object_content
-            view.set_view_data(object_content=object_content)
-            views.append(view)
+            object_content.obj.set_view_data(object_content=object_content)
+            views.append(object_content.obj)
 
         return views
         
@@ -387,7 +382,6 @@ class Server(object):
         if properties is None:
             properties = []
 
-        kls = classmapper(view_type)
         # Start the search at the root folder if no begin_entity was given
         if not begin_entity:
             begin_entity = self.sc.rootFolder.mo_ref
@@ -404,9 +398,9 @@ class Server(object):
 
         views = []
         for obj_content in obj_contents:
-            view = kls(obj_content.obj, self)
-            view.update_view_data(properties=properties)
-            views.append(view)
+            logger.debug("In find_entity_view with object of type %s" % obj_content.obj.__class__.__name__)
+            obj_content.obj.update_view_data(properties=properties)
+            views.append(obj_content.obj)
 
         return views
 
