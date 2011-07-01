@@ -924,6 +924,50 @@ class VirtualMachineProvisioningChecker(ManagedObject):
         super(VirtualMachineProvisioningChecker, self).__init__(mo_ref, server)
 
 
+class HostAuthenticationManager(ManagedObject):
+    attrs = {"info": {"MOR": False, "value": None},
+             "supportedStore": {"MOR": True, "value": list()}}
+    def __init__(self, mo_ref, server):
+        super(HostAuthenticationManager, self).__init__(mo_ref, server)
+
+
+class HostAuthenticationStore(ManagedObject):
+    attrs = {"info": {"MOR": False, "value": None}}
+    def __init__(self, mo_ref, server):
+        super(HostAuthenticationStore, self).__init__(mo_ref, server)
+
+
+class HostDirectoryStore(HostAuthenticationStore):
+    attrs = {}
+    def __init__(self, mo_ref, server):
+        super(HostDirectoryStore, self).__init__(mo_ref, server)
+
+
+class HostLocalAuthentication(HostAuthenticationStore):
+    attrs = {}
+    def __init__(self, mo_ref, server):
+        super(HostLocalAuthentication, self).__init__(mo_ref, server)
+    
+
+class HostActiveDirectoryAuthentication(HostDirectoryStore):
+    attrs = {}
+    def __init__(self, mo_ref, server):
+        super(HostActiveDirectoryAuthentication, self).__init__(mo_ref, server)
+    
+
+class HostPowerSystem(ManagedObject):
+    attrs = {"capability": {"MOR": False, "value": None},
+             "info": {"MOR": False, "value": None}}
+    def __init__(self, mo_ref, server):
+        super(HostPowerSystem, self).__init__(mo_ref, server)
+
+
+class StorageResourceManager(ManagedObject):
+    attrs = {}
+    def __init__(self, mo_ref, server):
+        super(StorageResourceManager, self).__init__(mo_ref, server)
+
+
 classmap = dict((x.__name__, x) for x in (
     Alarm,
     AlarmManager,
@@ -949,6 +993,9 @@ classmap = dict((x.__name__, x) for x in (
     FileManager,
     Folder,
     HistoryCollector,
+    HostActiveDirectoryAuthentication,
+    HostAuthenticationManager,
+    HostAuthenticationStore,
     HostAutoStartManager,
     HostBootDeviceSystem,
     HostCpuSchedulerSystem,
@@ -956,15 +1003,18 @@ classmap = dict((x.__name__, x) for x in (
     HostDatastoreSystem,
     HostDateTimeSystem,
     HostDiagnosticSystem,
+    HostDirectoryStore,
     HostFirewallSystem,
     HostFirmwareSystem,
     HostHealthStatusSystem,
     HostKernelModuleSystem,
     HostLocalAccountManager,
+    HostLocalAuthentication,
     HostMemorySystem,
     HostNetworkSystem,
     HostPatchManager,
     HostPciPassthruSystem,
+    HostPowerSystem,
     HostProfile,
     HostProfileManager,
     HostServiceSystem,
@@ -998,6 +1048,7 @@ classmap = dict((x.__name__, x) for x in (
     SearchIndex,
     ServiceInstance,
     SessionManager,
+    StorageResourceManager,
     Task,
     TaskHistoryCollector,
     TaskManager,
@@ -1011,7 +1062,7 @@ classmap = dict((x.__name__, x) for x in (
     VirtualMachineCompatibilityChecker,
     VirtualMachineProvisioningChecker,
     VirtualMachineSnapshot,
-    VmwareDistributedVirtualSwitch,
+    VmwareDistributedVirtualSwitch
 ))
 
 
