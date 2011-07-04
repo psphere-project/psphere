@@ -353,10 +353,11 @@ class ManagedEntity(ExtensibleManagedObject):
               "tag": {"MOR": False, "value": list()},
               "triggeredAlarmState": {"MOR": False, "value": list()}}
     def __init__(self, mo_ref, server):
-        super(ManagedEntity, self).__init__(mo_ref, server)
+        logger.debug("Calling __init__ on parent class ExtensibleManagedObject")
+        ExtensibleManagedObject.__init__(self, mo_ref, server)
 
     @classmethod
-    def find(cls, server, filter=None):
+    def find(cls, server):
         """Find ManagedEntity's of this type using the given filter.
         
         :param filter: Find ManagedEntity's matching these key/value pairs
@@ -368,7 +369,7 @@ class ManagedEntity(ExtensibleManagedObject):
         return server.find_entity_views(view_type=cls.__name__)
 
     @classmethod
-    def find_one(cls, server, filter=None):
+    def find_one(cls, server, filter=None, properties=None):
         """Find a ManagedEntity of this type using the given filter.
         
         If multiple ManagedEntity's are found, only the first is returned.
@@ -378,7 +379,12 @@ class ManagedEntity(ExtensibleManagedObject):
         :returns: A ManagedEntity's matching the filter or None
         :rtype: ManagedEntity
         """
-        return server.find_entity_view(view_type=cls.__name__, filter=filter)
+        if filter is None:
+            filter = []
+        if properties is None:
+            properties = []
+        return server.find_entity_view(view_type=cls.__name__, filter=filter,
+                                       properties=properties)
 
     def find_datacenter(self, parent=None):
         """Find the datacenter which this ManagedEntity belongs to."""
@@ -416,7 +422,8 @@ class ComputeResource(ManagedEntity):
              "resourcePool": {"MOR": True, "value": None},
              "summary": {"MOR": False, "value": None}}
     def __init__(self, mo_ref, server):
-        super(ComputeResource, self).__init__(mo_ref, server)
+        logger.debug("Calling __init__ on parent class ManagedEntity")
+        ManagedEntity.__init__(self, mo_ref, server)
 
     def find_datastore(self, name):
         if not self.datastore:
@@ -441,7 +448,8 @@ class ClusterComputeResource(ComputeResource):
              "migrationHistory": {"MOR": False, "value": list()},
              "recommendation": {"MOR": False, "value": list()}}
     def __init__(self, mo_ref, server):
-        super(ClusterComputeResource, self).__init__(mo_ref, server)
+        logger.debug("Calling __init__ on parent class ComputeResource")
+        ComputeResource.__init__(self, mo_ref, server)
 
 
 class Datacenter(ManagedEntity):
