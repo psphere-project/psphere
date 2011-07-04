@@ -17,24 +17,29 @@
 
 
 # Lists all files on all datastores attached to managed datacenters.
-import sys
+import time
 
 from psphere.scripting import BaseScript
-from psphere.soap import VimFault
-from psphere.vim25 import ObjectNotFoundError
+from psphere.managedobjects import Datacenter
 
 
 class DatastoreFiles(BaseScript):
     def list_files(self):
-        for o in self.vim.find_entity_list('Datacenter', properties=['name', 'datastore']):
-            print "Datacenter:", o.name
-            ds = self.vim.get_views(o.datastore, properties=['info', 'browser'])
-            for d in ds:
-                print "Datastore:", d.info.name
-                root_folder = "[%s] /" % d.info.name
-                task = self.vim.invoke_task('SearchDatastoreSubFolders_Task',
-                        _this=d.browser,
-                        datastorePath=root_folder)
+        for dc in Datacenter.find(self.server):
+            print("Datacenter: %s" % dc.name)
+            print(dc.datastore)
+            for ds in dc.datastore:
+                print("Datastore: %s" % ds.info.name)
+
+            for ds in dc.datastore:
+                print("Datastore: %s" % ds.info.name)
+                root_folder = "[%s] /" % ds.info.name
+                task = ds.browser.SearchDatastoreSubFolders_Task(datastorePath=root_folder)
+
+                task.update_view_data()
+                while task.info.state == "running":
+                    time.sleep(3)
+                    task.update_view_data()
 
                 for array_of_results in task.info.result:
                     # The first entry in this array is a type descriptor
@@ -43,7 +48,7 @@ class DatastoreFiles(BaseScript):
                         for r in result:
                             try:
                                 for f in r.file:
-                                    print "%s%s" % (r.folderPath, f.path)
+                                    print("%s%s" % (r.folderPath, f.path))
                             except AttributeError:
                                 pass
 
