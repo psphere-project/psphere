@@ -424,7 +424,8 @@ class ManagedObject(object):
                       'with value "%s"' % (dynprop.name, dynprop.val))
                 continue
 
-            if not len(dynprop.val):
+            if (not isinstance(dynprop.val, (bool, int, long))
+                and not len(dynprop.val):
                 if self.vim.debug:
                     print('DEBUG: Skipping %s with empty value' % dynprop.name)
                 continue
@@ -503,6 +504,15 @@ class AlarmManager(ManagedObject):
     def __init__(self, mo_ref, vim):
         self.defaultExpression = []
         self.description = None
+        ManagedObject.__init__(self, mo_ref, vim)
+
+
+class HttpNfcLease(ManagedObject):
+    def __init__(self, mo_ref, vim):
+        self.error = None
+        self.info = None
+        self.initializeProgress = 0
+        self.state = None
         ManagedObject.__init__(self, mo_ref, vim)
 
 
