@@ -8,7 +8,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(name='psphere',
-      version='0.1.2',
+      version='0.1.3',
       description='vSphere SDK for Python',
       long_description=read('README'),
       author='Jonathan Kinred',
