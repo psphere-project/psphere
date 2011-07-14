@@ -16,7 +16,7 @@ psphere is compatible with **Python 2.4** so that it can run on CentOS/RHEL 5.
 Installing psphere
 ------------------
 
-    # easy_install psphere
+    # pip install -U psphere
 
 Usage
 -----

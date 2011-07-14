@@ -18,6 +18,6 @@ Installation
 
 psphere is best installed using the official package:
 
-$ pip install psphere
+# pip install -U psphere
 
 This will fetch psphere and it's dependencies from PyPI.
