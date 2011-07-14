@@ -1,7 +1,7 @@
 Introduction
 ============
 
-This is the documentation for pSphere, native Python bindings for the
+This is the documentation for psphere, native Python bindings for the
 vSphere Web Services SDK and VMware Infrastructure SDK.
 
 Prerequisites
@@ -10,8 +10,8 @@ Prerequisites
 All development is done against VMware ESX Server 3.5 which is VI SDK 2.5. I
 have not tested it against ESXi, vSphere 4, etc. although I fully intend to.
 
-pSphere is developed with **Python 2.6**. My intention is to ensure
-pSphere is compatible with **Python 2.4** so that it can run on CentOS/RHEL 5.
+psphere is developed with **Python 2.6**. My intention is to ensure
+psphere is compatible with **Python 2.4** so that it can run on CentOS/RHEL 5.
 
 The suds SOAP library is used for comms with the vSphere server. The 0.4 beta
 is required which isn't in PyPI at time of writing. You can download and
@@ -25,7 +25,7 @@ install it yourself from the `the suds website`_::
 .. _the suds website: https://fedorahosted.org/suds/#Resources
 
 
-Installing pSphere
+Installing psphere
 ------------------
 
 Until I release to PyPI, you have to clone the hg repository and install it

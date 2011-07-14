@@ -1,10 +1,10 @@
 .. highlight:: python
 
-First steps with pSphere
+First steps with psphere
 ========================
 
-This document is meant to give a tutorial-like overview of the main pSphere
-objects and the common tasks that pSphere is used for.
+This document is meant to give a tutorial-like overview of the main psphere
+objects and the common tasks that psphere is used for.
 
 The green arrows designate "more info" links leading to more detailed
 sections about the described task.
@@ -25,7 +25,7 @@ Throughout this documentation there are links to the API reference documentation
 The Vim object
 --------------
 
-The Vim object is the entry point into pSphere. Through it you can log into a
+The Vim object is the entry point into psphere. Through it you can log into a
 vSphere server, find managed objects, obtain views of those managed objects
 and access information about them.
 
@@ -38,7 +38,7 @@ A brief overview of the most common methods:
 |more| Read more about the :ref:`Vim attributes and methods <vim-reference>`.
 
 
-Hello World in pSphere
+Hello World in psphere
 ----------------------
 
 Not quite, but logging into the server and printing the current time is

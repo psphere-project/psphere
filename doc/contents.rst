@@ -1,6 +1,6 @@
 .. _contents:
 
-pSphere documentation contents
+psphere documentation contents
 ==============================
 
 .. toctree::

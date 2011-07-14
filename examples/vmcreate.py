@@ -86,7 +86,7 @@ class VMCreate(BaseScript):
         vm_config_spec.name = name
         vm_config_spec.memoryMB = memory
         vm_config_spec.files = vmfi
-        vm_config_spec.annotation = 'Auto-provisioned by pSphere'
+        vm_config_spec.annotation = 'Auto-provisioned by psphere'
         vm_config_spec.numCPUs = num_cpus
         vm_config_spec.guestId = guest_id
         vm_config_spec.deviceChange = vm_devices

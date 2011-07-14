@@ -39,7 +39,7 @@ source_suffix = '.rst'
 master_doc = 'contents'
 
 # General information about the project.
-project = u'pSphere'
+project = u'psphere'
 copyright = u'2010, Jonathan Kinred'
 
 # The version info for the project you're documenting, acts as replacement for

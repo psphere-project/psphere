@@ -2,7 +2,7 @@ Error handling
 ==============
 
 At time of writing, the vSphere SDK raises 435 types of exception. Rather
-than duplicate these in pSphere, the API instead raises a single fault 
+than duplicate these in psphere, the API instead raises a single fault 
 called `VimFault` when any vSphere related fault is detected. The `VimFault`
 exception contains the following attributes:
 
