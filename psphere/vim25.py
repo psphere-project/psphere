@@ -425,7 +425,7 @@ class ManagedObject(object):
                 continue
 
             if (not isinstance(dynprop.val, (bool, int, long))
-                and not len(dynprop.val):
+                and not len(dynprop.val)):
                 if self.vim.debug:
                     print('DEBUG: Skipping %s with empty value' % dynprop.name)
                 continue
