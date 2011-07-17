@@ -1,0 +1,19 @@
+Introduction
+------------
+
+This Python module aims to provide a Python interface to the VMware vSphere
+Web Services SDK.
+
+By using this module, one can perform all operations on a vSphere server such
+as:
+    * Query host systems, datastores and virtual machines
+    * Provision new virtual machines
+
+Installation
+------------
+
+psphere is best installed using the official package:
+
+# pip install -U psphere
+
+This will fetch psphere and it's dependencies from PyPI.

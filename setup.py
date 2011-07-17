@@ -1,16 +1,24 @@
 #!/usr/bin/env python
 
+import os
+
 from setuptools import setup
 
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
 setup(name='psphere',
-      version='0.1',
+      version='0.5.0',
       description='vSphere SDK for Python',
+      long_description=read('README'),
       author='Jonathan Kinred',
       author_email='jonathan.kinred@gmail.com',
-      url='http://jkinred.bitbucket.org/psphere',
+      url='http://bitbucket.org/jkinred/psphere2',
       packages=['psphere'],
       install_requires=['suds', 'PyYAML'],
+      keywords=['vsphere', 'vmware'],
       classifiers=[
         "Development Status :: 2 - Pre-Alpha",
+        "License :: OSI Approved :: Apache Software License",
       ],
      )
