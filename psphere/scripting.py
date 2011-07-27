@@ -20,11 +20,11 @@ read predefined configuration from the users .visdkrc file.
 
 
 import os, optparse
-from psphere.server import Server
+from psphere.client import Client
 
 class BaseScript(object):
     def __init__(self):
-        self.server = None
+        self.client = None
         self.required_opts = []
         # The vars that are valid in the .visdkrc file
         self.config_vars = ['url', 'username', 'password']
@@ -55,8 +55,8 @@ class BaseScript(object):
         if password:
             self.options.password = password
 
-        self.server = Server(self.options.url)
-        self.server.login(self.options.username, self.options.password)
+        self.client = Client(self.options.url)
+        self.client.login(self.options.username, self.options.password)
 
     def read_visdk(self):
         # Read the visdkrc file, use values that are in there or append

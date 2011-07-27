@@ -1,10 +1,10 @@
 .. highlight:: python
 
-First steps with pSphere
+First steps with psphere
 ========================
 
-This document is meant to give a tutorial-like overview of the main pSphere
-objects and the common tasks that pSphere is used for.
+This document is meant to give a tutorial-like overview of the main psphere
+objects and the common tasks that psphere is used for.
 
 The green arrows designate "more info" links leading to more detailed
 sections about the described task.
@@ -22,50 +22,51 @@ Throughout this documentation there are links to the API reference documentation
 |more| See :ref:`useful references <useful-references>`.
 
 
-The ServiceInstance object
---------------
+The Client object
+-----------------
 
-The ServiceInstance object is the entry point into pSphere. Through it you can login to a
+The Client object is the entry point into psphere. Through it you can login to a
 vSphere server and obtain Python objects representing managed objects. You can
 then access information about and execute methods on those objects.
 
 |more| Read more about the :ref:`Vim attributes and methods <vim-reference>`.
 
 
-Hello World in pSphere
+Hello World in psphere
 ----------------------
 
 Not quite, but logging into the server and printing the current time is close::
 
-    >>> from psphere.managedobject import ServiceInstance
-    >>> si = ServicInstance('https://localhost/sdk', 'Administrator', 'none')
-    >>> servertime = si.CurrentTime()
+    >>> from psphere.client import Client
+    >>> client = Client('https://localhost/sdk', 'Administrator', 'none')
+    >>> servertime = client.si.CurrentTime()
     >>> print(servertime)
     2010-09-04 18:35:12.062575
-    >>> si.logout()
+    >>> client.logout()
 
 
 General programming pattern
 ---------------------------
 
-Create a new ServiceInstance::
+Create a new Client::
 
-    >>> from psphere.managedobjects import ServiceInstance
-    >>> si = ServiceInstance('https://localhost/sdk', 'Administrator', 'mypassword')
+    >>> from psphere.client import Client
+    >>> client = Client('https://localhost/sdk', 'Administrator', 'mypassword')
 
 ...check out the rootFolder of the content attribute, it's a Python object::
 
-    >>> si.content.rootFolder.__class__
+    >>> root_folder = client.si.content.rootFolder
+    >>> root_folder.__class__
     <class 'psphere.managedobjects.Folder'>
 
-...access properties of a Managed Object::
+...access properties of a it::
 
-    >>> print(si.content.rootFolder.name)
+    >>> print(root_folder.name)
     Datacenters
 
 ...invoke a method::
 
-    >>> new_folder = si.content.rootFolder.CreateFolder(name='New')
+    >>> new_folder = root_folder.CreateFolder(name='New')
     >>> print(new_folder.name)
     New
     >>> task = new_folder.Destroy_Task()
@@ -74,21 +75,23 @@ Create a new ServiceInstance::
 
 ...log out of the server::
 
-    >>> si.logout()
+    >>> client.logout()
 
 
 Finding a ManagedEntity
 -----------------------
 
-Managed Objects extending **ManagedEntity** are probably the most used
-objects in the vSphere API.
+Managed Object's which extend the **ManagedEntity** class are the most
+commonly used objects in the vSphere API. These include Managed Object's
+such as HostSystem's and VirtualMachine's.
 
-pSphere makes it easy to find Managed Entity's by providing a find_one()
+psphere makes it easy to find Managed Entity's by providing a find_one()
 classmethod to find them::
 
-    >>> from psphere.managedobjects import ServiceInstance, VirtualMachine
-    >>> si = ServiceInstance('https://localhost/sdk', 'Administrator', 'none')
-    >>> vm = VirtualMachine.find_one(service_instance=si, filter={'name': 'genesis'})
+    >>> from psphere.client import Client
+    >>> from psphere.managedobjects import VirtualMachine
+    >>> client = Client('https://localhost/sdk', 'Administrator', 'none')
+    >>> vm = VirtualMachine.find_one(client=client, filter={'name': 'genesis'})
     >>> vm.__class__
     <class 'psphere.managedobjects.VirtualMachine'>
     >>> vm.name
@@ -103,18 +106,23 @@ Some notes on attribute retrieval
 ---------------------------------
 
 At this point we have to delve into a more complicated aspect of vSphere and
-how pSphere handles it. The vSphere SDK is setup to provide abstract "views"
-of server side objects, some of these objects can be quite substantial once
-the nested properties have been followed and retrieved. For example a
-HostSystem has a xxx which has an xxx which has an xxx.
-reference to a If you inefficiently retrieve these attributes and you retrieve
-substantial objects then your scripts will be slow and you will generate load
-on your vSphere server.
+how psphere handles it. You do not need to worry about this, psphere will just
+work for you -- albeit inefficiently in some cases.
 
-pSphere deals with this using the following logic:
+The vSphere SDK architecture provides abstract "views" of server side objects,
+some of these objects can be quite substantial, both in size and server
+resources required to collect them.
 
-By default, a Managed Object will not retrieve properties from the server
-when it is instantiated. The property will be "lazily" retrieved from the
+For example a HostSystem has a xxx which has an xxx which has an xxx. If you
+inefficiently retrieve these attributes and you retrieve substantial objects
+then your scripts will be slow and you will generate load on your vSphere
+server.
+
+psphere deals with this using the following logic:
+
+When a Managed Object is instantiated, it will not retrieve properties from
+the server when it is instantiated. The property will be "lazily" retrieved
+from the
 server when it is accessed. Once accessed, it will be cached for future
 use. This works well if you are accessing only a few properties, but it
 requires a SOAP call for each property retrieval, so if you know ahead
@@ -122,7 +130,7 @@ of time which properties you will be accessing, then you can retrieve
 those properties from the server with a single SOAP call by creating,
 or updating the Managed Object with the properties you will be using::
 
-    >>> vm = VirtualMachine.find_one(filter={"name": "genesis"}, properties=["name", "guest"])
+    >>> vm = VirtualMachine.find_one(client=client, filter={"name": "genesis"}, properties=["name", "guest"])
     >>> vm.name
     genesis
     >>> vm.guest.ipAddress
@@ -135,13 +143,14 @@ The vSphere API even allows you to do this extremely efficiently using
 a "sub" property specification::
 
     >>> del(vm.config) # Deletes the cached property
-    >>> vm = VirtualMachine.find_one(filter={"name": "genesis"}, properties=["config.guestId"])
+    >>> vm = VirtualMachine.find_one(client=client, filter={"name": "genesis"}, properties=["config.guestId"])
     >>> print(vm.config.guestId)
     rhel5guest
 
-The properties parameter is available in the ServiceInstance.find_entity_view(),
-ServiceInstance.find_entity_views(), ManagedObject.find_one() and
-ManagedObject.update() methods.
+The properties parameter is available in the Client.find_entity_view(),
+Client.find_entity_views() methods and is implemented in the find(),
+find_one() and update() methods of the ManagedObject class (which all
+Managed Object's derive from).
 
 
 .. |more| image:: more.png

@@ -39,8 +39,8 @@ class Connect(BaseScript):
         """
         self.login()
         print('Successfully connected to %s' % self.options.url)
-        print(self.server.si.CurrentTime())
-        self.server.logout()
+        print(self.client.si.CurrentTime())
+        self.client.logout()
 
 def main():
     c = Connect()

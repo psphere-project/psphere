@@ -1,8 +1,8 @@
-"""                                                                             
-:mod:`psphere.server` - vSphere server access
+"""
+:mod:`psphere.client` - A client for communicating with a vSphere server
 =============================================
 
-.. module:: server
+.. module:: client
 
 The main module for accessing a vSphere server.
 
@@ -27,6 +27,7 @@ The main module for accessing a vSphere server.
 
 import time
 import logging
+import suds
 
 from psphere import config
 from psphere import soap
@@ -35,11 +36,11 @@ from psphere.managedobjects import *
 
 logger = logging.getLogger("psphere")
 
-class Server(object):
-    """Represents a VirtualCenter/ESX/ESXi server instance.
+class Client(suds.client.Client):
+    """A client for communicating with a VirtualCenter/ESX/ESXi server
 
-    >>> from psphere.server import Server
-    >>> server = Server(url="http//esx.foo.com/sdk")
+    >>> from psphere.client import Client
+    >>> Client = Client(url="http//esx.foo.com/sdk")
 
     :param url: The url of the server. e.g. https://esx.foo.com/sdk
     :type url: str
@@ -50,13 +51,13 @@ class Server(object):
 
     """
     def __init__(self, url, auto_populate=True, debug=False):
-        self.url = url
+        super(self.__class__, self).__init__("%s/vimService.wsdl" % url)
+        self.set_options(location=url)
         self.auto_populate = auto_populate
         self.debug = debug
         self.config = config.get_config()
         # Setup logging
         self._init_logging()
-        self.client = soap.get_client(url)
         si_mo_ref = soap.ManagedObjectReference(_type='ServiceInstance',
                                                 value='ServiceInstance')
         self.si = ServiceInstance(si_mo_ref, self) 
@@ -78,7 +79,7 @@ class Server(object):
     def login(self, username, password):
         """Login to a vSphere server.
 
-        >>> server.login(username='Administrator', password='strongpass')
+        >>> client.login(username='Administrator', password='strongpass')
 
         :param username: The username to authenticate as.
         :type username: str
@@ -96,19 +97,19 @@ class Server(object):
     def invoke(self, method, _this, **kwargs):
         """Invoke a method on the server.
 
-        >>> server.invoke('CurrentTime', server.si)
+        >>> client.invoke('CurrentTime', client.si)
 
         :param method: The method to invoke, as found in the SDK.
         :type method: str
-        :param _this: The managed object against which to invoke the \
-        method.
+        :param _this: The managed object reference against which to invoke \
+        the method.
         :type _this: ManagedObject
         :param kwargs: The arguments to pass to the method, as \
         found in the SDK.
         :type kwargs: TODO
 
         """
-        result = soap.invoke(self.client, method, _this=_this, **kwargs)
+        result = getattr(self.service, method)(_this=_this, **kwargs)
         if not hasattr(result, '__iter__'):
             logger.debug("Result is not iterable")
             return result
@@ -166,10 +167,10 @@ class Server(object):
 
         return new_object
 
-    def create_object(self, type_, **kwargs):
+    def create(self, type_, **kwargs):
         """Create a SOAP object of the requested type.
 
-        >>> server.create_object('VirtualE1000')
+        >>> client.create('VirtualE1000')
 
         :param type_: The type of SOAP object to create.
         :type type_: str
@@ -177,7 +178,7 @@ class Server(object):
         :type kwargs: TODO
 
         """
-        obj = soap.create(self.client, type_)
+        obj = self.factory.create("ns0:%s" % _type)
         for key, value in kwargs.items():
             setattr(obj, key, value)
         return obj
@@ -227,7 +228,7 @@ class Server(object):
         :rtype: list of ManagedObject's
 
         """
-        property_spec = soap.create(self.client, 'PropertySpec')
+        property_spec = self.create('PropertySpec')
         # FIXME: Makes assumption about mo_refs being a list
         property_spec.type = str(mo_refs[0]._type)
         if not properties and self.auto_populate:
@@ -239,11 +240,11 @@ class Server(object):
 
         object_specs = []
         for mo_ref in mo_refs:
-            object_spec = soap.create(self.client, 'ObjectSpec')
+            object_spec = self.create('ObjectSpec')
             object_spec.obj = mo_ref
             object_specs.append(object_spec)
 
-        pfs = soap.create(self.client, 'PropertyFilterSpec')
+        pfs = self.create('PropertyFilterSpec')
         pfs.propSet = [property_spec]
         pfs.objectSet = object_specs
 
@@ -287,53 +288,53 @@ class Server(object):
 
         # Create a selection spec for each of the strings specified above
         selection_specs = [
-            soap.create(self.client, 'SelectionSpec', name=ss_string)
+            self.create('SelectionSpec', name=ss_string)
             for ss_string in ss_strings
         ]
 
         # A traversal spec for deriving ResourcePool's from found VMs
-        rpts = soap.create(self.client, 'TraversalSpec')
+        rpts = self.create('TraversalSpec')
         rpts.name = 'resource_pool_traversal_spec'
         rpts.type = 'ResourcePool'
         rpts.path = 'resourcePool'
         rpts.selectSet = [selection_specs[0], selection_specs[1]]
 
         # A traversal spec for deriving ResourcePool's from found VMs
-        rpvts = soap.create(self.client, 'TraversalSpec')
+        rpvts = self.create('TraversalSpec')
         rpvts.name = 'resource_pool_vm_traversal_spec'
         rpvts.type = 'ResourcePool'
         rpvts.path = 'vm'
 
-        crrts = soap.create(self.client ,'TraversalSpec')
+        crrts = self.create('TraversalSpec')
         crrts.name = 'compute_resource_rp_traversal_spec'
         crrts.type = 'ComputeResource'
         crrts.path = 'resourcePool'
         crrts.selectSet = [selection_specs[0], selection_specs[1]]
 
-        crhts = soap.create(self.client, 'TraversalSpec')
+        crhts = self.create('TraversalSpec')
         crhts.name = 'compute_resource_host_traversal_spec'
         crhts.type = 'ComputeResource'
         crhts.path = 'host'
          
-        dhts = soap.create(self.client, 'TraversalSpec')
+        dhts = self.create('TraversalSpec')
         dhts.name = 'datacenter_host_traversal_spec'
         dhts.type = 'Datacenter'
         dhts.path = 'hostFolder'
         dhts.selectSet = [selection_specs[2]]
 
-        dvts = soap.create(self.client, 'TraversalSpec')
+        dvts = self.create('TraversalSpec')
         dvts.name = 'datacenter_vm_traversal_spec'
         dvts.type = 'Datacenter'
         dvts.path = 'vmFolder'
         dvts.selectSet = [selection_specs[2]]
 
-        hvts = soap.create(self.client, 'TraversalSpec')
+        hvts = self.create('TraversalSpec')
         hvts.name = 'host_vm_traversal_spec'
         hvts.type = 'HostSystem'
         hvts.path = 'vm'
         hvts.selectSet = [selection_specs[2]]
       
-        fts = soap.create(self.client, 'TraversalSpec')
+        fts = self.create('TraversalSpec')
         fts.name = 'folder_traversal_spec'
         fts.type = 'Folder'
         fts.path = 'childEntity'
@@ -342,12 +343,12 @@ class Server(object):
                           selection_specs[6], selection_specs[7],
                           selection_specs[1]]
 
-        obj_spec = soap.create(self.client, 'ObjectSpec')
+        obj_spec = self.create('ObjectSpec')
         obj_spec.obj = begin_entity
         obj_spec.selectSet = [fts, dvts, dhts, crhts, crrts,
                                rpts, hvts, rpvts]
 
-        pfs = soap.create(self.client, 'PropertyFilterSpec')
+        pfs = self.create('PropertyFilterSpec')
         pfs.propSet = [property_spec]
         pfs.objectSet = [obj_spec]
         return pfs
@@ -402,7 +403,7 @@ class Server(object):
         if not begin_entity:
             begin_entity = self.sc.rootFolder.mo_ref
 
-        property_spec = soap.create(self.client, 'PropertySpec')
+        property_spec = self.create('PropertySpec')
         property_spec.type = view_type
         property_spec.all = False
         property_spec.pathSet = properties
@@ -448,7 +449,7 @@ class Server(object):
             begin_entity = self.sc.rootFolder.mo_ref
             logger.debug("Using %s" % self.sc.rootFolder.mo_ref)
 
-        property_spec = soap.create(self.client, 'PropertySpec')
+        property_spec = self.create('PropertySpec')
         property_spec.type = view_type
         property_spec.all = False
         property_spec.pathSet = filter.keys()

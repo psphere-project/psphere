@@ -22,7 +22,7 @@ from psphere.managedobjects import Datacenter
 
 class DatastoreFiles(BaseScript):
     def list_files(self):
-        for dc in Datacenter.find(self.server):
+        for dc in Datacenter.find(self.client):
             print("Datacenter: %s" % dc.name)
             print(dc.datastore)
             for ds in dc.datastore:

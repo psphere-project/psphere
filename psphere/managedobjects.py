@@ -28,27 +28,23 @@ class ManagedObject(object):
     
    :param mo_ref: The managed object reference used to create this instance
    :type mo_ref: ManagedObjectReference
-   :param server: A reference back to the psphere server object, which \
+   :param client: A reference back to the psphere client object, which \
    we use to make calls.
-   :type server: Vim
+   :type client: Client
 
     """
-    attrs = {}
-    def __init__(self, mo_ref, server):
+    props = {}
+    def __init__(self, mo_ref, client):
         logger.debug("===== Have been passed %s as mo_ref: " % mo_ref)
         self.mo_ref = mo_ref
-        self.server = server
-        self.properties = {}
-        if self.__class__.__name__ != "ManagedObject":
-            parent_attrs = super(self.__class__, self).attrs
-            self.properties = dict(self.attrs.items() + parent_attrs.items())
-            logger.debug("Merged property list for %s: %s" %
-                         (self.__class__.__name__, self.properties))
+        self.client = client
+        logger.debug("Merged property list for %s: %s" %
+                     (self.__class__, self.props))
 
     def update_view_data(self, properties=None):
         """Update the local object from the server-side object.
         
-        >>> vm = VirtualMachine.find_one(server, filter={"name": "genesis"})
+        >>> vm = VirtualMachine.find_one(client, filter={"name": "genesis"})
         >>> # Update all properties
         >>> vm.update_view_data()
         >>> # Update the config and summary properties
@@ -61,26 +57,26 @@ class ManagedObject(object):
         if properties is None:
             properties = []
         logger.info("Updating view data for object of type %s" % self.mo_ref._type)
-        property_spec = soap.create(self.server.client, 'PropertySpec')
+        property_spec = self.client.create('PropertySpec')
         property_spec.type = str(self.mo_ref._type)
         # Determine which properties to retrieve from the server
-        if not properties and self.server.auto_populate:
+        if not properties and self.client.auto_populate:
             logger.debug("Retrieving all properties of the object")
             property_spec.all = True
         else:
             logger.debug("Retrieving %s properties" % len(properties))
             property_spec.all = False
-            property_spec.pathSet = properties
+            property_spec.pathSet = passroperties
 
-        object_spec = soap.create(self.server.client, 'ObjectSpec')
+        object_spec = self.client.create('ObjectSpec')
         object_spec.obj = self.mo_ref
 
-        pfs = soap.create(self.server.client, 'PropertyFilterSpec')
+        pfs = self.client.create('PropertyFilterSpec')
         pfs.propSet = [property_spec]
         pfs.objectSet = [object_spec]
 
         # Create a copy of the property collector and call the method
-        pc = self.server.sc.propertyCollector
+        pc = self.client.sc.propertyCollector
         object_content = pc.RetrieveProperties(specSet=pfs)[0]
         if not object_content:
             # TODO: Improve error checking and reporting
@@ -92,12 +88,12 @@ class ManagedObject(object):
         """Update the local object from the passed in object_content."""
         # A debugging convenience, allows inspection of the object_content
         # that was used to create the object
-        logger.info("Setting view data for a %s" % self.__class__.__name__)
+        logger.info("Setting view data for a %s" % self.__class__)
         self._object_content = object_content
 
         for dynprop in object_content.propSet:
             # If the class hasn't defined the property, don't use it
-            if dynprop.name not in self.properties.keys():
+            if dynprop.name not in self.props.keys():
                 logger.error("Server returned a property '%s' but the object"
                              "hasn't defined it so it is being ignored." %
                              dynprop.name)
@@ -118,20 +114,20 @@ class ManagedObject(object):
 
             # Values which contain classes starting with Array need
             # to be converted into a nicer Python list
-            if dynprop.val.__class__.__name__.startswith('Array'):
+            if dynprop.val.__name__.startswith('Array'):
                 # suds returns a list containing a single item, which
                 # is another list. Use the first item which is the real list
                 logger.info("Setting value of an Array* property")
                 logger.debug("%s being set to %s" % (dynprop.name,
                                                      dynprop.val[0]))
-                self.properties[dynprop.name]["value"] = dynprop.val[0]
+                self.props[dynprop.name]["value"] = dynprop.val[0]
             else:
                 logger.info("Setting value of a single-valued property")
                 logger.debug("DynamicProperty value is a %s: " %
-                             dynprop.val.__class__.__name__)
+                             dynprop.val.__name__)
                 logger.debug("%s being set to %s" % (dynprop.name,
                                                      dynprop.val))
-                self.properties[dynprop.name]["value"] = dynprop.val
+                self.props[dynprop.name]["value"] = dynprop.val
 
     def __getattribute__(self, name):
         """Overridden so that SOAP methods can be proxied.
@@ -153,14 +149,15 @@ class ManagedObject(object):
         :param type: str
 
         """
-        logger.debug("Entering overriden built-in __getattribute__")
+        logger.debug("Entering overridden built-in __getattribute__"
+                     " with %s" % name)
         # Built-ins always use the default behaviour
-        if name.startswith("__"):
+        if name.startswith("__") or name == "props":
             logger.debug("Returning built-in attribute %s" % name)
             return object.__getattribute__(self, name)
 
-        properties = object.__getattribute__(self, "properties")
-        if name in properties.keys():
+        props = object.__getattribute__(self, "props")
+        if name in props.keys():
             # See if the value has already been retrieved an saved
             logger.debug("%s is a property of this object, checking if "
                          "attribute is already cached" % name)
@@ -172,18 +169,18 @@ class ManagedObject(object):
                 logger.debug("No cached value for %s. Retrieving..." % name)
                 # TODO: Check if it's an array or a single value
                 #result = self.method(inst)
-                if self.properties[name]["MOR"] is True:
+                if self.props[name]["MOR"] is True:
                     logger.debug("%s is a MOR" % name)
-                    if isinstance(self.properties[name]["value"], list):
+                    if isinstance(self.props[name]["value"], list):
                         logger.debug("%s is a list of MORs" % name)
-                        result = self.server.get_views(self.properties[name]["value"])
+                        result = self.client.get_views(self.props[name]["value"])
                     else:
                         logger.debug("%s is single-valued" % name)
-                        result = self.server.get_view(self.properties[name]["value"])
+                        result = self.client.get_view(self.props[name]["value"])
                 else:
                     # It's just a property, get it
                     logger.debug("%s is not a MOR" % name)
-                    result = self.properties[name]["value"]
+                    result = self.props[name]["value"]
                     
                 # Set the object value to returned value
                 logger.debug("Retrieved %s for %s" % (result, name))
@@ -191,14 +188,16 @@ class ManagedObject(object):
                 return result            
         else:
             try:
-                # Here we must manually get the server object so we
+                # Here we must manually get the client object so we
                 # don't get recursively called when the next method
                 # call looks for it
-                server = object.__getattribute__(self, "server")
-                getattr(server.client.service, name)
+                client = object.__getattribute__(self, "client")
+                # TODO: This should probably be raised by Client.invoke
+                getattr(client.service, name)
                 logger.debug("Constructing func for %s", name)
                 def func(**kwargs):
-                    result = self.server.invoke(name, _this=self.mo_ref, **kwargs)
+                    result = client.invoke(name, _this=self.mo_ref,
+                                                **kwargs)
                     logger.debug("Invoke returned %s" % result)
                     return result
         
@@ -209,138 +208,175 @@ class ManagedObject(object):
 
 # First list the classes which directly inherit from ManagedObject
 class AlarmManager(ManagedObject):
-    attrs = {"defaultExpression": {"MOR": False, "value": list()},
+    props = {"defaultExpression": {"MOR": False, "value": list()},
              "description": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(AlarmManager, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class AuthorizationManager(ManagedObject):
-    attrs = {"description": {"MOR": False, "value": None},
+    props = {"description": {"MOR": False, "value": None},
              "privilegeList": {"MOR": False, "value": list()},
              "roleList": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(AuthorizationManager, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class CustomFieldsManager(ManagedObject):
-    attrs = {"field": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(CustomFieldsManager, self).__init__(mo_ref, server)
+    props = {"field": {"MOR": False, "value": list()}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class CustomizationSpecManager(ManagedObject):
-    attrs = {"encryptionKey": {"MOR": False, "value": list()},
+    props = {"encryptionKey": {"MOR": False, "value": list()},
              "info": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(CustomizationSpecManager, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class DiagnosticManager(ManagedObject):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(DiagnosticManager, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class DistributedVirtualSwitchManager(ManagedObject):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(DistributedVirtualSwitchManager, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class EnvironmentBrowser(ManagedObject):
-    attrs = {"datastoreBrowser": {"MOR": True, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(EnvironmentBrowser, self).__init__(mo_ref, server)
+    props = {"datastoreBrowser": {"MOR": True, "value": None}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class EventManager(ManagedObject):
-    attrs = {"description": {"MOR": False, "value": None},
+    props = {"description": {"MOR": False, "value": None},
              "latestEvent": {"MOR": False, "value": None},
              "maxCollector": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(EventManager, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class ExtensibleManagedObject(ManagedObject):
-    attrs = {"availableField": {"MOR": False, "value": list()},
+    props = {"availableField": {"MOR": False, "value": list()},
              "value": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(ExtensibleManagedObject, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.props = dict(ManagedObject.props.items() + self.props.items())
 
 
 class Alarm(ExtensibleManagedObject):
-    attrs = {"info": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(Alarm, self).__init__(mo_ref, server)
+    props = {"info": {"MOR": False, "value": None}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostCpuSchedulerSystem(ExtensibleManagedObject):
-    attrs = {"hyperThreadInfo": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(HostCpuSchedulerSystem, self).__init__(mo_ref, server)
+    props = {"hyperThreadInfo": {"MOR": False, "value": None}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostFirewallSystem(ExtensibleManagedObject):
-    attrs = {"firewallInfo": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(HostFirewallSystem, self).__init__(mo_ref, server)
+    props = {"firewallInfo": {"MOR": False, "value": None}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostMemorySystem(ExtensibleManagedObject):
-    attrs = {"consoleReservationInfo": {"MOR": False, "value": None},
+    props = {"consoleReservationInfo": {"MOR": False, "value": None},
              "virtualMachineReservationInfo": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(HostMemorySystem, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostNetworkSystem(ExtensibleManagedObject):
-    attrs = {"capabilites": {"MOR": False, "value": None},
+    props = {"capabilites": {"MOR": False, "value": None},
              "consoleIpRouteConfig": {"MOR": False, "value": None},
              "dnsConfig": {"MOR": False, "value": None},
              "ipRouteConfig": {"MOR": False, "value": None},
              "networkConfig": {"MOR": False, "value": None},
              "networkInfo": {"MOR": False, "value": None},
              "offloadCapabilities": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(HostNetworkSystem, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostPciPassthruSystem(ExtensibleManagedObject):
-    attrs = {"pciPassthruInfo": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(HostPciPassthruSystem, self).__init__(mo_ref, server)
+    props = {"pciPassthruInfo": {"MOR": False, "value": list()}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostServiceSystem(ExtensibleManagedObject):
-    attrs = {"serviceInfo": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(HostServiceSystem, self).__init__(mo_ref, server)
+    props = {"serviceInfo": {"MOR": False, "value": None}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostStorageSystem(ExtensibleManagedObject):
-    attrs = {"fileSystemVolumeInfo": {"MOR": False, "value": None},
+    props = {"fileSystemVolumeInfo": {"MOR": False, "value": None},
              "multipathStateInfo": {"MOR": False, "value": None},
              "storageDeviceInfo": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(HostStorageSystem, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostVirtualNicManager(ExtensibleManagedObject):
-    attrs = {"info": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(HostVirtualNicManager, self).__init__(mo_ref, server)
+    props = {"info": {"MOR": False, "value": None}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostVMotionSystem(ExtensibleManagedObject):
-    attrs = {"ipConfig": {"MOR": False, "value": None},
+    props = {"ipConfig": {"MOR": False, "value": None},
              "netConfig": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(HostVMotionSystem, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class ManagedEntity(ExtensibleManagedObject):
-    attrs = {"alarmActionsEnabled": {"MOR": False, "value": list()},
+    props = {"alarmActionsEnabled": {"MOR": False, "value": list()},
              "configIssue": {"MOR": False, "value": list()},
               "configStatus": {"MOR": False, "value": None},
               "customValue": {"MOR": False, "value": list()},
@@ -354,12 +390,13 @@ class ManagedEntity(ExtensibleManagedObject):
               "recentTask": {"MOR": True, "value": list()},
               "tag": {"MOR": False, "value": list()},
               "triggeredAlarmState": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, server):
-        logger.debug("Calling __init__ on parent class ExtensibleManagedObject")
-        ExtensibleManagedObject.__init__(self, mo_ref, server)
+    def __init__(self, mo_ref, client):
+        ExtensibleManagedObject.__init__(self, mo_ref, client)
+        self.props = dict(ExtensibleManagedObject.props.items() +
+                          self.props.items())
 
     @classmethod
-    def find(cls, server):
+    def find(cls, client):
         """Find ManagedEntity's of this type using the given filter.
         
         :param filter: Find ManagedEntity's matching these key/value pairs
@@ -368,10 +405,10 @@ class ManagedEntity(ExtensibleManagedObject):
         :rtype: list
         """
         # TODO: Implement filter for this find method
-        return server.find_entity_views(view_type=cls.__name__)
+        return client.find_entity_views(view_type=cls.__name__)
 
     @classmethod
-    def find_one(cls, server, filter=None, properties=None):
+    def find_one(cls, client, filter=None, properties=None):
         """Find a ManagedEntity of this type using the given filter.
         
         If multiple ManagedEntity's are found, only the first is returned.
@@ -385,7 +422,7 @@ class ManagedEntity(ExtensibleManagedObject):
             filter = []
         if properties is None:
             properties = []
-        return server.find_entity_view(view_type=cls.__name__, filter=filter,
+        return client.find_entity_view(view_type=cls.__name__, filter=filter,
                                        properties=properties)
 
     def find_datacenter(self, parent=None):
@@ -398,44 +435,45 @@ class ManagedEntity(ExtensibleManagedObject):
 
             # Establish the type of object we need to create
             kls = classmapper(self.parent._type)
-            parent = kls(self.parent, self.server)
+            parent = kls(self.parent, self.client)
             parent.update_view_data(properties=['name', 'parent'])
 
-        if not parent.__class__.__name__ == 'Datacenter':
+        if not parent.__name__ == 'Datacenter':
             # Create an instance of the parent class
             kls = classmapper(parent.parent._type)
-            next_parent = kls(parent.parent, self.server)
+            next_parent = kls(parent.parent, self.client)
             next_parent.update_view_data(properties=['name', 'parent'])
             # ...and recursively call this method
             parent = self.find_datacenter(parent=next_parent)
 
-        if parent.__class__.__name__ == 'Datacenter':
+        if parent.__name__ == 'Datacenter':
             return parent
         else:
             raise ObjectNotFoundError('No parent found for this instance')
 
 
 class ComputeResource(ManagedEntity):
-    attrs = {"configurationEx": {"MOR": False, "value": None},
+    props = {"configurationEx": {"MOR": False, "value": None},
              "datastore": {"MOR": True, "value": list()},
              "environmentBrowser": {"MOR": True, "value": None},
              "host": {"MOR": True, "value": list()},
              "network": {"MOR": True, "value": list()},
              "resourcePool": {"MOR": True, "value": None},
              "summary": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        logger.debug("Calling __init__ on parent class ManagedEntity")
-        ManagedEntity.__init__(self, mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
     def find_datastore(self, name):
         if not self.datastore:
             self.update_view_data(self.datastore)
 
-        datastores = self.server.get_views(self.datastore,
+        datastores = self.client.get_views(self.datastore,
                                            properties=['summary'])
         for datastore in datastores:
             if datastore.summary.name == name:
-                if self.server.auto_populate:
+                if self.client.auto_populate:
                     datastore.update_view_data()
                 return datastore
 
@@ -443,64 +481,74 @@ class ComputeResource(ManagedEntity):
 
 
 class ClusterComputeResource(ComputeResource):
-    attrs = {"actionHistory": {"MOR": False, "value": list()},
+    props = {"actionHistory": {"MOR": False, "value": list()},
              "configuration": {"MOR": False, "value": None},
              "drsFault": {"MOR": False, "value": list()},
              "drsRecommendation": {"MOR": False, "value": list()},
              "migrationHistory": {"MOR": False, "value": list()},
              "recommendation": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, server):
-        logger.debug("Calling __init__ on parent class ComputeResource")
-        ComputeResource.__init__(self, mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class Datacenter(ManagedEntity):
-    attrs = {"datastore": {"MOR": True, "value": list()},
+    props = {"datastore": {"MOR": True, "value": list()},
              "datastoreFolder": {"MOR": True, "value": None},
              "hostFolder": {"MOR": True, "value": None},
              "network": {"MOR": True, "value": list()},
              "networkFolder": {"MOR": True, "value": None},
              "vmFolder": {"MOR": True, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(Datacenter, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class Datastore(ManagedEntity):
-    attrs = {"browser": {"MOR": True, "value": None},
+    props = {"browser": {"MOR": True, "value": None},
              "capability": {"MOR": False, "value": None},
              "host": {"MOR": False, "value": list()},
              "info": {"MOR": False, "value": None},
              "iormConfiguration": {"MOR": False, "value": None},
              "summary": {"MOR": False, "value": None},
              "vm": {"MOR": True, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(Datastore, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 class DistributedVirtualSwitch(ManagedEntity):
-    attrs = {"capability": {"MOR": False, "value": None},
+    props = {"capability": {"MOR": False, "value": None},
              "config": {"MOR": False, "value": None},
              "portgroup": {"MOR": True, "value": list()},
              "summary": {"MOR": False, "value": None},
              "uuid": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(DistributedVirtualSwitch, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class VmwareDistributedVirtualSwitch(DistributedVirtualSwitch):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(VmwareDistributedVirtualSwitch, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class Folder(ManagedEntity):
-    attrs = {"childEntity": {"MOR": True, "value": list()},
+    props = {"childEntity": {"MOR": True, "value": list()},
              "childType": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(Folder, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        ManagedEntity.__init__(self, mo_ref, client)
+        self.props = dict(ManagedEntity.props.items() + self.props.items())
 
 
 class HostSystem(ManagedEntity):
-    attrs = {"capability": {"MOR": False, "value": None},
+    props = {"capability": {"MOR": False, "value": None},
              "config": {"MOR": False, "value": None},
              "configManager": {"MOR": False, "value": None},
              "datastore": {"MOR": True, "value": list()},
@@ -511,216 +559,274 @@ class HostSystem(ManagedEntity):
              "summary": {"MOR": False, "value": None},
              "systemResources": {"MOR": False, "value": None},
              "vm": {"MOR": True, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(HostSystem, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class Network(ManagedEntity):
-    attrs = {"host": {"MOR": True, "value": list()},
+    props = {"host": {"MOR": True, "value": list()},
              "name": {"MOR": False, "value": None},
              "summary": {"MOR": False, "value": None},
              "vm": {"MOR": True, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(Network, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class DistributedVirtualPortgroup(Network):
-    attrs = {"config": {"MOR": False, "value": None},
+    props = {"config": {"MOR": False, "value": None},
              "key": {"MOR": False, "value": None},
              "portKeys": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(DistributedVirtualPortgroup, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class ResourcePool(ManagedEntity):
-    attrs = {"childConfiguration": {"MOR": False, "value": list()},
+    props = {"childConfiguration": {"MOR": False, "value": list()},
              "config": {"MOR": False, "value": None},
              "owner": {"MOR": True, "value": None},
              "resourcePool": {"MOR": True, "value": list()},
              "runtime": {"MOR": False, "value": None},
              "summary": {"MOR": False, "value": None},
              "vm": {"MOR": True, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(ResourcePool, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class VirtualApp(ResourcePool):
-    attrs = {"datastore": {"MOR": True, "value": list()},
+    props = {"datastore": {"MOR": True, "value": list()},
              "network": {"MOR": True, "value": list()},
              "parentFolder": {"MOR": True, "value": None},
              "vAppConfig": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(VirtualApp, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class VirtualMachine(ManagedEntity):
-    attrs = {}
-    attrs["capability"] = {"MOR": False, "value": None}
-    attrs["config"] = {"MOR": False, "value": None}
-    attrs["datastore"] = {"MOR": True, "value": list()}
-    attrs["environmentBrowser"] = {"MOR": True, "value": None}
-    attrs["guest"] = {"MOR": False, "value": None}
-    attrs["heartbeatStatus"] = {"MOR": False, "value": None}
-    attrs["layout"] = {"MOR": False, "value": None}
-    attrs["layoutEx"] = {"MOR": False, "value": None}
-    attrs["network"] = {"MOR": True, "value": list()}
-    attrs["parentVApp"] = {"MOR": False, "value": None}
-    attrs["resourceConfig"] = {"MOR": False, "value": None}
-    attrs["resourcePool"] = {"MOR": True, "value": None}
-    attrs["rootSnapshot"] = {"MOR": False, "value": list()}
-    attrs["runtime"] = {"MOR": False, "value": None}
-    attrs["snapshot"] = {"MOR": False, "value": None}
-    attrs["storage"] = {"MOR": False, "value": None}
-    attrs["summary"] = {"MOR": False, "value": None}
-    def __init__(self, mo_ref, server):
-        super(VirtualMachine, self).__init__(mo_ref, server)
+    props = {}
+    props["capability"] = {"MOR": False, "value": None}
+    props["config"] = {"MOR": False, "value": None}
+    props["datastore"] = {"MOR": True, "value": list()}
+    props["environmentBrowser"] = {"MOR": True, "value": None}
+    props["guest"] = {"MOR": False, "value": None}
+    props["heartbeatStatus"] = {"MOR": False, "value": None}
+    props["layout"] = {"MOR": False, "value": None}
+    props["layoutEx"] = {"MOR": False, "value": None}
+    props["network"] = {"MOR": True, "value": list()}
+    props["parentVApp"] = {"MOR": False, "value": None}
+    props["resourceConfig"] = {"MOR": False, "value": None}
+    props["resourcePool"] = {"MOR": True, "value": None}
+    props["rootSnapshot"] = {"MOR": False, "value": list()}
+    props["runtime"] = {"MOR": False, "value": None}
+    props["snapshot"] = {"MOR": False, "value": None}
+    props["storage"] = {"MOR": False, "value": None}
+    props["summary"] = {"MOR": False, "value": None}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class ScheduledTask(ExtensibleManagedObject):
-    attrs = {"info": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(ScheduledTask, self).__init__(mo_ref, server)
+    props = {"info": {"MOR": False, "value": None}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class Task(ExtensibleManagedObject):
-    attrs = {"info": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(Task, self).__init__(mo_ref, server)
+    props = {"info": {"MOR": False, "value": None}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 class VirtualMachineSnapshot(ExtensibleManagedObject):
-    attrs = {"config": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(VirtualMachineSnapshot, self).__init__(mo_ref, server)
+    props = {"config": {"MOR": False, "value": None}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class ExtensionManager(ManagedObject):
-    attrs = {"extensionList": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(ExtensionManager, self).__init__(mo_ref, server)
+    props = {"extensionList": {"MOR": False, "value": list()}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class FileManager(ManagedObject):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(FileManager, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HistoryCollector(ManagedObject):
-    attrs = {"filter": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(HistoryCollector, self).__init__(self, mo_ref, server)
+    props = {"filter": {"MOR": False, "value": None}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class EventHistoryCollector(HistoryCollector):
-    attrs = {"latestPage": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(EventHistoryCollector, self).__init__(mo_ref, server)
+    props = {"latestPage": {"MOR": False, "value": list()}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class TaskHistoryCollector(HistoryCollector):
-    attrs = {"latestPage": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(TaskHistoryCollector, self).__init__(mo_ref, server)
+    props = {"latestPage": {"MOR": False, "value": list()}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostAutoStartManager(ManagedObject):
-    attrs = {"config": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(HostAutoStartManager, self).__init__(mo_ref, server)
+    props = {"config": {"MOR": False, "value": None}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostBootDeviceSystem(ManagedObject):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(HostBootDeviceSystem, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostDatastoreBrowser(ManagedObject):
-    attrs = {"datastore": {"MOR": True, "value": list()},
+    props = {"datastore": {"MOR": True, "value": list()},
              "supportedType": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(HostDatastoreBrowser, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostDatastoreSystem(ManagedObject):
-    attrs = {"capabilities": {"MOR": False, "value": None},
+    props = {"capabilities": {"MOR": False, "value": None},
              "datastore": {"MOR": True, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(HostDatastoreSystem, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostDateTimeSystem(ManagedObject):
-    attrs = {"dateTimeInfo": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(HostDateTimeSystem, self).__init__(mo_ref, server)
+    props = {"dateTimeInfo": {"MOR": False, "value": None}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostDiagnosticSystem(ManagedObject):
-    attrs = {"activePartition": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(HostDiagnosticSystem, self).__init__(mo_ref, server)
+    props = {"activePartition": {"MOR": False, "value": None}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostFirmwareSystem(ManagedObject):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(HostFirmwareSystem, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostHealthStatusSystem(ManagedObject):
-    attrs = {"runtime": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(HostHealthStatusSystem, self).__init__(mo_ref, server)
+    props = {"runtime": {"MOR": False, "value": None}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostKernelModuleSystem(ManagedObject):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(HostKernelModuleSystem, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostLocalAccountManager(ManagedObject):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(HostLocalAccountManager, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostPatchManager(ManagedObject):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(HostPatchManager, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostSnmpSystem(ManagedObject):
-    attrs = {"configuration": {"MOR": False, "value": None},
+    props = {"configuration": {"MOR": False, "value": None},
              "limits": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(HostSnmpSystem, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HttpNfcLease(ManagedObject):
-    attrs = {"error": {"MOR": False, "value": None},
+    props = {"error": {"MOR": False, "value": None},
              "info": {"MOR": False, "value": None},
              "initializeProgress": {"MOR": False, "value": None},
              "state": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(HttpNfcLease, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class IpPoolManager(ManagedObject):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(IpPoolManager, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class LicenseAssignmentManager(ManagedObject):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(LicenseAssignmentManager, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class LicenseManager(ManagedObject):
-    attrs = {"diagnostics": {"MOR": False, "value": None},
+    props = {"diagnostics": {"MOR": False, "value": None},
              "evaluation": {"MOR": False, "value": None},
              "featureInfo": {"MOR": False, "value": list()},
              "licenseAssignmentManager": {"MOR": True, "value": None},
@@ -728,254 +834,330 @@ class LicenseManager(ManagedObject):
              "licenses": {"MOR": False, "value": list()},
              "source": {"MOR": False, "value": None},
              "sourceAvailable": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(LicenseManager, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class LocalizationManager(ManagedObject):
-    attrs = {"catalog": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(LocalizationManager, self).__init__(mo_ref, server)
+    props = {"catalog": {"MOR": False, "value": list()}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class OptionManager(ManagedObject):
-    attrs = {"setting": {"MOR": False, "value": list()},
+    props = {"setting": {"MOR": False, "value": list()},
              "supportedOptions": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(OptionManager, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class OvfManager(ManagedObject):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(OvfManager, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class PerformanceManager(ManagedObject):
-    attrs = {"description": {"MOR": False, "value": None},
+    props = {"description": {"MOR": False, "value": None},
              "historicalInterval": {"MOR": False, "value": list()},
              "perfCounter": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(PerformanceManager, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class Profile(ManagedObject):
-    attrs = {"complianceStatus": {"MOR": False, "value": None},
+    props = {"complianceStatus": {"MOR": False, "value": None},
              "config": {"MOR": False, "value": None},
              "createdTime": {"MOR": False, "value": None},
              "description": {"MOR": False, "value": None},
              "entity": {"MOR": True, "value": list()},
              "modifiedTime": {"MOR": False, "value": None},
              "name": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(Profile, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class ClusterProfile(Profile):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(ClusterProfile, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostProfile(Profile):
-    attrs = {"referenceHost": {"MOR": True, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(HostProfile, self).__init__(mo_ref, server)
+    props = {"referenceHost": {"MOR": True, "value": None}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class ProfileComplianceManager(ManagedObject):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(ProfileComplianceManager, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class ProfileManager(ManagedObject):
-    attrs = {"profile": {"MOR": True, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(ProfileManager, self).__init__(mo_ref, server)
+    props = {"profile": {"MOR": True, "value": list()}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class ClusterProfileManager(ProfileManager):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(ClusterProfileManager, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostProfileManager(ProfileManager):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(HostProfileManager, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class PropertyCollector(ManagedObject):
-    attrs = {"filter": {"MOR": True, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(PropertyCollector, self).__init__(mo_ref, server)
+    props = {"filter": {"MOR": True, "value": list()}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class PropertyFilter(ManagedObject):
-    attrs = {"partialUpdates": {"MOR": False, "value": None},
+    props = {"partialUpdates": {"MOR": False, "value": None},
              "spec": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(PropertyFilter, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class ResourcePlanningManager(ManagedObject):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(ResourcePlanningManager, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class ScheduledTaskManager(ManagedObject):
-    attrs = {"description": {"MOR": False, "value": None},
+    props = {"description": {"MOR": False, "value": None},
              "scheduledTask": {"MOR": True, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(ScheduledTaskManager, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class SearchIndex(ManagedObject):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(SearchIndex, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class ServiceInstance(ManagedObject):
-    attrs = {"capability": {"MOR": False, "value": None},
+    props = {"capability": {"MOR": False, "value": None},
              "content": {"MOR": False, "value": None},
-             "serverClock": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(ServiceInstance, self).__init__(mo_ref, server)
+             "clientClock": {"MOR": False, "value": None}}
+    def __init__(self, mo_ref, client, properties=None):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class SessionManager(ManagedObject):
-    attrs = {"currentSession": {"MOR": False, "value": None},
+    props = {"currentSession": {"MOR": False, "value": None},
              "defaultLocale": {"MOR": False, "value": None},
              "message": {"MOR": False, "value": None},
              "messageLocaleList": {"MOR": False, "value": list()},
              "sessionList": {"MOR": False, "value": list()},
              "supportedLocaleList": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(SessionManager, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class TaskManager(ManagedObject):
-    attrs = {"description": {"MOR": False, "value": None},
+    props = {"description": {"MOR": False, "value": None},
              "maxCollector": {"MOR": False, "value": None},
              "recentTask": {"MOR": True, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(TaskManager, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class UserDirectory(ManagedObject):
-    attrs = {"domainList": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(UserDirectory, self).__init__(mo_ref, server)
+    props = {"domainList": {"MOR": False, "value": list()}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class View(ManagedObject):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(View, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class ManagedObjectView(View):
-    attrs = {"view": {"MOR": True, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(ManagedObjectView, self).__init__(mo_ref, server)
+    props = {"view": {"MOR": True, "value": list()}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class ContainerView(ManagedObjectView):
-    attrs = {"container": {"MOR": True, "value": None},
+    props = {"container": {"MOR": True, "value": None},
              "recursive": {"MOR": False, "value": None},
              "type": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(ContainerView, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class InventoryView(ManagedObjectView):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(InventoryView, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class ListView(ManagedObjectView):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(ListView, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class ViewManager(ManagedObject):
-    attrs = {"viewList": {"MOR": True, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(ViewManager, self).__init__(mo_ref, server)
+    props = {"viewList": {"MOR": True, "value": list()}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class VirtualDiskManager(ManagedObject):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(VirtualDiskManager, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class VirtualizationManager(ManagedObject):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(VirtualizationManager, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class VirtualMachineCompatibilityChecker(ManagedObject):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(VirtualMachineCompatibilityChecker, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class VirtualMachineProvisioningChecker(ManagedObject):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(VirtualMachineProvisioningChecker, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostAuthenticationManager(ManagedObject):
-    attrs = {"info": {"MOR": False, "value": None},
+    props = {"info": {"MOR": False, "value": None},
              "supportedStore": {"MOR": True, "value": list()}}
-    def __init__(self, mo_ref, server):
-        super(HostAuthenticationManager, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostAuthenticationStore(ManagedObject):
-    attrs = {"info": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(HostAuthenticationStore, self).__init__(mo_ref, server)
+    props = {"info": {"MOR": False, "value": None}}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostDirectoryStore(HostAuthenticationStore):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(HostDirectoryStore, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class HostLocalAuthentication(HostAuthenticationStore):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(HostLocalAuthentication, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
     
 
 class HostActiveDirectoryAuthentication(HostDirectoryStore):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(HostActiveDirectoryAuthentication, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
     
 
 class HostPowerSystem(ManagedObject):
-    attrs = {"capability": {"MOR": False, "value": None},
+    props = {"capability": {"MOR": False, "value": None},
              "info": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, server):
-        super(HostPowerSystem, self).__init__(mo_ref, server)
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 class StorageResourceManager(ManagedObject):
-    attrs = {}
-    def __init__(self, mo_ref, server):
-        super(StorageResourceManager, self).__init__(mo_ref, server)
+    props = {}
+    def __init__(self, mo_ref, client):
+        super(self.__class__, self).__init__(mo_ref, client)
+        self.props = dict(super(self.__class__, self).props.items() +
+                          self.props.items())
 
 
 classmap = dict((x.__name__, x) for x in (
