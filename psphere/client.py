@@ -156,9 +156,10 @@ class Client(suds.client.Client):
 
             logger.debug("Obj keylist: %s" % obj[1].__keylist__)
             if "_type" in obj[1].__keylist__:
-                logger.debug("Would convert this node:")
+                logger.debug("Converting nested MOR to psphere class:")
                 logger.debug(obj[1])
                 kls = classmapper(obj[1]._type)
+                logger.debug("Setting %s.%s to %s" % (new_object.__class__.__name__, obj[0], obj[1]))
                 setattr(new_object, obj[0], kls(obj[1], self))
             else:
                 logger.debug("Didn't find _type in:")
@@ -178,7 +179,7 @@ class Client(suds.client.Client):
         :type kwargs: TODO
 
         """
-        obj = self.factory.create("ns0:%s" % _type)
+        obj = self.factory.create("ns0:%s" % type_)
         for key, value in kwargs.items():
             setattr(obj, key, value)
         return obj
