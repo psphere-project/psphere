@@ -1,0 +1,486 @@
+- extends: null
+  name: ExtensibleManagedObject
+  properties:
+  - {mor: false, multivalue: true, name: availableField}
+  - {mor: false, multivalue: true, name: value}
+- extends: ExtensibleManagedObject
+  name: Alarm
+  properties:
+  - {mor: false, multivalue: false, name: info}
+- extends: null
+  name: AlarmManager
+  properties:
+  - {mor: false, multivalue: true, name: defaultExpression}
+  - {mor: false, multivalue: false, name: description}
+- extends: null
+  name: AuthorizationManager
+  properties:
+  - {mor: false, multivalue: false, name: description}
+  - {mor: false, multivalue: true, name: privilegeList}
+  - {mor: false, multivalue: true, name: roleList}
+- extends: ExtensibleManagedObject
+  name: ManagedEntity
+  properties:
+  - {mor: false, multivalue: false, name: alarmActionsEnabled}
+  - {mor: false, multivalue: true, name: configIssue}
+  - {mor: false, multivalue: false, name: configStatus}
+  - {mor: false, multivalue: true, name: customValue}
+  - {mor: false, multivalue: true, name: declaredAlarmState}
+  - {mor: false, multivalue: true, name: disabledMethod}
+  - {mor: false, multivalue: true, name: effectiveRole}
+  - {mor: false, multivalue: false, name: name}
+  - {mor: false, multivalue: false, name: overallStatus}
+  - {mor: true, multivalue: false, name: parent}
+  - {mor: false, multivalue: true, name: permission}
+  - {mor: true, multivalue: true, name: recentTask}
+  - {mor: false, multivalue: true, name: tag}
+  - {mor: false, multivalue: true, name: triggeredAlarmState}
+- extends: ManagedEntity
+  name: ComputeResource
+  properties:
+  - {mor: false, multivalue: false, name: configurationEx}
+  - {mor: true, multivalue: true, name: datastore}
+  - {mor: true, multivalue: false, name: environmentBrowser}
+  - {mor: true, multivalue: true, name: host}
+  - {mor: true, multivalue: true, name: network}
+  - {mor: true, multivalue: false, name: resourcePool}
+  - {mor: false, multivalue: false, name: summary}
+- extends: ComputeResource
+  name: ClusterComputeResource
+  properties:
+  - {mor: false, multivalue: true, name: actionHistory}
+  - {mor: false, multivalue: false, name: configuration}
+  - {mor: false, multivalue: true, name: drsFault}
+  - {mor: false, multivalue: true, name: drsRecommendation}
+  - {mor: false, multivalue: true, name: migrationHistory}
+  - {mor: false, multivalue: true, name: recommendation}
+- extends: null
+  name: Profile
+  properties:
+  - {mor: false, multivalue: false, name: complianceStatus}
+  - {mor: false, multivalue: false, name: config}
+  - {mor: false, multivalue: false, name: createdTime}
+  - {mor: false, multivalue: false, name: description}
+  - {mor: true, multivalue: true, name: entity}
+  - {mor: false, multivalue: false, name: modifiedTime}
+  - {mor: false, multivalue: false, name: name}
+- extends: Profile
+  name: ClusterProfile
+  properties: []
+- extends: null
+  name: ProfileManager
+  properties:
+  - {mor: true, multivalue: true, name: profile}
+- extends: ProfileManager
+  name: ClusterProfileManager
+  properties: []
+- extends: null
+  name: View
+  properties: []
+- extends: View
+  name: ManagedObjectView
+  properties:
+  - {mor: true, multivalue: true, name: view}
+- extends: ManagedObjectView
+  name: ContainerView
+  properties:
+  - {mor: true, multivalue: false, name: container}
+  - {mor: false, multivalue: false, name: recursive}
+  - {mor: false, multivalue: true, name: type}
+- extends: null
+  name: CustomFieldsManager
+  properties:
+  - {mor: false, multivalue: true, name: field}
+- extends: null
+  name: CustomizationSpecManager
+  properties:
+  - {mor: false, multivalue: true, name: encryptionKey}
+  - {mor: false, multivalue: true, name: info}
+- extends: ManagedEntity
+  name: Datacenter
+  properties:
+  - {mor: true, multivalue: true, name: datastore}
+  - {mor: true, multivalue: false, name: datastoreFolder}
+  - {mor: true, multivalue: false, name: hostFolder}
+  - {mor: true, multivalue: true, name: network}
+  - {mor: true, multivalue: false, name: networkFolder}
+  - {mor: true, multivalue: false, name: vmFolder}
+- extends: ManagedEntity
+  name: Datastore
+  properties:
+  - {mor: true, multivalue: false, name: browser}
+  - {mor: false, multivalue: false, name: capability}
+  - {mor: false, multivalue: true, name: host}
+  - {mor: false, multivalue: false, name: info}
+  - {mor: false, multivalue: false, name: iormConfiguration}
+  - {mor: false, multivalue: false, name: summary}
+  - {mor: true, multivalue: true, name: vm}
+- extends: null
+  name: DiagnosticManager
+  properties: []
+- extends: ManagedEntity
+  name: Network
+  properties:
+  - {mor: true, multivalue: true, name: host}
+  - {mor: false, multivalue: false, name: name}
+  - {mor: false, multivalue: false, name: summary}
+  - {mor: true, multivalue: true, name: vm}
+- extends: Network
+  name: DistributedVirtualPortgroup
+  properties:
+  - {mor: false, multivalue: false, name: config}
+  - {mor: false, multivalue: false, name: key}
+  - {mor: false, multivalue: true, name: portKeys}
+- extends: ManagedEntity
+  name: DistributedVirtualSwitch
+  properties:
+  - {mor: false, multivalue: false, name: capability}
+  - {mor: false, multivalue: false, name: config}
+  - {mor: false, multivalue: true, name: networkResourcePool}
+  - {mor: true, multivalue: true, name: portgroup}
+  - {mor: false, multivalue: false, name: summary}
+  - {mor: false, multivalue: false, name: uuid}
+- extends: null
+  name: DistributedVirtualSwitchManager
+  properties: []
+- extends: null
+  name: EnvironmentBrowser
+  properties:
+  - {mor: true, multivalue: false, name: datastoreBrowser}
+- extends: null
+  name: HistoryCollector
+  properties:
+  - {mor: false, multivalue: false, name: filter}
+- extends: HistoryCollector
+  name: EventHistoryCollector
+  properties:
+  - {mor: false, multivalue: true, name: latestPage}
+- extends: null
+  name: EventManager
+  properties:
+  - {mor: false, multivalue: false, name: description}
+  - {mor: false, multivalue: false, name: latestEvent}
+  - {mor: false, multivalue: false, name: maxCollector}
+- extends: null
+  name: ExtensionManager
+  properties:
+  - {mor: false, multivalue: true, name: extensionList}
+- extends: null
+  name: FileManager
+  properties: []
+- extends: ManagedEntity
+  name: Folder
+  properties:
+  - {mor: true, multivalue: true, name: childEntity}
+  - {mor: false, multivalue: true, name: childType}
+- extends: null
+  name: HostAuthenticationStore
+  properties:
+  - {mor: false, multivalue: false, name: info}
+- extends: HostAuthenticationStore
+  name: HostDirectoryStore
+  properties: []
+- extends: HostDirectoryStore
+  name: HostActiveDirectoryAuthentication
+  properties: []
+- extends: null
+  name: HostAuthenticationManager
+  properties:
+  - {mor: false, multivalue: false, name: info}
+  - {mor: true, multivalue: true, name: supportedStore}
+- extends: null
+  name: HostAutoStartManager
+  properties:
+  - {mor: false, multivalue: false, name: config}
+- extends: null
+  name: HostBootDeviceSystem
+  properties: []
+- extends: ExtensibleManagedObject
+  name: HostCpuSchedulerSystem
+  properties:
+  - {mor: false, multivalue: false, name: hyperthreadInfo}
+- extends: null
+  name: HostDatastoreBrowser
+  properties:
+  - {mor: true, multivalue: true, name: datastore}
+  - {mor: false, multivalue: true, name: supportedType}
+- extends: null
+  name: HostDatastoreSystem
+  properties:
+  - {mor: false, multivalue: false, name: capabilities}
+  - {mor: true, multivalue: true, name: datastore}
+- extends: null
+  name: HostDateTimeSystem
+  properties:
+  - {mor: false, multivalue: false, name: dateTimeInfo}
+- extends: null
+  name: HostDiagnosticSystem
+  properties:
+  - {mor: false, multivalue: false, name: activePartition}
+- extends: ExtensibleManagedObject
+  name: HostFirewallSystem
+  properties:
+  - {mor: false, multivalue: false, name: firewallInfo}
+- extends: null
+  name: HostFirmwareSystem
+  properties: []
+- extends: null
+  name: HostHealthStatusSystem
+  properties:
+  - {mor: false, multivalue: false, name: runtime}
+- extends: null
+  name: HostKernelModuleSystem
+  properties: []
+- extends: null
+  name: HostLocalAccountManager
+  properties: []
+- extends: HostAuthenticationStore
+  name: HostLocalAuthentication
+  properties: []
+- extends: ExtensibleManagedObject
+  name: HostMemorySystem
+  properties:
+  - {mor: false, multivalue: false, name: consoleReservationInfo}
+  - {mor: false, multivalue: false, name: virtualMachineReservationInfo}
+- extends: ExtensibleManagedObject
+  name: HostNetworkSystem
+  properties:
+  - {mor: false, multivalue: false, name: capabilities}
+  - {mor: false, multivalue: false, name: consoleIpRouteConfig}
+  - {mor: false, multivalue: false, name: dnsConfig}
+  - {mor: false, multivalue: false, name: ipRouteConfig}
+  - {mor: false, multivalue: false, name: networkConfig}
+  - {mor: false, multivalue: false, name: networkInfo}
+  - {mor: false, multivalue: false, name: offloadCapabilities}
+- extends: null
+  name: HostPatchManager
+  properties: []
+- extends: ExtensibleManagedObject
+  name: HostPciPassthruSystem
+  properties:
+  - {mor: false, multivalue: true, name: pciPassthruInfo}
+- extends: null
+  name: HostPowerSystem
+  properties:
+  - {mor: false, multivalue: false, name: capability}
+  - {mor: false, multivalue: false, name: info}
+- extends: Profile
+  name: HostProfile
+  properties:
+  - {mor: true, multivalue: false, name: referenceHost}
+- extends: ProfileManager
+  name: HostProfileManager
+  properties: []
+- extends: ExtensibleManagedObject
+  name: HostServiceSystem
+  properties:
+  - {mor: false, multivalue: false, name: serviceInfo}
+- extends: null
+  name: HostSnmpSystem
+  properties:
+  - {mor: false, multivalue: false, name: configuration}
+  - {mor: false, multivalue: false, name: limits}
+- extends: ExtensibleManagedObject
+  name: HostStorageSystem
+  properties:
+  - {mor: false, multivalue: false, name: fileSystemVolumeInfo}
+  - {mor: false, multivalue: false, name: multipathStateInfo}
+  - {mor: false, multivalue: false, name: storageDeviceInfo}
+  - {mor: false, multivalue: true, name: systemFile}
+- extends: ManagedEntity
+  name: HostSystem
+  properties:
+  - {mor: false, multivalue: false, name: capability}
+  - {mor: false, multivalue: false, name: config}
+  - {mor: false, multivalue: false, name: configManager}
+  - {mor: true, multivalue: true, name: datastore}
+  - {mor: true, multivalue: false, name: datastoreBrowser}
+  - {mor: false, multivalue: false, name: hardware}
+  - {mor: true, multivalue: true, name: network}
+  - {mor: false, multivalue: false, name: runtime}
+  - {mor: false, multivalue: false, name: summary}
+  - {mor: false, multivalue: false, name: systemResources}
+  - {mor: true, multivalue: true, name: vm}
+- extends: ExtensibleManagedObject
+  name: HostVirtualNicManager
+  properties:
+  - {mor: false, multivalue: false, name: info}
+- extends: ExtensibleManagedObject
+  name: HostVMotionSystem
+  properties:
+  - {mor: false, multivalue: false, name: ipConfig}
+  - {mor: false, multivalue: false, name: netConfig}
+- extends: null
+  name: HttpNfcLease
+  properties:
+  - {mor: false, multivalue: false, name: error}
+  - {mor: false, multivalue: false, name: info}
+  - {mor: false, multivalue: false, name: initializeProgress}
+  - {mor: false, multivalue: false, name: state}
+- extends: ManagedObjectView
+  name: InventoryView
+  properties: []
+- extends: null
+  name: IpPoolManager
+  properties: []
+- extends: null
+  name: LicenseAssignmentManager
+  properties: []
+- extends: null
+  name: LicenseManager
+  properties:
+  - {mor: false, multivalue: false, name: diagnostics}
+  - {mor: false, multivalue: false, name: evaluation}
+  - {mor: false, multivalue: true, name: featureInfo}
+  - {mor: true, multivalue: false, name: licenseAssignmentManager}
+  - {mor: false, multivalue: false, name: licensedEdition}
+  - {mor: false, multivalue: true, name: licenses}
+  - {mor: false, multivalue: false, name: source}
+  - {mor: false, multivalue: false, name: sourceAvailable}
+- extends: ManagedObjectView
+  name: ListView
+  properties: []
+- extends: null
+  name: LocalizationManager
+  properties:
+  - {mor: false, multivalue: true, name: catalog}
+- extends: null
+  name: OptionManager
+  properties:
+  - {mor: false, multivalue: true, name: setting}
+  - {mor: false, multivalue: true, name: supportedOption}
+- extends: null
+  name: OvfManager
+  properties: []
+- extends: null
+  name: PerformanceManager
+  properties:
+  - {mor: false, multivalue: false, name: description}
+  - {mor: false, multivalue: true, name: historicalInterval}
+  - {mor: false, multivalue: true, name: perfCounter}
+- extends: null
+  name: ProfileComplianceManager
+  properties: []
+- extends: null
+  name: PropertyCollector
+  properties:
+  - {mor: true, multivalue: true, name: filter}
+- extends: null
+  name: PropertyFilter
+  properties:
+  - {mor: false, multivalue: false, name: partialUpdates}
+  - {mor: false, multivalue: false, name: spec}
+- extends: null
+  name: ResourcePlanningManager
+  properties: []
+- extends: ManagedEntity
+  name: ResourcePool
+  properties:
+  - {mor: false, multivalue: true, name: childConfiguration}
+  - {mor: false, multivalue: false, name: config}
+  - {mor: true, multivalue: false, name: owner}
+  - {mor: true, multivalue: true, name: resourcePool}
+  - {mor: false, multivalue: false, name: runtime}
+  - {mor: false, multivalue: false, name: summary}
+  - {mor: true, multivalue: true, name: vm}
+- extends: ExtensibleManagedObject
+  name: ScheduledTask
+  properties:
+  - {mor: false, multivalue: false, name: info}
+- extends: null
+  name: ScheduledTaskManager
+  properties:
+  - {mor: false, multivalue: false, name: description}
+  - {mor: true, multivalue: true, name: scheduledTask}
+- extends: null
+  name: SearchIndex
+  properties: []
+- extends: null
+  name: ServiceInstance
+  properties:
+  - {mor: false, multivalue: false, name: capability}
+  - {mor: false, multivalue: false, name: content}
+  - {mor: false, multivalue: false, name: serverClock}
+- extends: null
+  name: SessionManager
+  properties:
+  - {mor: false, multivalue: false, name: currentSession}
+  - {mor: false, multivalue: false, name: defaultLocale}
+  - {mor: false, multivalue: false, name: message}
+  - {mor: false, multivalue: true, name: messageLocaleList}
+  - {mor: false, multivalue: true, name: sessionList}
+  - {mor: false, multivalue: true, name: supportedLocaleList}
+- extends: null
+  name: StorageResourceManager
+  properties: []
+- extends: ExtensibleManagedObject
+  name: Task
+  properties:
+  - {mor: false, multivalue: false, name: info}
+- extends: HistoryCollector
+  name: TaskHistoryCollector
+  properties:
+  - {mor: false, multivalue: true, name: latestPage}
+- extends: null
+  name: TaskManager
+  properties:
+  - {mor: false, multivalue: false, name: description}
+  - {mor: false, multivalue: false, name: maxCollector}
+  - {mor: true, multivalue: true, name: recentTask}
+- extends: null
+  name: UserDirectory
+  properties:
+  - {mor: false, multivalue: true, name: domainList}
+- extends: null
+  name: ViewManager
+  properties:
+  - {mor: true, multivalue: true, name: viewList}
+- extends: ResourcePool
+  name: VirtualApp
+  properties:
+  - {mor: false, multivalue: true, name: childLink}
+  - {mor: true, multivalue: true, name: datastore}
+  - {mor: true, multivalue: true, name: network}
+  - {mor: true, multivalue: false, name: parentFolder}
+  - {mor: true, multivalue: false, name: parentVApp}
+  - {mor: false, multivalue: false, name: vAppConfig}
+- extends: null
+  name: VirtualDiskManager
+  properties: []
+- extends: null
+  name: VirtualizationManager
+  properties: []
+- extends: ManagedEntity
+  name: VirtualMachine
+  properties:
+  - {mor: false, multivalue: false, name: capability}
+  - {mor: false, multivalue: false, name: config}
+  - {mor: true, multivalue: true, name: datastore}
+  - {mor: true, multivalue: false, name: environmentBrowser}
+  - {mor: false, multivalue: false, name: guest}
+  - {mor: false, multivalue: false, name: guestHeartbeatStatus}
+  - {mor: false, multivalue: false, name: layout}
+  - {mor: false, multivalue: false, name: layoutEx}
+  - {mor: true, multivalue: true, name: network}
+  - {mor: true, multivalue: false, name: parentVApp}
+  - {mor: false, multivalue: false, name: resourceConfig}
+  - {mor: true, multivalue: false, name: resourcePool}
+  - {mor: true, multivalue: true, name: rootSnapshot}
+  - {mor: false, multivalue: false, name: runtime}
+  - {mor: false, multivalue: false, name: snapshot}
+  - {mor: false, multivalue: false, name: storage}
+  - {mor: false, multivalue: false, name: summary}
+- extends: null
+  name: VirtualMachineCompatibilityChecker
+  properties: []
+- extends: null
+  name: VirtualMachineProvisioningChecker
+  properties: []
+- extends: ExtensibleManagedObject
+  name: VirtualMachineSnapshot
+  properties:
+  - {mor: true, multivalue: true, name: childSnapshot}
+  - {mor: false, multivalue: false, name: config}
+- extends: DistributedVirtualSwitch
+  name: VmwareDistributedVirtualSwitch
+  properties: []
