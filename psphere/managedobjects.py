@@ -1,1181 +1,1310 @@
-"""Defines the Managed Object's found in the vSphere API."""
-
-# Copyright 2010 Jonathan Kinred
-#
-# Licensed under the Apache License, Version 2.0 (the "License"); you may not
-# use this file except in compliance with the License. You may obtain a copy
-# of the License at:
-# 
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
-
-
-import logging
-
-from suds import MethodNotFound
-from psphere import soap
-from psphere.errors import ObjectNotFoundError
-
-logger = logging.getLogger("psphere")
-
-class ManagedObject(object):
-    """The base class which all managed object's derive from.
-    
-   :param mo_ref: The managed object reference used to create this instance
-   :type mo_ref: ManagedObjectReference
-   :param client: A reference back to the psphere client object, which \
-   we use to make calls.
-   :type client: Client
-
-    """
-    props = {}
-    def __init__(self, mo_ref, client):
-        logger.debug("===== Have been passed %s as mo_ref: " % mo_ref)
-        self.mo_ref = mo_ref
-        self.client = client
-        logger.debug("Merged property list for %s: %s" %
-                     (self.__class__.__name__, self.props))
-
-    def update_view_data(self, properties=None):
-        """Update the local object from the server-side object.
-        
-        >>> vm = VirtualMachine.find_one(client, filter={"name": "genesis"})
-        >>> # Update all properties
-        >>> vm.update_view_data()
-        >>> # Update the config and summary properties
-        >>> vm.update_view_data(properties=["config", "summary"]
-
-        :param properties: A list of properties to update.
-        :type properties: list
-
-        """
-        if properties is None:
-            properties = []
-        logger.info("Updating view data for object of type %s" % self.mo_ref._type)
-        property_spec = self.client.create('PropertySpec')
-        property_spec.type = str(self.mo_ref._type)
-        # Determine which properties to retrieve from the server
-        if not properties and self.client.auto_populate:
-            logger.debug("Retrieving all properties of the object")
-            property_spec.all = True
-        else:
-            logger.debug("Retrieving %s properties" % len(properties))
-            property_spec.all = False
-            property_spec.pathSet = properties
-
-        object_spec = self.client.create('ObjectSpec')
-        object_spec.obj = self.mo_ref
-
-        pfs = self.client.create('PropertyFilterSpec')
-        pfs.propSet = [property_spec]
-        pfs.objectSet = [object_spec]
-
-        # Create a copy of the property collector and call the method
-        pc = self.client.sc.propertyCollector
-        object_content = pc.RetrieveProperties(specSet=pfs)[0]
-        if not object_content:
-            # TODO: Improve error checking and reporting
-            logger.error("Nothing returned from RetrieveProperties!")
-
-        self.set_view_data(object_content)
-
-    def set_view_data(self, object_content):
-        """Update the local object from the passed in object_content."""
-        # A debugging convenience, allows inspection of the object_content
-        # that was used to create the object
-        logger.info("Setting view data for a %s" % self.__class__)
-        self._object_content = object_content
-
-        for dynprop in object_content.propSet:
-            # If the class hasn't defined the property, don't use it
-            if dynprop.name not in self.props.keys():
-                logger.error("Server returned a property '%s' but the object"
-                             "hasn't defined it so it is being ignored." %
-                             dynprop.name)
-                continue
-
-            try:
-                if not len(dynprop.val):
-                    logger.info("Server returned empty value for %s" %
-                                dynprop.name)
-                    continue
-            except TypeError:
-                # This except allows us to pass over:
-                # TypeError: object of type 'datetime.datetime' has no len()
-                # It will be processed in the next code block
-                logger.error("%s of type %s has no len!" % (dynprop.name,
-                                                            type(dynprop.val)))
-                pass
-
-            # Values which contain classes starting with Array need
-            # to be converted into a nicer Python list
-            if dynprop.val.__class__.__name__.startswith('Array'):
-                # suds returns a list containing a single item, which
-                # is another list. Use the first item which is the real list
-                logger.info("Setting value of an Array* property")
-                logger.debug("%s being set to %s" % (dynprop.name,
-                                                     dynprop.val[0]))
-                self.props[dynprop.name]["value"] = dynprop.val[0]
-            else:
-                logger.info("Setting value of a single-valued property")
-                logger.debug("DynamicProperty value is a %s: " %
-                             dynprop.val.__class__.__name__)
-                logger.debug("%s being set to %s" % (dynprop.name,
-                                                     dynprop.val))
-                self.props[dynprop.name]["value"] = dynprop.val
-
-    def __getattribute__(self, name):
-        """Overridden so that SOAP methods can be proxied.
-
-        This is overridden for two reasons:
-        - To implement caching of ManagedObject properties
-        - To each SOAP method can be accessed through the object without having to explicitly define it.
-        
-        It is achieved by checking if the method exists in the SOAP service.
-        
-        If it doesn't then the exception is caught and the default
-        behaviour is executed.
-        
-        If it does, then a function is returned that will invoke
-        the method against the SOAP service with _this set to the
-        current objects managed object reference.
-        
-        :param name: The name of the method to call.
-        :param type: str
-
-        """
-        logger.debug("Entering overridden built-in __getattribute__"
-                     " with %s" % name)
-        # Built-ins always use the default behaviour
-        if name.startswith("__") or name == "props":
-            logger.debug("Returning built-in attribute %s" % name)
-            return object.__getattribute__(self, name)
-
-        props = object.__getattribute__(self, "props")
-        if name in props.keys():
-            # See if the value has already been retrieved an saved
-            logger.debug("%s is a property of this object, checking if "
-                         "attribute is already cached" % name)
-            if name in self.__dict__.keys():
-                logger.debug("Using cached value for %s" % name)
-                logger.debug("Returning %s from a %s" % (name, self.__class__.__name__))
-                return object.__getattribute__(self, name)
-            # Else, calculate the desired value and set it
-            else:
-                logger.debug("No cached value for %s. Retrieving..." % name)
-                # TODO: Check if it's an array or a single value
-                #result = self.method(inst)
-                if self.props[name]["MOR"] is True:
-                    logger.debug("%s is a MOR" % name)
-                    if isinstance(self.props[name]["value"], list):
-                        logger.debug("%s is a list of MORs" % name)
-                        result = self.client.get_views(self.props[name]["value"])
-                    else:
-                        logger.debug("%s is single-valued" % name)
-                        result = self.client.get_view(self.props[name]["value"])
-                else:
-                    # It's just a property, get it
-                    logger.debug("%s is not a MOR" % name)
-                    result = self.props[name]["value"]
-                    
-                # Set the object value to returned value
-                logger.debug("Retrieved %s for %s" % (result, name))
-                self.__dict__[name] = result
-                return result            
-        else:
-            try:
-                # Here we must manually get the client object so we
-                # don't get recursively called when the next method
-                # call looks for it
-                client = object.__getattribute__(self, "client")
-                # TODO: This should probably be raised by Client.invoke
-                getattr(client.service, name)
-                logger.debug("Constructing func for %s", name)
-                def func(**kwargs):
-                    result = client.invoke(name, _this=self.mo_ref,
-                                                **kwargs)
-                    logger.debug("Invoke returned %s" % result)
-                    return result
-        
-                return func
-            except MethodNotFound:
-                return object.__getattribute__(self, name)
-
-
-# First list the classes which directly inherit from ManagedObject
-class AlarmManager(ManagedObject):
-    props = {"defaultExpression": {"MOR": False, "value": list()},
-             "description": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() + self.props.items())
-
-
-class AuthorizationManager(ManagedObject):
-    props = {"description": {"MOR": False, "value": None},
-             "privilegeList": {"MOR": False, "value": list()},
-             "roleList": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() + self.props.items())
-
-
-class CustomFieldsManager(ManagedObject):
-    props = {"field": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() + self.props.items())
-
-
-class CustomizationSpecManager(ManagedObject):
-    props = {"encryptionKey": {"MOR": False, "value": list()},
-             "info": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() + self.props.items())
-
-
-class DiagnosticManager(ManagedObject):
-    props = {}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() + self.props.items())
-
-
-class DistributedVirtualSwitchManager(ManagedObject):
-    props = {}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() + self.props.items())
-
-
-class EnvironmentBrowser(ManagedObject):
-    props = {"datastoreBrowser": {"MOR": True, "value": None}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() + self.props.items())
-
-
-class EventManager(ManagedObject):
-    props = {"description": {"MOR": False, "value": None},
-             "latestEvent": {"MOR": False, "value": None},
-             "maxCollector": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() + self.props.items())
-
+from psphere import ManagedObject, cached_property
 
 class ExtensibleManagedObject(ManagedObject):
-    props = {"availableField": {"MOR": False, "value": list()},
-             "value": {"MOR": False, "value": list()}}
+    valid_attrs = set(['availableField', 'value'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() + self.props.items())
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def availableField(self):
+       return self._get_dataobject("availableField", True)
+    @cached_property
+    def value(self):
+       return self._get_dataobject("value", True)
 
 
 class Alarm(ExtensibleManagedObject):
-    props = {"info": {"MOR": False, "value": None}}
+    valid_attrs = set(['info'])
     def __init__(self, mo_ref, client):
         ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ExtensibleManagedObject.props.items() +
-                          self.props.items())
+        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+    @cached_property
+    def info(self):
+       return self._get_dataobject("info", False)
 
 
-class HostCpuSchedulerSystem(ExtensibleManagedObject):
-    props = {"hyperThreadInfo": {"MOR": False, "value": None}}
+class AlarmManager(ManagedObject):
+    valid_attrs = set(['defaultExpression', 'description'])
     def __init__(self, mo_ref, client):
-        ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ExtensibleManagedObject.props.items() +
-                          self.props.items())
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def defaultExpression(self):
+       return self._get_dataobject("defaultExpression", True)
+    @cached_property
+    def description(self):
+       return self._get_dataobject("description", False)
 
 
-class HostFirewallSystem(ExtensibleManagedObject):
-    props = {"firewallInfo": {"MOR": False, "value": None}}
+class AuthorizationManager(ManagedObject):
+    valid_attrs = set(['description', 'privilegeList', 'roleList'])
     def __init__(self, mo_ref, client):
-        ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ExtensibleManagedObject.props.items() +
-                          self.props.items())
-
-
-class HostMemorySystem(ExtensibleManagedObject):
-    props = {"consoleReservationInfo": {"MOR": False, "value": None},
-             "virtualMachineReservationInfo": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client):
-        ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ExtensibleManagedObject.props.items() +
-                          self.props.items())
-
-
-class HostNetworkSystem(ExtensibleManagedObject):
-    props = {"capabilites": {"MOR": False, "value": None},
-             "consoleIpRouteConfig": {"MOR": False, "value": None},
-             "dnsConfig": {"MOR": False, "value": None},
-             "ipRouteConfig": {"MOR": False, "value": None},
-             "networkConfig": {"MOR": False, "value": None},
-             "networkInfo": {"MOR": False, "value": None},
-             "offloadCapabilities": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client):
-        ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ExtensibleManagedObject.props.items() +
-                          self.props.items())
-
-
-class HostPciPassthruSystem(ExtensibleManagedObject):
-    props = {"pciPassthruInfo": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, client):
-        ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ExtensibleManagedObject.props.items() +
-                          self.props.items())
-
-
-class HostServiceSystem(ExtensibleManagedObject):
-    props = {"serviceInfo": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client):
-        ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ExtensibleManagedObject.props.items() +
-                          self.props.items())
-
-
-class HostStorageSystem(ExtensibleManagedObject):
-    props = {"fileSystemVolumeInfo": {"MOR": False, "value": None},
-             "multipathStateInfo": {"MOR": False, "value": None},
-             "storageDeviceInfo": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client):
-        ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ExtensibleManagedObject.props.items() +
-                          self.props.items())
-
-
-class HostVirtualNicManager(ExtensibleManagedObject):
-    props = {"info": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client):
-        ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ExtensibleManagedObject.props.items() +
-                          self.props.items())
-
-
-class HostVMotionSystem(ExtensibleManagedObject):
-    props = {"ipConfig": {"MOR": False, "value": None},
-             "netConfig": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client):
-        ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ExtensibleManagedObject.props.items() +
-                          self.props.items())
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def description(self):
+       return self._get_dataobject("description", False)
+    @cached_property
+    def privilegeList(self):
+       return self._get_dataobject("privilegeList", True)
+    @cached_property
+    def roleList(self):
+       return self._get_dataobject("roleList", True)
 
 
 class ManagedEntity(ExtensibleManagedObject):
-    props = {"alarmActionsEnabled": {"MOR": False, "value": list()},
-             "configIssue": {"MOR": False, "value": list()},
-              "configStatus": {"MOR": False, "value": None},
-              "customValue": {"MOR": False, "value": list()},
-              "declaredAlarmState": {"MOR": False, "value": list()},
-              "disabledMethod": {"MOR": False, "value": None},
-              "effectiveRole": {"MOR": False, "value": list()},
-              "name": {"MOR": False, "value": None},
-              "overallStatus": {"MOR": False, "value": None},
-              "parent": {"MOR": True, "value": None},
-              "permission": {"MOR": False, "value": list()},
-              "recentTask": {"MOR": True, "value": list()},
-              "tag": {"MOR": False, "value": list()},
-              "triggeredAlarmState": {"MOR": False, "value": list()}}
+    valid_attrs = set(['alarmActionsEnabled', 'configIssue', 'configStatus', 'customValue', 'declaredAlarmState', 'disabledMethod', 'effectiveRole', 'name', 'overallStatus', 'parent', 'permission', 'recentTask', 'tag', 'triggeredAlarmState'])
     def __init__(self, mo_ref, client):
         ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ExtensibleManagedObject.props.items() +
-                          self.props.items())
-
-    @classmethod
-    def find(cls, client):
-        """Find ManagedEntity's of this type using the given filter.
-        
-        :param filter: Find ManagedEntity's matching these key/value pairs
-        :type filter: dict
-        :returns: A list of ManagedEntity's matching the filter or None
-        :rtype: list
-        """
-        # TODO: Implement filter for this find method
-        return client.find_entity_views(view_type=cls.__name__)
-
-    @classmethod
-    def find_one(cls, client, filter=None, properties=None):
-        """Find a ManagedEntity of this type using the given filter.
-        
-        If multiple ManagedEntity's are found, only the first is returned.
-        
-        :param filter: Find ManagedEntity's matching these key/value pairs
-        :type filter: dict
-        :returns: A ManagedEntity's matching the filter or None
-        :rtype: ManagedEntity
-        """
-        if filter is None:
-            filter = {}
-        if properties is None:
-            properties = []
-        return client.find_entity_view(view_type=cls.__name__, filter=filter,
-                                       properties=properties)
-
-    def find_datacenter(self, parent=None):
-        """Find the datacenter which this ManagedEntity belongs to."""
-        # If the parent hasn't been set, use the parent of the
-        # calling instance, if it exists
-        if not parent:
-            if not self.parent:
-                raise ObjectNotFoundError('No parent found for this instance')
-
-            # Establish the type of object we need to create
-            kls = classmapper(self.parent._type)
-            parent = kls(self.parent, self.client)
-            parent.update_view_data(properties=['name', 'parent'])
-
-        if not parent.__class__.__name__ == 'Datacenter':
-            # Create an instance of the parent class
-            kls = classmapper(parent.parent._type)
-            next_parent = kls(parent.parent, self.client)
-            next_parent.update_view_data(properties=['name', 'parent'])
-            # ...and recursively call this method
-            parent = self.find_datacenter(parent=next_parent)
-
-        if parent.__class__.__name__ == 'Datacenter':
-            return parent
-        else:
-            raise ObjectNotFoundError('No parent found for this instance')
+        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+    @cached_property
+    def alarmActionsEnabled(self):
+       return self._get_dataobject("alarmActionsEnabled", False)
+    @cached_property
+    def configIssue(self):
+       return self._get_dataobject("configIssue", True)
+    @cached_property
+    def configStatus(self):
+       return self._get_dataobject("configStatus", False)
+    @cached_property
+    def customValue(self):
+       return self._get_dataobject("customValue", True)
+    @cached_property
+    def declaredAlarmState(self):
+       return self._get_dataobject("declaredAlarmState", True)
+    @cached_property
+    def disabledMethod(self):
+       return self._get_dataobject("disabledMethod", True)
+    @cached_property
+    def effectiveRole(self):
+       return self._get_dataobject("effectiveRole", True)
+    @cached_property
+    def name(self):
+       return self._get_dataobject("name", False)
+    @cached_property
+    def overallStatus(self):
+       return self._get_dataobject("overallStatus", False)
+    @cached_property
+    def parent(self):
+       return self._get_mor("parent", False)
+    @cached_property
+    def permission(self):
+       return self._get_dataobject("permission", True)
+    @cached_property
+    def recentTask(self):
+       return self._get_mor("recentTask", True)
+    @cached_property
+    def tag(self):
+       return self._get_dataobject("tag", True)
+    @cached_property
+    def triggeredAlarmState(self):
+       return self._get_dataobject("triggeredAlarmState", True)
 
 
 class ComputeResource(ManagedEntity):
-    props = {"configurationEx": {"MOR": False, "value": None},
-             "datastore": {"MOR": True, "value": list()},
-             "environmentBrowser": {"MOR": True, "value": None},
-             "host": {"MOR": True, "value": list()},
-             "network": {"MOR": True, "value": list()},
-             "resourcePool": {"MOR": True, "value": None},
-             "summary": {"MOR": False, "value": None}}
+    valid_attrs = set(['configurationEx', 'datastore', 'environmentBrowser', 'host', 'network', 'resourcePool', 'summary'])
     def __init__(self, mo_ref, client):
         ManagedEntity.__init__(self, mo_ref, client)
-        self.props = dict(ManagedEntity.props.items() + self.props.items())
-
-    def find_datastore(self, name):
-        if not self.datastore:
-            self.update_view_data(self.datastore)
-
-        datastores = self.client.get_views(self.datastore,
-                                           properties=['summary'])
-        for datastore in datastores:
-            if datastore.summary.name == name:
-                if self.client.auto_populate:
-                    datastore.update_view_data()
-                return datastore
-
-        raise ObjectNotFoundError(error='No datastore matching %s' % name)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedEntity.valid_attrs)
+    @cached_property
+    def configurationEx(self):
+       return self._get_dataobject("configurationEx", False)
+    @cached_property
+    def datastore(self):
+       return self._get_mor("datastore", True)
+    @cached_property
+    def environmentBrowser(self):
+       return self._get_mor("environmentBrowser", False)
+    @cached_property
+    def host(self):
+       return self._get_mor("host", True)
+    @cached_property
+    def network(self):
+       return self._get_mor("network", True)
+    @cached_property
+    def resourcePool(self):
+       return self._get_mor("resourcePool", False)
+    @cached_property
+    def summary(self):
+       return self._get_dataobject("summary", False)
 
 
 class ClusterComputeResource(ComputeResource):
-    props = {"actionHistory": {"MOR": False, "value": list()},
-             "configuration": {"MOR": False, "value": None},
-             "drsFault": {"MOR": False, "value": list()},
-             "drsRecommendation": {"MOR": False, "value": list()},
-             "migrationHistory": {"MOR": False, "value": list()},
-             "recommendation": {"MOR": False, "value": list()}}
+    valid_attrs = set(['actionHistory', 'configuration', 'drsFault', 'drsRecommendation', 'migrationHistory', 'recommendation'])
     def __init__(self, mo_ref, client):
         ComputeResource.__init__(self, mo_ref, client)
-        self.props = dict(ComputeResource.props.items() + self.props.items())
-
-
-class Datacenter(ManagedEntity):
-    props = {"datastore": {"MOR": True, "value": list()},
-             "datastoreFolder": {"MOR": True, "value": None},
-             "hostFolder": {"MOR": True, "value": None},
-             "network": {"MOR": True, "value": list()},
-             "networkFolder": {"MOR": True, "value": None},
-             "vmFolder": {"MOR": True, "value": None}}
-    def __init__(self, mo_ref, client):
-        ManagedEntity.__init__(self, mo_ref, client)
-        self.props = dict(ManagedEntity.props.items() + self.props.items())
-
-
-class Datastore(ManagedEntity):
-    props = {"browser": {"MOR": True, "value": None},
-             "capability": {"MOR": False, "value": None},
-             "host": {"MOR": False, "value": list()},
-             "info": {"MOR": False, "value": None},
-             "iormConfiguration": {"MOR": False, "value": None},
-             "summary": {"MOR": False, "value": None},
-             "vm": {"MOR": True, "value": list()}}
-    def __init__(self, mo_ref, client):
-        ManagedEntity.__init__(self, mo_ref, client)
-        logger.debug("Creating a new Datastore, info is: %s" % self.props["info"]["value"])
-        self.props = dict(ManagedEntity.props.items() + self.props.items())
-
-
-class DistributedVirtualSwitch(ManagedEntity):
-    props = {"capability": {"MOR": False, "value": None},
-             "config": {"MOR": False, "value": None},
-             "portgroup": {"MOR": True, "value": list()},
-             "summary": {"MOR": False, "value": None},
-             "uuid": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client):
-        ManagedEntity.__init__(self, mo_ref, client)
-        self.props = dict(ManagedEntity.props.items() + self.props.items())
-
-
-class VmwareDistributedVirtualSwitch(DistributedVirtualSwitch):
-    props = {}
-    def __init__(self, mo_ref, client):
-        VmwareDistributedVirtualSwitch.__init__(self, mo_ref, client)
-        self.props = dict(VmwareDistributedVirtualSwitch.props.items() +
-                          self.props.items())
-
-
-class Folder(ManagedEntity):
-    props = {"childEntity": {"MOR": True, "value": list()},
-             "childType": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, client):
-        ManagedEntity.__init__(self, mo_ref, client)
-        self.props = dict(ManagedEntity.props.items() + self.props.items())
-
-
-class HostSystem(ManagedEntity):
-    props = {"capability": {"MOR": False, "value": None},
-             "config": {"MOR": False, "value": None},
-             "configManager": {"MOR": False, "value": None},
-             "datastore": {"MOR": True, "value": list()},
-             "datastoreBrowser": {"MOR": True, "value": None},
-             "hardware": {"MOR": False, "value": None},
-             "network": {"MOR": True, "value": list()},
-             "runtime": {"MOR": False, "value": None},
-             "summary": {"MOR": False, "value": None},
-             "systemResources": {"MOR": False, "value": None},
-             "vm": {"MOR": True, "value": list()}}
-    def __init__(self, mo_ref, client):
-        ManagedEntity.__init__(self, mo_ref, client)
-        self.props = dict(ManagedEntity.props.items() + self.props.items())
-
-
-class Network(ManagedEntity):
-    props = {"host": {"MOR": True, "value": list()},
-             "name": {"MOR": False, "value": None},
-             "summary": {"MOR": False, "value": None},
-             "vm": {"MOR": True, "value": list()}}
-    def __init__(self, mo_ref, client):
-        ManagedEntity.__init__(self, mo_ref, client)
-        self.props = dict(ManagedEntity.props.items() + self.props.items())
-
-
-class DistributedVirtualPortgroup(Network):
-    props = {"config": {"MOR": False, "value": None},
-             "key": {"MOR": False, "value": None},
-             "portKeys": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, client):
-        Network.__init__(self, mo_ref, client)
-        self.props = dict(Network.props.items() +
-                          self.props.items())
-
-
-class ResourcePool(ManagedEntity):
-    props = {"childConfiguration": {"MOR": False, "value": list()},
-             "config": {"MOR": False, "value": None},
-             "owner": {"MOR": True, "value": None},
-             "resourcePool": {"MOR": True, "value": list()},
-             "runtime": {"MOR": False, "value": None},
-             "summary": {"MOR": False, "value": None},
-             "vm": {"MOR": True, "value": list()}}
-    def __init__(self, mo_ref, client):
-        ManagedEntity.__init__(self, mo_ref, client)
-        self.props = dict(ManagedEntity.props.items() +
-                          self.props.items())
-
-
-class VirtualApp(ResourcePool):
-    props = {"datastore": {"MOR": True, "value": list()},
-             "network": {"MOR": True, "value": list()},
-             "parentFolder": {"MOR": True, "value": None},
-             "vAppConfig": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client):
-        ResourcePool.__init__(self, mo_ref, client)
-        self.props = dict(ResourcePool.props.items() +
-                          self.props.items())
-
-
-class VirtualMachine(ManagedEntity):
-    props = {}
-    props["capability"] = {"MOR": False, "value": None}
-    props["config"] = {"MOR": False, "value": None}
-    props["datastore"] = {"MOR": True, "value": list()}
-    props["environmentBrowser"] = {"MOR": True, "value": None}
-    props["guest"] = {"MOR": False, "value": None}
-    props["heartbeatStatus"] = {"MOR": False, "value": None}
-    props["layout"] = {"MOR": False, "value": None}
-    props["layoutEx"] = {"MOR": False, "value": None}
-    props["network"] = {"MOR": True, "value": list()}
-    props["parentVApp"] = {"MOR": False, "value": None}
-    props["resourceConfig"] = {"MOR": False, "value": None}
-    props["resourcePool"] = {"MOR": True, "value": None}
-    props["rootSnapshot"] = {"MOR": False, "value": list()}
-    props["runtime"] = {"MOR": False, "value": None}
-    props["snapshot"] = {"MOR": False, "value": None}
-    props["storage"] = {"MOR": False, "value": None}
-    props["summary"] = {"MOR": False, "value": None}
-    def __init__(self, mo_ref, client):
-        ManagedEntity.__init__(self, mo_ref, client)
-        self.props = dict(ManagedEntity.props.items() +
-                          self.props.items())
-
-
-class ScheduledTask(ExtensibleManagedObject):
-    props = {"info": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client):
-        ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ExtensibleManagedObject.props.items() +
-                          self.props.items())
-
-
-class Task(ExtensibleManagedObject):
-    props = {"info": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client):
-        ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ExtensibleManagedObject.props.items() +
-                          self.props.items())
-
-class VirtualMachineSnapshot(ExtensibleManagedObject):
-    props = {"config": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client):
-        ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ExtensibleManagedObject.props.items() +
-                          self.props.items())
-
-
-class ExtensionManager(ManagedObject):
-    props = {"extensionList": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class FileManager(ManagedObject):
-    props = {}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class HistoryCollector(ManagedObject):
-    props = {"filter": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class EventHistoryCollector(HistoryCollector):
-    props = {"latestPage": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, client):
-        HistoryCollector.__init__(self, mo_ref, client)
-        self.props = dict(HistoryCollector.props.items() +
-                          self.props.items())
-
-
-class TaskHistoryCollector(HistoryCollector):
-    props = {"latestPage": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, client):
-        HistoryCollector.__init__(self, mo_ref, client)
-        self.props = dict(HistoryCollector.props.items() +
-                          self.props.items())
-
-
-class HostAutoStartManager(ManagedObject):
-    props = {"config": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class HostBootDeviceSystem(ManagedObject):
-    props = {}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class HostDatastoreBrowser(ManagedObject):
-    props = {"datastore": {"MOR": True, "value": list()},
-             "supportedType": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class HostDatastoreSystem(ManagedObject):
-    props = {"capabilities": {"MOR": False, "value": None},
-             "datastore": {"MOR": True, "value": list()}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class HostDateTimeSystem(ManagedObject):
-    props = {"dateTimeInfo": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class HostDiagnosticSystem(ManagedObject):
-    props = {"activePartition": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class HostFirmwareSystem(ManagedObject):
-    props = {}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class HostHealthStatusSystem(ManagedObject):
-    props = {"runtime": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class HostKernelModuleSystem(ManagedObject):
-    props = {}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class HostLocalAccountManager(ManagedObject):
-    props = {}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class HostPatchManager(ManagedObject):
-    props = {}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class HostSnmpSystem(ManagedObject):
-    props = {"configuration": {"MOR": False, "value": None},
-             "limits": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class HttpNfcLease(ManagedObject):
-    props = {"error": {"MOR": False, "value": None},
-             "info": {"MOR": False, "value": None},
-             "initializeProgress": {"MOR": False, "value": None},
-             "state": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class IpPoolManager(ManagedObject):
-    props = {}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class LicenseAssignmentManager(ManagedObject):
-    props = {}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class LicenseManager(ManagedObject):
-    props = {"diagnostics": {"MOR": False, "value": None},
-             "evaluation": {"MOR": False, "value": None},
-             "featureInfo": {"MOR": False, "value": list()},
-             "licenseAssignmentManager": {"MOR": True, "value": None},
-             "licensedEdition": {"MOR": False, "value": None},
-             "licenses": {"MOR": False, "value": list()},
-             "source": {"MOR": False, "value": None},
-             "sourceAvailable": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class LocalizationManager(ManagedObject):
-    props = {"catalog": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class OptionManager(ManagedObject):
-    props = {"setting": {"MOR": False, "value": list()},
-             "supportedOptions": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class OvfManager(ManagedObject):
-    props = {}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class PerformanceManager(ManagedObject):
-    props = {"description": {"MOR": False, "value": None},
-             "historicalInterval": {"MOR": False, "value": list()},
-             "perfCounter": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
+        self.valid_attrs = set.union(self.valid_attrs, ComputeResource.valid_attrs)
+    @cached_property
+    def actionHistory(self):
+       return self._get_dataobject("actionHistory", True)
+    @cached_property
+    def configuration(self):
+       return self._get_dataobject("configuration", False)
+    @cached_property
+    def drsFault(self):
+       return self._get_dataobject("drsFault", True)
+    @cached_property
+    def drsRecommendation(self):
+       return self._get_dataobject("drsRecommendation", True)
+    @cached_property
+    def migrationHistory(self):
+       return self._get_dataobject("migrationHistory", True)
+    @cached_property
+    def recommendation(self):
+       return self._get_dataobject("recommendation", True)
 
 
 class Profile(ManagedObject):
-    props = {"complianceStatus": {"MOR": False, "value": None},
-             "config": {"MOR": False, "value": None},
-             "createdTime": {"MOR": False, "value": None},
-             "description": {"MOR": False, "value": None},
-             "entity": {"MOR": True, "value": list()},
-             "modifiedTime": {"MOR": False, "value": None},
-             "name": {"MOR": False, "value": None}}
+    valid_attrs = set(['complianceStatus', 'config', 'createdTime', 'description', 'entity', 'modifiedTime', 'name'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def complianceStatus(self):
+       return self._get_dataobject("complianceStatus", False)
+    @cached_property
+    def config(self):
+       return self._get_dataobject("config", False)
+    @cached_property
+    def createdTime(self):
+       return self._get_dataobject("createdTime", False)
+    @cached_property
+    def description(self):
+       return self._get_dataobject("description", False)
+    @cached_property
+    def entity(self):
+       return self._get_mor("entity", True)
+    @cached_property
+    def modifiedTime(self):
+       return self._get_dataobject("modifiedTime", False)
+    @cached_property
+    def name(self):
+       return self._get_dataobject("name", False)
 
 
 class ClusterProfile(Profile):
-    props = {}
+    valid_attrs = set([])
     def __init__(self, mo_ref, client):
         Profile.__init__(self, mo_ref, client)
-        self.props = dict(Profile.props.items() +
-                          self.props.items())
-
-
-class HostProfile(Profile):
-    props = {"referenceHost": {"MOR": True, "value": None}}
-    def __init__(self, mo_ref, client):
-        Profile.__init__(self, mo_ref, client)
-        self.props = dict(Profile.props.items() +
-                          self.props.items())
-
-
-class ProfileComplianceManager(ManagedObject):
-    props = {}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
+        self.valid_attrs = set.union(self.valid_attrs, Profile.valid_attrs)
 
 
 class ProfileManager(ManagedObject):
-    props = {"profile": {"MOR": True, "value": list()}}
+    valid_attrs = set(['profile'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def profile(self):
+       return self._get_mor("profile", True)
 
 
 class ClusterProfileManager(ProfileManager):
-    props = {}
+    valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ProfileManager.__init__(self, mo_ref, client)
-        self.props = dict(ProfileManager.props.items() +
-                          self.props.items())
-
-
-class HostProfileManager(ProfileManager):
-    props = {}
-    def __init__(self, mo_ref, client):
-        ProfileManager.__init__(self, mo_ref, client)
-        self.props = dict(ProfileManager.props.items() +
-                          self.props.items())
-
-
-class PropertyCollector(ManagedObject):
-    props = {"filter": {"MOR": True, "value": list()}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class PropertyFilter(ManagedObject):
-    props = {"partialUpdates": {"MOR": False, "value": None},
-             "spec": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class ResourcePlanningManager(ManagedObject):
-    props = {}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class ScheduledTaskManager(ManagedObject):
-    props = {"description": {"MOR": False, "value": None},
-             "scheduledTask": {"MOR": True, "value": list()}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class SearchIndex(ManagedObject):
-    props = {}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class ServiceInstance(ManagedObject):
-    props = {"capability": {"MOR": False, "value": None},
-             "content": {"MOR": False, "value": None},
-             "clientClock": {"MOR": False, "value": None}}
-    def __init__(self, mo_ref, client, properties=None):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class SessionManager(ManagedObject):
-    props = {"currentSession": {"MOR": False, "value": None},
-             "defaultLocale": {"MOR": False, "value": None},
-             "message": {"MOR": False, "value": None},
-             "messageLocaleList": {"MOR": False, "value": list()},
-             "sessionList": {"MOR": False, "value": list()},
-             "supportedLocaleList": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class TaskManager(ManagedObject):
-    props = {"description": {"MOR": False, "value": None},
-             "maxCollector": {"MOR": False, "value": None},
-             "recentTask": {"MOR": True, "value": list()}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
-
-
-class UserDirectory(ManagedObject):
-    props = {"domainList": {"MOR": False, "value": list()}}
-    def __init__(self, mo_ref, client):
-        ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
+        self.valid_attrs = set.union(self.valid_attrs, ProfileManager.valid_attrs)
 
 
 class View(ManagedObject):
-    props = {}
+    valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
 
 
 class ManagedObjectView(View):
-    props = {"view": {"MOR": True, "value": list()}}
+    valid_attrs = set(['view'])
     def __init__(self, mo_ref, client):
         View.__init__(self, mo_ref, client)
-        self.props = dict(View.props.items() +
-                          self.props.items())
+        self.valid_attrs = set.union(self.valid_attrs, View.valid_attrs)
+    @cached_property
+    def view(self):
+       return self._get_mor("view", True)
 
 
 class ContainerView(ManagedObjectView):
-    props = {"container": {"MOR": True, "value": None},
-             "recursive": {"MOR": False, "value": None},
-             "type": {"MOR": False, "value": None}}
+    valid_attrs = set(['container', 'recursive', 'type'])
     def __init__(self, mo_ref, client):
         ManagedObjectView.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObjectView.props.items() +
-                          self.props.items())
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObjectView.valid_attrs)
+    @cached_property
+    def container(self):
+       return self._get_mor("container", False)
+    @cached_property
+    def recursive(self):
+       return self._get_dataobject("recursive", False)
+    @cached_property
+    def type(self):
+       return self._get_dataobject("type", True)
 
 
-class InventoryView(ManagedObjectView):
-    props = {}
-    def __init__(self, mo_ref, client):
-        ManagedObjectView.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObjectView.props.items() +
-                          self.props.items())
-
-
-class ListView(ManagedObjectView):
-    props = {}
-    def __init__(self, mo_ref, client):
-        ManagedObjectView.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObjectView.props.items() +
-                          self.props.items())
-
-
-class ViewManager(ManagedObject):
-    props = {"viewList": {"MOR": True, "value": list()}}
+class CustomFieldsManager(ManagedObject):
+    valid_attrs = set(['field'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def field(self):
+       return self._get_dataobject("field", True)
 
 
-class VirtualDiskManager(ManagedObject):
-    props = {}
+class CustomizationSpecManager(ManagedObject):
+    valid_attrs = set(['encryptionKey', 'info'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def encryptionKey(self):
+       return self._get_dataobject("encryptionKey", True)
+    @cached_property
+    def info(self):
+       return self._get_dataobject("info", True)
 
 
-class VirtualizationManager(ManagedObject):
-    props = {}
+class Datacenter(ManagedEntity):
+    valid_attrs = set(['datastore', 'datastoreFolder', 'hostFolder', 'network', 'networkFolder', 'vmFolder'])
+    def __init__(self, mo_ref, client):
+        ManagedEntity.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedEntity.valid_attrs)
+    @cached_property
+    def datastore(self):
+       return self._get_mor("datastore", True)
+    @cached_property
+    def datastoreFolder(self):
+       return self._get_mor("datastoreFolder", False)
+    @cached_property
+    def hostFolder(self):
+       return self._get_mor("hostFolder", False)
+    @cached_property
+    def network(self):
+       return self._get_mor("network", True)
+    @cached_property
+    def networkFolder(self):
+       return self._get_mor("networkFolder", False)
+    @cached_property
+    def vmFolder(self):
+       return self._get_mor("vmFolder", False)
+
+
+class Datastore(ManagedEntity):
+    valid_attrs = set(['browser', 'capability', 'host', 'info', 'iormConfiguration', 'summary', 'vm'])
+    def __init__(self, mo_ref, client):
+        ManagedEntity.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedEntity.valid_attrs)
+    @cached_property
+    def browser(self):
+       return self._get_mor("browser", False)
+    @cached_property
+    def capability(self):
+       return self._get_dataobject("capability", False)
+    @cached_property
+    def host(self):
+       return self._get_dataobject("host", True)
+    @cached_property
+    def info(self):
+       return self._get_dataobject("info", False)
+    @cached_property
+    def iormConfiguration(self):
+       return self._get_dataobject("iormConfiguration", False)
+    @cached_property
+    def summary(self):
+       return self._get_dataobject("summary", False)
+    @cached_property
+    def vm(self):
+       return self._get_mor("vm", True)
+
+
+class DiagnosticManager(ManagedObject):
+    valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
 
 
-class VirtualMachineCompatibilityChecker(ManagedObject):
-    props = {}
+class Network(ManagedEntity):
+    valid_attrs = set(['host', 'name', 'summary', 'vm'])
+    def __init__(self, mo_ref, client):
+        ManagedEntity.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedEntity.valid_attrs)
+    @cached_property
+    def host(self):
+       return self._get_mor("host", True)
+    @cached_property
+    def name(self):
+       return self._get_dataobject("name", False)
+    @cached_property
+    def summary(self):
+       return self._get_dataobject("summary", False)
+    @cached_property
+    def vm(self):
+       return self._get_mor("vm", True)
+
+
+class DistributedVirtualPortgroup(Network):
+    valid_attrs = set(['config', 'key', 'portKeys'])
+    def __init__(self, mo_ref, client):
+        Network.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, Network.valid_attrs)
+    @cached_property
+    def config(self):
+       return self._get_dataobject("config", False)
+    @cached_property
+    def key(self):
+       return self._get_dataobject("key", False)
+    @cached_property
+    def portKeys(self):
+       return self._get_dataobject("portKeys", True)
+
+
+class DistributedVirtualSwitch(ManagedEntity):
+    valid_attrs = set(['capability', 'config', 'networkResourcePool', 'portgroup', 'summary', 'uuid'])
+    def __init__(self, mo_ref, client):
+        ManagedEntity.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedEntity.valid_attrs)
+    @cached_property
+    def capability(self):
+       return self._get_dataobject("capability", False)
+    @cached_property
+    def config(self):
+       return self._get_dataobject("config", False)
+    @cached_property
+    def networkResourcePool(self):
+       return self._get_dataobject("networkResourcePool", True)
+    @cached_property
+    def portgroup(self):
+       return self._get_mor("portgroup", True)
+    @cached_property
+    def summary(self):
+       return self._get_dataobject("summary", False)
+    @cached_property
+    def uuid(self):
+       return self._get_dataobject("uuid", False)
+
+
+class DistributedVirtualSwitchManager(ManagedObject):
+    valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
 
 
-class VirtualMachineProvisioningChecker(ManagedObject):
-    props = {}
+class EnvironmentBrowser(ManagedObject):
+    valid_attrs = set(['datastoreBrowser'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def datastoreBrowser(self):
+       return self._get_mor("datastoreBrowser", False)
 
 
-class HostAuthenticationManager(ManagedObject):
-    props = {"info": {"MOR": False, "value": None},
-             "supportedStore": {"MOR": True, "value": list()}}
+class HistoryCollector(ManagedObject):
+    valid_attrs = set(['filter'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def filter(self):
+       return self._get_dataobject("filter", False)
+
+
+class EventHistoryCollector(HistoryCollector):
+    valid_attrs = set(['latestPage'])
+    def __init__(self, mo_ref, client):
+        HistoryCollector.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, HistoryCollector.valid_attrs)
+    @cached_property
+    def latestPage(self):
+       return self._get_dataobject("latestPage", True)
+
+
+class EventManager(ManagedObject):
+    valid_attrs = set(['description', 'latestEvent', 'maxCollector'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def description(self):
+       return self._get_dataobject("description", False)
+    @cached_property
+    def latestEvent(self):
+       return self._get_dataobject("latestEvent", False)
+    @cached_property
+    def maxCollector(self):
+       return self._get_dataobject("maxCollector", False)
+
+
+class ExtensionManager(ManagedObject):
+    valid_attrs = set(['extensionList'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def extensionList(self):
+       return self._get_dataobject("extensionList", True)
+
+
+class FileManager(ManagedObject):
+    valid_attrs = set([])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+
+
+class Folder(ManagedEntity):
+    valid_attrs = set(['childEntity', 'childType'])
+    def __init__(self, mo_ref, client):
+        ManagedEntity.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedEntity.valid_attrs)
+    @cached_property
+    def childEntity(self):
+       return self._get_mor("childEntity", True)
+    @cached_property
+    def childType(self):
+       return self._get_dataobject("childType", True)
 
 
 class HostAuthenticationStore(ManagedObject):
-    props = {"info": {"MOR": False, "value": None}}
+    valid_attrs = set(['info'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def info(self):
+       return self._get_dataobject("info", False)
 
 
 class HostDirectoryStore(HostAuthenticationStore):
-    props = {}
+    valid_attrs = set([])
     def __init__(self, mo_ref, client):
         HostAuthenticationStore.__init__(self, mo_ref, client)
-        self.props = dict(HostAuthenticationStore.props.items() +
-                          self.props.items())
+        self.valid_attrs = set.union(self.valid_attrs, HostAuthenticationStore.valid_attrs)
+
+
+class HostActiveDirectoryAuthentication(HostDirectoryStore):
+    valid_attrs = set([])
+    def __init__(self, mo_ref, client):
+        HostDirectoryStore.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, HostDirectoryStore.valid_attrs)
+
+
+class HostAuthenticationManager(ManagedObject):
+    valid_attrs = set(['info', 'supportedStore'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def info(self):
+       return self._get_dataobject("info", False)
+    @cached_property
+    def supportedStore(self):
+       return self._get_mor("supportedStore", True)
+
+
+class HostAutoStartManager(ManagedObject):
+    valid_attrs = set(['config'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def config(self):
+       return self._get_dataobject("config", False)
+
+
+class HostBootDeviceSystem(ManagedObject):
+    valid_attrs = set([])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+
+
+class HostCpuSchedulerSystem(ExtensibleManagedObject):
+    valid_attrs = set(['hyperthreadInfo'])
+    def __init__(self, mo_ref, client):
+        ExtensibleManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+    @cached_property
+    def hyperthreadInfo(self):
+       return self._get_dataobject("hyperthreadInfo", False)
+
+
+class HostDatastoreBrowser(ManagedObject):
+    valid_attrs = set(['datastore', 'supportedType'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def datastore(self):
+       return self._get_mor("datastore", True)
+    @cached_property
+    def supportedType(self):
+       return self._get_dataobject("supportedType", True)
+
+
+class HostDatastoreSystem(ManagedObject):
+    valid_attrs = set(['capabilities', 'datastore'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def capabilities(self):
+       return self._get_dataobject("capabilities", False)
+    @cached_property
+    def datastore(self):
+       return self._get_mor("datastore", True)
+
+
+class HostDateTimeSystem(ManagedObject):
+    valid_attrs = set(['dateTimeInfo'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def dateTimeInfo(self):
+       return self._get_dataobject("dateTimeInfo", False)
+
+
+class HostDiagnosticSystem(ManagedObject):
+    valid_attrs = set(['activePartition'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def activePartition(self):
+       return self._get_dataobject("activePartition", False)
+
+
+class HostFirewallSystem(ExtensibleManagedObject):
+    valid_attrs = set(['firewallInfo'])
+    def __init__(self, mo_ref, client):
+        ExtensibleManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+    @cached_property
+    def firewallInfo(self):
+       return self._get_dataobject("firewallInfo", False)
+
+
+class HostFirmwareSystem(ManagedObject):
+    valid_attrs = set([])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+
+
+class HostHealthStatusSystem(ManagedObject):
+    valid_attrs = set(['runtime'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def runtime(self):
+       return self._get_dataobject("runtime", False)
+
+
+class HostKernelModuleSystem(ManagedObject):
+    valid_attrs = set([])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+
+
+class HostLocalAccountManager(ManagedObject):
+    valid_attrs = set([])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
 
 
 class HostLocalAuthentication(HostAuthenticationStore):
-    props = {}
+    valid_attrs = set([])
     def __init__(self, mo_ref, client):
         HostAuthenticationStore.__init__(self, mo_ref, client)
-        self.props = dict(HostAuthenticationStore.props.items() +
-                          self.props.items())
-    
+        self.valid_attrs = set.union(self.valid_attrs, HostAuthenticationStore.valid_attrs)
 
-class HostActiveDirectoryAuthentication(HostDirectoryStore):
-    props = {}
+
+class HostMemorySystem(ExtensibleManagedObject):
+    valid_attrs = set(['consoleReservationInfo', 'virtualMachineReservationInfo'])
     def __init__(self, mo_ref, client):
-        HostDirectoryStore.__init__(self, mo_ref, client)
-        self.props = dict(HostDirectoryStore.props.items() +
-                          self.props.items())
-    
+        ExtensibleManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+    @cached_property
+    def consoleReservationInfo(self):
+       return self._get_dataobject("consoleReservationInfo", False)
+    @cached_property
+    def virtualMachineReservationInfo(self):
+       return self._get_dataobject("virtualMachineReservationInfo", False)
 
-class HostPowerSystem(ManagedObject):
-    props = {"capability": {"MOR": False, "value": None},
-             "info": {"MOR": False, "value": None}}
+
+class HostNetworkSystem(ExtensibleManagedObject):
+    valid_attrs = set(['capabilities', 'consoleIpRouteConfig', 'dnsConfig', 'ipRouteConfig', 'networkConfig', 'networkInfo', 'offloadCapabilities'])
+    def __init__(self, mo_ref, client):
+        ExtensibleManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+    @cached_property
+    def capabilities(self):
+       return self._get_dataobject("capabilities", False)
+    @cached_property
+    def consoleIpRouteConfig(self):
+       return self._get_dataobject("consoleIpRouteConfig", False)
+    @cached_property
+    def dnsConfig(self):
+       return self._get_dataobject("dnsConfig", False)
+    @cached_property
+    def ipRouteConfig(self):
+       return self._get_dataobject("ipRouteConfig", False)
+    @cached_property
+    def networkConfig(self):
+       return self._get_dataobject("networkConfig", False)
+    @cached_property
+    def networkInfo(self):
+       return self._get_dataobject("networkInfo", False)
+    @cached_property
+    def offloadCapabilities(self):
+       return self._get_dataobject("offloadCapabilities", False)
+
+
+class HostPatchManager(ManagedObject):
+    valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+
+
+class HostPciPassthruSystem(ExtensibleManagedObject):
+    valid_attrs = set(['pciPassthruInfo'])
+    def __init__(self, mo_ref, client):
+        ExtensibleManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+    @cached_property
+    def pciPassthruInfo(self):
+       return self._get_dataobject("pciPassthruInfo", True)
+
+
+class HostPowerSystem(ManagedObject):
+    valid_attrs = set(['capability', 'info'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def capability(self):
+       return self._get_dataobject("capability", False)
+    @cached_property
+    def info(self):
+       return self._get_dataobject("info", False)
+
+
+class HostProfile(Profile):
+    valid_attrs = set(['referenceHost'])
+    def __init__(self, mo_ref, client):
+        Profile.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, Profile.valid_attrs)
+    @cached_property
+    def referenceHost(self):
+       return self._get_mor("referenceHost", False)
+
+
+class HostProfileManager(ProfileManager):
+    valid_attrs = set([])
+    def __init__(self, mo_ref, client):
+        ProfileManager.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ProfileManager.valid_attrs)
+
+
+class HostServiceSystem(ExtensibleManagedObject):
+    valid_attrs = set(['serviceInfo'])
+    def __init__(self, mo_ref, client):
+        ExtensibleManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+    @cached_property
+    def serviceInfo(self):
+       return self._get_dataobject("serviceInfo", False)
+
+
+class HostSnmpSystem(ManagedObject):
+    valid_attrs = set(['configuration', 'limits'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def configuration(self):
+       return self._get_dataobject("configuration", False)
+    @cached_property
+    def limits(self):
+       return self._get_dataobject("limits", False)
+
+
+class HostStorageSystem(ExtensibleManagedObject):
+    valid_attrs = set(['fileSystemVolumeInfo', 'multipathStateInfo', 'storageDeviceInfo', 'systemFile'])
+    def __init__(self, mo_ref, client):
+        ExtensibleManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+    @cached_property
+    def fileSystemVolumeInfo(self):
+       return self._get_dataobject("fileSystemVolumeInfo", False)
+    @cached_property
+    def multipathStateInfo(self):
+       return self._get_dataobject("multipathStateInfo", False)
+    @cached_property
+    def storageDeviceInfo(self):
+       return self._get_dataobject("storageDeviceInfo", False)
+    @cached_property
+    def systemFile(self):
+       return self._get_dataobject("systemFile", True)
+
+
+class HostSystem(ManagedEntity):
+    valid_attrs = set(['capability', 'config', 'configManager', 'datastore', 'datastoreBrowser', 'hardware', 'network', 'runtime', 'summary', 'systemResources', 'vm'])
+    def __init__(self, mo_ref, client):
+        ManagedEntity.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedEntity.valid_attrs)
+    @cached_property
+    def capability(self):
+       return self._get_dataobject("capability", False)
+    @cached_property
+    def config(self):
+       return self._get_dataobject("config", False)
+    @cached_property
+    def configManager(self):
+       return self._get_dataobject("configManager", False)
+    @cached_property
+    def datastore(self):
+       return self._get_mor("datastore", True)
+    @cached_property
+    def datastoreBrowser(self):
+       return self._get_mor("datastoreBrowser", False)
+    @cached_property
+    def hardware(self):
+       return self._get_dataobject("hardware", False)
+    @cached_property
+    def network(self):
+       return self._get_mor("network", True)
+    @cached_property
+    def runtime(self):
+       return self._get_dataobject("runtime", False)
+    @cached_property
+    def summary(self):
+       return self._get_dataobject("summary", False)
+    @cached_property
+    def systemResources(self):
+       return self._get_dataobject("systemResources", False)
+    @cached_property
+    def vm(self):
+       return self._get_mor("vm", True)
+
+
+class HostVirtualNicManager(ExtensibleManagedObject):
+    valid_attrs = set(['info'])
+    def __init__(self, mo_ref, client):
+        ExtensibleManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+    @cached_property
+    def info(self):
+       return self._get_dataobject("info", False)
+
+
+class HostVMotionSystem(ExtensibleManagedObject):
+    valid_attrs = set(['ipConfig', 'netConfig'])
+    def __init__(self, mo_ref, client):
+        ExtensibleManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+    @cached_property
+    def ipConfig(self):
+       return self._get_dataobject("ipConfig", False)
+    @cached_property
+    def netConfig(self):
+       return self._get_dataobject("netConfig", False)
+
+
+class HttpNfcLease(ManagedObject):
+    valid_attrs = set(['error', 'info', 'initializeProgress', 'state'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def error(self):
+       return self._get_dataobject("error", False)
+    @cached_property
+    def info(self):
+       return self._get_dataobject("info", False)
+    @cached_property
+    def initializeProgress(self):
+       return self._get_dataobject("initializeProgress", False)
+    @cached_property
+    def state(self):
+       return self._get_dataobject("state", False)
+
+
+class InventoryView(ManagedObjectView):
+    valid_attrs = set([])
+    def __init__(self, mo_ref, client):
+        ManagedObjectView.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObjectView.valid_attrs)
+
+
+class IpPoolManager(ManagedObject):
+    valid_attrs = set([])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+
+
+class LicenseAssignmentManager(ManagedObject):
+    valid_attrs = set([])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+
+
+class LicenseManager(ManagedObject):
+    valid_attrs = set(['diagnostics', 'evaluation', 'featureInfo', 'licenseAssignmentManager', 'licensedEdition', 'licenses', 'source', 'sourceAvailable'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def diagnostics(self):
+       return self._get_dataobject("diagnostics", False)
+    @cached_property
+    def evaluation(self):
+       return self._get_dataobject("evaluation", False)
+    @cached_property
+    def featureInfo(self):
+       return self._get_dataobject("featureInfo", True)
+    @cached_property
+    def licenseAssignmentManager(self):
+       return self._get_mor("licenseAssignmentManager", False)
+    @cached_property
+    def licensedEdition(self):
+       return self._get_dataobject("licensedEdition", False)
+    @cached_property
+    def licenses(self):
+       return self._get_dataobject("licenses", True)
+    @cached_property
+    def source(self):
+       return self._get_dataobject("source", False)
+    @cached_property
+    def sourceAvailable(self):
+       return self._get_dataobject("sourceAvailable", False)
+
+
+class ListView(ManagedObjectView):
+    valid_attrs = set([])
+    def __init__(self, mo_ref, client):
+        ManagedObjectView.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObjectView.valid_attrs)
+
+
+class LocalizationManager(ManagedObject):
+    valid_attrs = set(['catalog'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def catalog(self):
+       return self._get_dataobject("catalog", True)
+
+
+class OptionManager(ManagedObject):
+    valid_attrs = set(['setting', 'supportedOption'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def setting(self):
+       return self._get_dataobject("setting", True)
+    @cached_property
+    def supportedOption(self):
+       return self._get_dataobject("supportedOption", True)
+
+
+class OvfManager(ManagedObject):
+    valid_attrs = set([])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+
+
+class PerformanceManager(ManagedObject):
+    valid_attrs = set(['description', 'historicalInterval', 'perfCounter'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def description(self):
+       return self._get_dataobject("description", False)
+    @cached_property
+    def historicalInterval(self):
+       return self._get_dataobject("historicalInterval", True)
+    @cached_property
+    def perfCounter(self):
+       return self._get_dataobject("perfCounter", True)
+
+
+class ProfileComplianceManager(ManagedObject):
+    valid_attrs = set([])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+
+
+class PropertyCollector(ManagedObject):
+    valid_attrs = set(['filter'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def filter(self):
+       return self._get_mor("filter", True)
+
+
+class PropertyFilter(ManagedObject):
+    valid_attrs = set(['partialUpdates', 'spec'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def partialUpdates(self):
+       return self._get_dataobject("partialUpdates", False)
+    @cached_property
+    def spec(self):
+       return self._get_dataobject("spec", False)
+
+
+class ResourcePlanningManager(ManagedObject):
+    valid_attrs = set([])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+
+
+class ResourcePool(ManagedEntity):
+    valid_attrs = set(['childConfiguration', 'config', 'owner', 'resourcePool', 'runtime', 'summary', 'vm'])
+    def __init__(self, mo_ref, client):
+        ManagedEntity.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedEntity.valid_attrs)
+    @cached_property
+    def childConfiguration(self):
+       return self._get_dataobject("childConfiguration", True)
+    @cached_property
+    def config(self):
+       return self._get_dataobject("config", False)
+    @cached_property
+    def owner(self):
+       return self._get_mor("owner", False)
+    @cached_property
+    def resourcePool(self):
+       return self._get_mor("resourcePool", True)
+    @cached_property
+    def runtime(self):
+       return self._get_dataobject("runtime", False)
+    @cached_property
+    def summary(self):
+       return self._get_dataobject("summary", False)
+    @cached_property
+    def vm(self):
+       return self._get_mor("vm", True)
+
+
+class ScheduledTask(ExtensibleManagedObject):
+    valid_attrs = set(['info'])
+    def __init__(self, mo_ref, client):
+        ExtensibleManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+    @cached_property
+    def info(self):
+       return self._get_dataobject("info", False)
+
+
+class ScheduledTaskManager(ManagedObject):
+    valid_attrs = set(['description', 'scheduledTask'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def description(self):
+       return self._get_dataobject("description", False)
+    @cached_property
+    def scheduledTask(self):
+       return self._get_mor("scheduledTask", True)
+
+
+class SearchIndex(ManagedObject):
+    valid_attrs = set([])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+
+
+class ServiceInstance(ManagedObject):
+    valid_attrs = set(['capability', 'content', 'serverClock'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def capability(self):
+       return self._get_dataobject("capability", False)
+    @cached_property
+    def content(self):
+       return self._get_dataobject("content", False)
+    @cached_property
+    def serverClock(self):
+       return self._get_dataobject("serverClock", False)
+
+
+class SessionManager(ManagedObject):
+    valid_attrs = set(['currentSession', 'defaultLocale', 'message', 'messageLocaleList', 'sessionList', 'supportedLocaleList'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def currentSession(self):
+       return self._get_dataobject("currentSession", False)
+    @cached_property
+    def defaultLocale(self):
+       return self._get_dataobject("defaultLocale", False)
+    @cached_property
+    def message(self):
+       return self._get_dataobject("message", False)
+    @cached_property
+    def messageLocaleList(self):
+       return self._get_dataobject("messageLocaleList", True)
+    @cached_property
+    def sessionList(self):
+       return self._get_dataobject("sessionList", True)
+    @cached_property
+    def supportedLocaleList(self):
+       return self._get_dataobject("supportedLocaleList", True)
 
 
 class StorageResourceManager(ManagedObject):
-    props = {}
+    valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.props = dict(ManagedObject.props.items() +
-                          self.props.items())
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+
+
+class Task(ExtensibleManagedObject):
+    valid_attrs = set(['info'])
+    def __init__(self, mo_ref, client):
+        ExtensibleManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+    @cached_property
+    def info(self):
+       return self._get_dataobject("info", False)
+
+
+class TaskHistoryCollector(HistoryCollector):
+    valid_attrs = set(['latestPage'])
+    def __init__(self, mo_ref, client):
+        HistoryCollector.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, HistoryCollector.valid_attrs)
+    @cached_property
+    def latestPage(self):
+       return self._get_dataobject("latestPage", True)
+
+
+class TaskManager(ManagedObject):
+    valid_attrs = set(['description', 'maxCollector', 'recentTask'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def description(self):
+       return self._get_dataobject("description", False)
+    @cached_property
+    def maxCollector(self):
+       return self._get_dataobject("maxCollector", False)
+    @cached_property
+    def recentTask(self):
+       return self._get_mor("recentTask", True)
+
+
+class UserDirectory(ManagedObject):
+    valid_attrs = set(['domainList'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def domainList(self):
+       return self._get_dataobject("domainList", True)
+
+
+class ViewManager(ManagedObject):
+    valid_attrs = set(['viewList'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+    @cached_property
+    def viewList(self):
+       return self._get_mor("viewList", True)
+
+
+class VirtualApp(ResourcePool):
+    valid_attrs = set(['childLink', 'datastore', 'network', 'parentFolder', 'parentVApp', 'vAppConfig'])
+    def __init__(self, mo_ref, client):
+        ResourcePool.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ResourcePool.valid_attrs)
+    @cached_property
+    def childLink(self):
+       return self._get_dataobject("childLink", True)
+    @cached_property
+    def datastore(self):
+       return self._get_mor("datastore", True)
+    @cached_property
+    def network(self):
+       return self._get_mor("network", True)
+    @cached_property
+    def parentFolder(self):
+       return self._get_mor("parentFolder", False)
+    @cached_property
+    def parentVApp(self):
+       return self._get_mor("parentVApp", False)
+    @cached_property
+    def vAppConfig(self):
+       return self._get_dataobject("vAppConfig", False)
+
+
+class VirtualDiskManager(ManagedObject):
+    valid_attrs = set([])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+
+
+class VirtualizationManager(ManagedObject):
+    valid_attrs = set([])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+
+
+class VirtualMachine(ManagedEntity):
+    valid_attrs = set(['capability', 'config', 'datastore', 'environmentBrowser', 'guest', 'guestHeartbeatStatus', 'layout', 'layoutEx', 'network', 'parentVApp', 'resourceConfig', 'resourcePool', 'rootSnapshot', 'runtime', 'snapshot', 'storage', 'summary'])
+    def __init__(self, mo_ref, client):
+        ManagedEntity.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedEntity.valid_attrs)
+    @cached_property
+    def capability(self):
+       return self._get_dataobject("capability", False)
+    @cached_property
+    def config(self):
+       return self._get_dataobject("config", False)
+    @cached_property
+    def datastore(self):
+       return self._get_mor("datastore", True)
+    @cached_property
+    def environmentBrowser(self):
+       return self._get_mor("environmentBrowser", False)
+    @cached_property
+    def guest(self):
+       return self._get_dataobject("guest", False)
+    @cached_property
+    def guestHeartbeatStatus(self):
+       return self._get_dataobject("guestHeartbeatStatus", False)
+    @cached_property
+    def layout(self):
+       return self._get_dataobject("layout", False)
+    @cached_property
+    def layoutEx(self):
+       return self._get_dataobject("layoutEx", False)
+    @cached_property
+    def network(self):
+       return self._get_mor("network", True)
+    @cached_property
+    def parentVApp(self):
+       return self._get_mor("parentVApp", False)
+    @cached_property
+    def resourceConfig(self):
+       return self._get_dataobject("resourceConfig", False)
+    @cached_property
+    def resourcePool(self):
+       return self._get_mor("resourcePool", False)
+    @cached_property
+    def rootSnapshot(self):
+       return self._get_mor("rootSnapshot", True)
+    @cached_property
+    def runtime(self):
+       return self._get_dataobject("runtime", False)
+    @cached_property
+    def snapshot(self):
+       return self._get_dataobject("snapshot", False)
+    @cached_property
+    def storage(self):
+       return self._get_dataobject("storage", False)
+    @cached_property
+    def summary(self):
+       return self._get_dataobject("summary", False)
+
+
+class VirtualMachineCompatibilityChecker(ManagedObject):
+    valid_attrs = set([])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+
+
+class VirtualMachineProvisioningChecker(ManagedObject):
+    valid_attrs = set([])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+
+
+class VirtualMachineSnapshot(ExtensibleManagedObject):
+    valid_attrs = set(['childSnapshot', 'config'])
+    def __init__(self, mo_ref, client):
+        ExtensibleManagedObject.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+    @cached_property
+    def childSnapshot(self):
+       return self._get_mor("childSnapshot", True)
+    @cached_property
+    def config(self):
+       return self._get_dataobject("config", False)
+
+
+class VmwareDistributedVirtualSwitch(DistributedVirtualSwitch):
+    valid_attrs = set([])
+    def __init__(self, mo_ref, client):
+        DistributedVirtualSwitch.__init__(self, mo_ref, client)
+        self.valid_attrs = set.union(self.valid_attrs, DistributedVirtualSwitch.valid_attrs)
 
 
 classmap = dict((x.__name__, x) for x in (
+    ExtensibleManagedObject,
     Alarm,
     AlarmManager,
     AuthorizationManager,
-    ClusterComputeResource,
-    ClusterProfile,
-    ClusterProfileManager,
+    ManagedEntity,
     ComputeResource,
+    ClusterComputeResource,
+    Profile,
+    ClusterProfile,
+    ProfileManager,
+    ClusterProfileManager,
+    View,
+    ManagedObjectView,
     ContainerView,
     CustomFieldsManager,
     CustomizationSpecManager,
     Datacenter,
     Datastore,
     DiagnosticManager,
+    Network,
     DistributedVirtualPortgroup,
     DistributedVirtualSwitch,
     DistributedVirtualSwitchManager,
     EnvironmentBrowser,
+    HistoryCollector,
     EventHistoryCollector,
     EventManager,
-    ExtensibleManagedObject,
     ExtensionManager,
     FileManager,
     Folder,
-    HistoryCollector,
+    HostAuthenticationStore,
+    HostDirectoryStore,
     HostActiveDirectoryAuthentication,
     HostAuthenticationManager,
-    HostAuthenticationStore,
     HostAutoStartManager,
     HostBootDeviceSystem,
     HostCpuSchedulerSystem,
@@ -1183,7 +1312,6 @@ classmap = dict((x.__name__, x) for x in (
     HostDatastoreSystem,
     HostDateTimeSystem,
     HostDiagnosticSystem,
-    HostDirectoryStore,
     HostFirewallSystem,
     HostFirmwareSystem,
     HostHealthStatusSystem,
@@ -1210,15 +1338,10 @@ classmap = dict((x.__name__, x) for x in (
     LicenseManager,
     ListView,
     LocalizationManager,
-    ManagedEntity,
-    ManagedObjectView,
-    Network,
     OptionManager,
     OvfManager,
     PerformanceManager,
-    Profile,
     ProfileComplianceManager,
-    ProfileManager,
     PropertyCollector,
     PropertyFilter,
     ResourcePlanningManager,
@@ -1233,7 +1356,6 @@ classmap = dict((x.__name__, x) for x in (
     TaskHistoryCollector,
     TaskManager,
     UserDirectory,
-    View,
     ViewManager,
     VirtualApp,
     VirtualDiskManager,
@@ -1244,7 +1366,5 @@ classmap = dict((x.__name__, x) for x in (
     VirtualMachineSnapshot,
     VmwareDistributedVirtualSwitch
 ))
-
-
 def classmapper(name):
     return classmap[name]
