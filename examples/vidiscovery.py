@@ -14,7 +14,6 @@
 # under the License.
 
 from psphere.scripting import BaseScript
-from psphere.managedobjects import ClusterComputeResource
 
 class Discovery(BaseScript):
     def discovery(self, url=None, username=None, password=None):
@@ -32,12 +31,12 @@ class Discovery(BaseScript):
         """
         self.login()
         # Find the first ClusterComputeResource
-        ccs = ClusterComputeResource.find_one(
+        ccr = self.client.find_entity_view("ClusterComputeResource",
                                     filter={'name': 'Application Engineering'},
                                     properties=['name', 'host'])
-        print('Cluster: %s (%s hosts)' % (ccs.name, len(ccs.host)))
+        print('Cluster: %s (%s hosts)' % (ccr.name, len(ccr.host)))
 
-        for host in ccs.hosts:
+        for host in ccr.host:
             print('  Host: %s (%s VMs)' % (host.name, len(host.vm)))
             # Get the vm views in one fell swoop
             for vm in host.vm:
