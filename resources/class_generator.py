@@ -23,8 +23,12 @@ for i, mo in enumerate(managed_objects):
     for prop in mo["properties"]:
         body_text += "    @cached_property\n"
         body_text += "    def %s(self):\n" % prop["name"]
-        body_text += ("       return self._get_property(\"%s\", %s, %s)\n" %
-                 (prop["name"], prop["mor"], prop["multivalue"]))
+        if prop["mor"] is True:
+            body_text += ("       return self._get_mor(\"%s\", %s)\n" %
+                     (prop["name"], prop["multivalue"]))
+        else:
+            body_text += ("       return self._get_dataobject(\"%s\", %s)\n" %
+                     (prop["name"], prop["multivalue"]))
 
     body_text += "\n\n"
 
