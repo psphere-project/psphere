@@ -212,7 +212,7 @@ class Client(suds.client.Client):
         kls = classmapper(mo_ref._type)
         view = kls(mo_ref, self)
         # Update the requested properties of the instance
-        view.update_view_data(properties=properties)
+        #view.update_view_data(properties=properties)
 
         return view
 
@@ -251,13 +251,10 @@ class Client(suds.client.Client):
 
         object_contents = self.sc.propertyCollector.RetrieveProperties(
             specSet=pfs)
-        print('@@@@@@@@@@@@@')
-        print(object_contents)
-        print('@@@@@@@@@@@@@')
         views = []
         for object_content in object_contents:
             # Update the instance with the data in object_content
-            object_content.obj.set_view_data(object_content=object_content)
+            #object_content.obj.set_view_data(object_content=object_content)
             views.append(object_content.obj)
 
         return views
@@ -417,7 +414,7 @@ class Client(suds.client.Client):
         views = []
         for obj_content in obj_contents:
             logger.debug("In find_entity_view with object of type %s" % obj_content.obj.__class__.__name__)
-            obj_content.obj.update_view_data(properties=properties)
+            #obj_content.obj.update_view_data(properties=properties)
             views.append(obj_content.obj)
 
         return views
@@ -469,7 +466,7 @@ class Client(suds.client.Client):
             logger.debug("Creating class in find_entity_view (filter)")
             view = kls(obj_contents[0].obj, self)
             logger.debug("Completed creating class in find_entity_view (filter)")
-            view.update_view_data(properties)
+            #view.update_view_data(properties)
             return view
 
         matched = False
@@ -502,5 +499,5 @@ class Client(suds.client.Client):
         logger.debug("Creating class in find_entity_view")
         view = kls(filtered_obj_content.obj.mo_ref, self)
         logger.debug("Completed creating class in find_entity_view")
-        view.update_view_data(properties=properties)
+        #view.update_view_data(properties=properties)
         return view
