@@ -52,14 +52,17 @@ class cached_property(object):
         try:
             # Get the value from the cache
             value, last_update = inst._cache[self.__name__]
+            logger.info("Found cached value for %s" % self.__name__)
             # If the value in the cache exceeds the TTL then raise
             # AttributeError so that we retrieve the value again below
             if self.ttl > 0 and now - last_update > self.ttl:
+                logger.info("Cached value has exceeded TTL")
                 raise AttributeError
         except (KeyError, AttributeError):
             # We end up here if the value hasn't been cached
             # or the value exceeds the TTL. We call the decorated
             # function to get the value.
+            logger.info("%s is not cached." % self.__name__)
             value = self.fget(inst)
             try:
                 # See if the instance has a cache attribute
@@ -84,12 +87,12 @@ class ManagedObject(object):
    :type client: Client
 
     """
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         self._cache = {}
         logger.debug("===== Have been passed %s as mo_ref: " % mo_ref)
-        self.mo_ref = mo_ref
-        self.client = client
+        self._mo_ref = mo_ref
+        self._client = client
 
     def _get_dataobject(self, name, multivalued):
         """This function only gets called if the decorated property
@@ -107,7 +110,7 @@ class ManagedObject(object):
         if multivalued is True:
             self.update_view_data(properties=[name])
             logger.debug("Getting views for MOR")
-            views = self.client.get_views(self._cache[name][0])
+            views = self._client.get_views(self._cache[name][0])
             return views
 
     def update_view_data(self, properties=None):
@@ -125,35 +128,38 @@ class ManagedObject(object):
         """
         if properties is None:
             properties = []
-        logger.info("Updating view data for object of type %s" % self.mo_ref._type)
-        property_spec = self.client.create('PropertySpec')
-        property_spec.type = str(self.mo_ref._type)
+        logger.info("Updating view data for object of type %s" % self._mo_ref._type)
+        property_spec = self._client.create('PropertySpec')
+        property_spec.type = str(self._mo_ref._type)
         # Determine which properties to retrieve from the server
-        if not properties and self.client.auto_populate:
-            logger.debug("Retrieving all properties of the object")
-            property_spec.all = True
+        if properties is None:
+            properties = []
         else:
-            logger.debug("Retrieving %s properties" % len(properties))
-            property_spec.all = False
-            property_spec.pathSet = properties
+            if properties == "all":
+                logger.debug("Retrieving all properties")
+                property_spec.all = True
+            else:
+                logger.debug("Retrieving %s properties" % len(properties))
+                property_spec.all = False
+                property_spec.pathSet = properties
 
-        object_spec = self.client.create('ObjectSpec')
-        object_spec.obj = self.mo_ref
+        object_spec = self._client.create('ObjectSpec')
+        object_spec.obj = self._mo_ref
 
-        pfs = self.client.create('PropertyFilterSpec')
+        pfs = self._client.create('PropertyFilterSpec')
         pfs.propSet = [property_spec]
         pfs.objectSet = [object_spec]
 
         # Create a copy of the property collector and call the method
-        pc = self.client.sc.propertyCollector
+        pc = self._client.sc.propertyCollector
         object_content = pc.RetrieveProperties(specSet=pfs)[0]
         if not object_content:
             # TODO: Improve error checking and reporting
             logger.error("Nothing returned from RetrieveProperties!")
 
-        self.set_view_data(object_content)
+        self._set_view_data(object_content)
 
-    def set_view_data(self, object_content):
+    def _set_view_data(self, object_content):
         """Update the local object from the passed in object_content."""
         # A debugging convenience, allows inspection of the object_content
         # that was used to create the object
@@ -162,7 +168,7 @@ class ManagedObject(object):
 
         for dynprop in object_content.propSet:
             # If the class hasn't defined the property, don't use it
-            if dynprop.name not in self.valid_attrs:
+            if dynprop.name not in self._valid_attrs:
                 logger.error("Server returned a property '%s' but the object"
                              " hasn't defined it so it is being ignored." %
                              dynprop.name)
@@ -172,7 +178,6 @@ class ManagedObject(object):
                 if not len(dynprop.val):
                     logger.info("Server returned empty value for %s" %
                                 dynprop.name)
-                    continue
             except TypeError:
                 # This except allows us to pass over:
                 # TypeError: object of type 'datetime.datetime' has no len()
@@ -180,6 +185,13 @@ class ManagedObject(object):
                 logger.error("%s of type %s has no len!" % (dynprop.name,
                                                             type(dynprop.val)))
                 pass
+
+            try:
+                # See if we have a cache attribute
+                cache = self._cache
+            except AttributeError:
+                # If we don't create one and use it
+                cache = self._cache = {}
 
             # Values which contain classes starting with Array need
             # to be converted into a nicer Python list
@@ -190,7 +202,7 @@ class ManagedObject(object):
                 logger.debug("%s being set to %s" % (dynprop.name,
                                                      dynprop.val[0]))
                 now = time.time()
-                self._cache[dynprop.name] = (dynprop.val[0], now)
+                cache[dynprop.name] = (dynprop.val[0], now)
             else:
                 logger.info("Setting value of a single-valued property")
                 logger.debug("DynamicProperty value is a %s: " %
@@ -198,9 +210,9 @@ class ManagedObject(object):
                 logger.debug("%s being set to %s" % (dynprop.name,
                                                      dynprop.val))
                 now = time.time()
-                self._cache[dynprop.name] = (dynprop.val, now)
+                cache[dynprop.name] = (dynprop.val, now)
 
-    def __getattribute__(self, name):
+    def __getattr__(self, name):
         """Overridden so that SOAP methods can be proxied.
 
         This is overridden for two reasons:
@@ -231,12 +243,12 @@ class ManagedObject(object):
             # Here we must manually get the client object so we
             # don't get recursively called when the next method
             # call looks for it
-            client = object.__getattribute__(self, "client")
+            client = object.__getattribute__(self, "_client")
             # TODO: This should probably be raised by Client.invoke
             getattr(client.service, name)
             logger.debug("Constructing func for %s", name)
             def func(**kwargs):
-                result = client.invoke(name, _this=self.mo_ref,
+                result = client.invoke(name, _this=self._mo_ref,
                                             **kwargs)
                 logger.debug("Invoke returned %s" % result)
                 return result
