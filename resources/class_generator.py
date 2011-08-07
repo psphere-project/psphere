@@ -16,10 +16,10 @@ for i, mo in enumerate(managed_objects):
     props = []
     for prop in mo["properties"]:
         props.append("%s" % prop["name"])
-    body_text += "    props = set(%s)\n" % props
+    body_text += "    _valid_attrs = set(%s)\n" % props
     body_text += "    def __init__(self, mo_ref, client):\n"
     body_text += "        %s.__init__(self, mo_ref, client)\n" % (mo["extends"])
-    body_text += ("        self.valid_attrs = set.union(self.props, %s.props)\n" % mo["extends"])
+    body_text += ("        self._valid_attrs = set.union(self._valid_attrs, %s._valid_attrs)\n" % mo["extends"])
     for prop in mo["properties"]:
         body_text += "    @cached_property\n"
         body_text += "    def %s(self):\n" % prop["name"]
