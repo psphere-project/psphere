@@ -1,10 +1,10 @@
 from psphere import ManagedObject, cached_property
 
 class ExtensibleManagedObject(ManagedObject):
-    valid_attrs = set(['availableField', 'value'])
+    _valid_attrs = set(['availableField', 'value'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def availableField(self):
        return self._get_dataobject("availableField", True)
@@ -14,20 +14,20 @@ class ExtensibleManagedObject(ManagedObject):
 
 
 class Alarm(ExtensibleManagedObject):
-    valid_attrs = set(['info'])
+    _valid_attrs = set(['info'])
     def __init__(self, mo_ref, client):
         ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ExtensibleManagedObject._valid_attrs)
     @cached_property
     def info(self):
        return self._get_dataobject("info", False)
 
 
 class AlarmManager(ManagedObject):
-    valid_attrs = set(['defaultExpression', 'description'])
+    _valid_attrs = set(['defaultExpression', 'description'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def defaultExpression(self):
        return self._get_dataobject("defaultExpression", True)
@@ -37,10 +37,10 @@ class AlarmManager(ManagedObject):
 
 
 class AuthorizationManager(ManagedObject):
-    valid_attrs = set(['description', 'privilegeList', 'roleList'])
+    _valid_attrs = set(['description', 'privilegeList', 'roleList'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def description(self):
        return self._get_dataobject("description", False)
@@ -53,10 +53,10 @@ class AuthorizationManager(ManagedObject):
 
 
 class ManagedEntity(ExtensibleManagedObject):
-    valid_attrs = set(['alarmActionsEnabled', 'configIssue', 'configStatus', 'customValue', 'declaredAlarmState', 'disabledMethod', 'effectiveRole', 'name', 'overallStatus', 'parent', 'permission', 'recentTask', 'tag', 'triggeredAlarmState'])
+    _valid_attrs = set(['alarmActionsEnabled', 'configIssue', 'configStatus', 'customValue', 'declaredAlarmState', 'disabledMethod', 'effectiveRole', 'name', 'overallStatus', 'parent', 'permission', 'recentTask', 'tag', 'triggeredAlarmState'])
     def __init__(self, mo_ref, client):
         ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ExtensibleManagedObject._valid_attrs)
     @cached_property
     def alarmActionsEnabled(self):
        return self._get_dataobject("alarmActionsEnabled", False)
@@ -102,10 +102,10 @@ class ManagedEntity(ExtensibleManagedObject):
 
 
 class ComputeResource(ManagedEntity):
-    valid_attrs = set(['configurationEx', 'datastore', 'environmentBrowser', 'host', 'network', 'resourcePool', 'summary'])
+    _valid_attrs = set(['configurationEx', 'datastore', 'environmentBrowser', 'host', 'network', 'resourcePool', 'summary'])
     def __init__(self, mo_ref, client):
         ManagedEntity.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedEntity.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedEntity._valid_attrs)
     @cached_property
     def configurationEx(self):
        return self._get_dataobject("configurationEx", False)
@@ -130,10 +130,10 @@ class ComputeResource(ManagedEntity):
 
 
 class ClusterComputeResource(ComputeResource):
-    valid_attrs = set(['actionHistory', 'configuration', 'drsFault', 'drsRecommendation', 'migrationHistory', 'recommendation'])
+    _valid_attrs = set(['actionHistory', 'configuration', 'drsFault', 'drsRecommendation', 'migrationHistory', 'recommendation'])
     def __init__(self, mo_ref, client):
         ComputeResource.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ComputeResource.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ComputeResource._valid_attrs)
     @cached_property
     def actionHistory(self):
        return self._get_dataobject("actionHistory", True)
@@ -155,10 +155,10 @@ class ClusterComputeResource(ComputeResource):
 
 
 class Profile(ManagedObject):
-    valid_attrs = set(['complianceStatus', 'config', 'createdTime', 'description', 'entity', 'modifiedTime', 'name'])
+    _valid_attrs = set(['complianceStatus', 'config', 'createdTime', 'description', 'entity', 'modifiedTime', 'name'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def complianceStatus(self):
        return self._get_dataobject("complianceStatus", False)
@@ -183,51 +183,51 @@ class Profile(ManagedObject):
 
 
 class ClusterProfile(Profile):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         Profile.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, Profile.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, Profile._valid_attrs)
 
 
 class ProfileManager(ManagedObject):
-    valid_attrs = set(['profile'])
+    _valid_attrs = set(['profile'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def profile(self):
        return self._get_mor("profile", True)
 
 
 class ClusterProfileManager(ProfileManager):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ProfileManager.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ProfileManager.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ProfileManager._valid_attrs)
 
 
 class View(ManagedObject):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
 
 
 class ManagedObjectView(View):
-    valid_attrs = set(['view'])
+    _valid_attrs = set(['view'])
     def __init__(self, mo_ref, client):
         View.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, View.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, View._valid_attrs)
     @cached_property
     def view(self):
        return self._get_mor("view", True)
 
 
 class ContainerView(ManagedObjectView):
-    valid_attrs = set(['container', 'recursive', 'type'])
+    _valid_attrs = set(['container', 'recursive', 'type'])
     def __init__(self, mo_ref, client):
         ManagedObjectView.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObjectView.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObjectView._valid_attrs)
     @cached_property
     def container(self):
        return self._get_mor("container", False)
@@ -240,20 +240,20 @@ class ContainerView(ManagedObjectView):
 
 
 class CustomFieldsManager(ManagedObject):
-    valid_attrs = set(['field'])
+    _valid_attrs = set(['field'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def field(self):
        return self._get_dataobject("field", True)
 
 
 class CustomizationSpecManager(ManagedObject):
-    valid_attrs = set(['encryptionKey', 'info'])
+    _valid_attrs = set(['encryptionKey', 'info'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def encryptionKey(self):
        return self._get_dataobject("encryptionKey", True)
@@ -263,10 +263,10 @@ class CustomizationSpecManager(ManagedObject):
 
 
 class Datacenter(ManagedEntity):
-    valid_attrs = set(['datastore', 'datastoreFolder', 'hostFolder', 'network', 'networkFolder', 'vmFolder'])
+    _valid_attrs = set(['datastore', 'datastoreFolder', 'hostFolder', 'network', 'networkFolder', 'vmFolder'])
     def __init__(self, mo_ref, client):
         ManagedEntity.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedEntity.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedEntity._valid_attrs)
     @cached_property
     def datastore(self):
        return self._get_mor("datastore", True)
@@ -288,10 +288,10 @@ class Datacenter(ManagedEntity):
 
 
 class Datastore(ManagedEntity):
-    valid_attrs = set(['browser', 'capability', 'host', 'info', 'iormConfiguration', 'summary', 'vm'])
+    _valid_attrs = set(['browser', 'capability', 'host', 'info', 'iormConfiguration', 'summary', 'vm'])
     def __init__(self, mo_ref, client):
         ManagedEntity.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedEntity.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedEntity._valid_attrs)
     @cached_property
     def browser(self):
        return self._get_mor("browser", False)
@@ -316,17 +316,17 @@ class Datastore(ManagedEntity):
 
 
 class DiagnosticManager(ManagedObject):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
 
 
 class Network(ManagedEntity):
-    valid_attrs = set(['host', 'name', 'summary', 'vm'])
+    _valid_attrs = set(['host', 'name', 'summary', 'vm'])
     def __init__(self, mo_ref, client):
         ManagedEntity.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedEntity.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedEntity._valid_attrs)
     @cached_property
     def host(self):
        return self._get_mor("host", True)
@@ -342,10 +342,10 @@ class Network(ManagedEntity):
 
 
 class DistributedVirtualPortgroup(Network):
-    valid_attrs = set(['config', 'key', 'portKeys'])
+    _valid_attrs = set(['config', 'key', 'portKeys'])
     def __init__(self, mo_ref, client):
         Network.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, Network.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, Network._valid_attrs)
     @cached_property
     def config(self):
        return self._get_dataobject("config", False)
@@ -358,10 +358,10 @@ class DistributedVirtualPortgroup(Network):
 
 
 class DistributedVirtualSwitch(ManagedEntity):
-    valid_attrs = set(['capability', 'config', 'networkResourcePool', 'portgroup', 'summary', 'uuid'])
+    _valid_attrs = set(['capability', 'config', 'networkResourcePool', 'portgroup', 'summary', 'uuid'])
     def __init__(self, mo_ref, client):
         ManagedEntity.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedEntity.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedEntity._valid_attrs)
     @cached_property
     def capability(self):
        return self._get_dataobject("capability", False)
@@ -383,47 +383,47 @@ class DistributedVirtualSwitch(ManagedEntity):
 
 
 class DistributedVirtualSwitchManager(ManagedObject):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
 
 
 class EnvironmentBrowser(ManagedObject):
-    valid_attrs = set(['datastoreBrowser'])
+    _valid_attrs = set(['datastoreBrowser'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def datastoreBrowser(self):
        return self._get_mor("datastoreBrowser", False)
 
 
 class HistoryCollector(ManagedObject):
-    valid_attrs = set(['filter'])
+    _valid_attrs = set(['filter'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def filter(self):
        return self._get_dataobject("filter", False)
 
 
 class EventHistoryCollector(HistoryCollector):
-    valid_attrs = set(['latestPage'])
+    _valid_attrs = set(['latestPage'])
     def __init__(self, mo_ref, client):
         HistoryCollector.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, HistoryCollector.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, HistoryCollector._valid_attrs)
     @cached_property
     def latestPage(self):
        return self._get_dataobject("latestPage", True)
 
 
 class EventManager(ManagedObject):
-    valid_attrs = set(['description', 'latestEvent', 'maxCollector'])
+    _valid_attrs = set(['description', 'latestEvent', 'maxCollector'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def description(self):
        return self._get_dataobject("description", False)
@@ -436,27 +436,27 @@ class EventManager(ManagedObject):
 
 
 class ExtensionManager(ManagedObject):
-    valid_attrs = set(['extensionList'])
+    _valid_attrs = set(['extensionList'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def extensionList(self):
        return self._get_dataobject("extensionList", True)
 
 
 class FileManager(ManagedObject):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
 
 
 class Folder(ManagedEntity):
-    valid_attrs = set(['childEntity', 'childType'])
+    _valid_attrs = set(['childEntity', 'childType'])
     def __init__(self, mo_ref, client):
         ManagedEntity.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedEntity.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedEntity._valid_attrs)
     @cached_property
     def childEntity(self):
        return self._get_mor("childEntity", True)
@@ -466,34 +466,34 @@ class Folder(ManagedEntity):
 
 
 class HostAuthenticationStore(ManagedObject):
-    valid_attrs = set(['info'])
+    _valid_attrs = set(['info'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def info(self):
        return self._get_dataobject("info", False)
 
 
 class HostDirectoryStore(HostAuthenticationStore):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         HostAuthenticationStore.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, HostAuthenticationStore.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, HostAuthenticationStore._valid_attrs)
 
 
 class HostActiveDirectoryAuthentication(HostDirectoryStore):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         HostDirectoryStore.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, HostDirectoryStore.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, HostDirectoryStore._valid_attrs)
 
 
 class HostAuthenticationManager(ManagedObject):
-    valid_attrs = set(['info', 'supportedStore'])
+    _valid_attrs = set(['info', 'supportedStore'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def info(self):
        return self._get_dataobject("info", False)
@@ -503,37 +503,37 @@ class HostAuthenticationManager(ManagedObject):
 
 
 class HostAutoStartManager(ManagedObject):
-    valid_attrs = set(['config'])
+    _valid_attrs = set(['config'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def config(self):
        return self._get_dataobject("config", False)
 
 
 class HostBootDeviceSystem(ManagedObject):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
 
 
 class HostCpuSchedulerSystem(ExtensibleManagedObject):
-    valid_attrs = set(['hyperthreadInfo'])
+    _valid_attrs = set(['hyperthreadInfo'])
     def __init__(self, mo_ref, client):
         ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ExtensibleManagedObject._valid_attrs)
     @cached_property
     def hyperthreadInfo(self):
        return self._get_dataobject("hyperthreadInfo", False)
 
 
 class HostDatastoreBrowser(ManagedObject):
-    valid_attrs = set(['datastore', 'supportedType'])
+    _valid_attrs = set(['datastore', 'supportedType'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def datastore(self):
        return self._get_mor("datastore", True)
@@ -543,10 +543,10 @@ class HostDatastoreBrowser(ManagedObject):
 
 
 class HostDatastoreSystem(ManagedObject):
-    valid_attrs = set(['capabilities', 'datastore'])
+    _valid_attrs = set(['capabilities', 'datastore'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def capabilities(self):
        return self._get_dataobject("capabilities", False)
@@ -556,78 +556,78 @@ class HostDatastoreSystem(ManagedObject):
 
 
 class HostDateTimeSystem(ManagedObject):
-    valid_attrs = set(['dateTimeInfo'])
+    _valid_attrs = set(['dateTimeInfo'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def dateTimeInfo(self):
        return self._get_dataobject("dateTimeInfo", False)
 
 
 class HostDiagnosticSystem(ManagedObject):
-    valid_attrs = set(['activePartition'])
+    _valid_attrs = set(['activePartition'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def activePartition(self):
        return self._get_dataobject("activePartition", False)
 
 
 class HostFirewallSystem(ExtensibleManagedObject):
-    valid_attrs = set(['firewallInfo'])
+    _valid_attrs = set(['firewallInfo'])
     def __init__(self, mo_ref, client):
         ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ExtensibleManagedObject._valid_attrs)
     @cached_property
     def firewallInfo(self):
        return self._get_dataobject("firewallInfo", False)
 
 
 class HostFirmwareSystem(ManagedObject):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
 
 
 class HostHealthStatusSystem(ManagedObject):
-    valid_attrs = set(['runtime'])
+    _valid_attrs = set(['runtime'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def runtime(self):
        return self._get_dataobject("runtime", False)
 
 
 class HostKernelModuleSystem(ManagedObject):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
 
 
 class HostLocalAccountManager(ManagedObject):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
 
 
 class HostLocalAuthentication(HostAuthenticationStore):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         HostAuthenticationStore.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, HostAuthenticationStore.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, HostAuthenticationStore._valid_attrs)
 
 
 class HostMemorySystem(ExtensibleManagedObject):
-    valid_attrs = set(['consoleReservationInfo', 'virtualMachineReservationInfo'])
+    _valid_attrs = set(['consoleReservationInfo', 'virtualMachineReservationInfo'])
     def __init__(self, mo_ref, client):
         ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ExtensibleManagedObject._valid_attrs)
     @cached_property
     def consoleReservationInfo(self):
        return self._get_dataobject("consoleReservationInfo", False)
@@ -637,10 +637,10 @@ class HostMemorySystem(ExtensibleManagedObject):
 
 
 class HostNetworkSystem(ExtensibleManagedObject):
-    valid_attrs = set(['capabilities', 'consoleIpRouteConfig', 'dnsConfig', 'ipRouteConfig', 'networkConfig', 'networkInfo', 'offloadCapabilities'])
+    _valid_attrs = set(['capabilities', 'consoleIpRouteConfig', 'dnsConfig', 'ipRouteConfig', 'networkConfig', 'networkInfo', 'offloadCapabilities'])
     def __init__(self, mo_ref, client):
         ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ExtensibleManagedObject._valid_attrs)
     @cached_property
     def capabilities(self):
        return self._get_dataobject("capabilities", False)
@@ -665,27 +665,27 @@ class HostNetworkSystem(ExtensibleManagedObject):
 
 
 class HostPatchManager(ManagedObject):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
 
 
 class HostPciPassthruSystem(ExtensibleManagedObject):
-    valid_attrs = set(['pciPassthruInfo'])
+    _valid_attrs = set(['pciPassthruInfo'])
     def __init__(self, mo_ref, client):
         ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ExtensibleManagedObject._valid_attrs)
     @cached_property
     def pciPassthruInfo(self):
        return self._get_dataobject("pciPassthruInfo", True)
 
 
 class HostPowerSystem(ManagedObject):
-    valid_attrs = set(['capability', 'info'])
+    _valid_attrs = set(['capability', 'info'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def capability(self):
        return self._get_dataobject("capability", False)
@@ -695,37 +695,37 @@ class HostPowerSystem(ManagedObject):
 
 
 class HostProfile(Profile):
-    valid_attrs = set(['referenceHost'])
+    _valid_attrs = set(['referenceHost'])
     def __init__(self, mo_ref, client):
         Profile.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, Profile.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, Profile._valid_attrs)
     @cached_property
     def referenceHost(self):
        return self._get_mor("referenceHost", False)
 
 
 class HostProfileManager(ProfileManager):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ProfileManager.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ProfileManager.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ProfileManager._valid_attrs)
 
 
 class HostServiceSystem(ExtensibleManagedObject):
-    valid_attrs = set(['serviceInfo'])
+    _valid_attrs = set(['serviceInfo'])
     def __init__(self, mo_ref, client):
         ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ExtensibleManagedObject._valid_attrs)
     @cached_property
     def serviceInfo(self):
        return self._get_dataobject("serviceInfo", False)
 
 
 class HostSnmpSystem(ManagedObject):
-    valid_attrs = set(['configuration', 'limits'])
+    _valid_attrs = set(['configuration', 'limits'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def configuration(self):
        return self._get_dataobject("configuration", False)
@@ -735,10 +735,10 @@ class HostSnmpSystem(ManagedObject):
 
 
 class HostStorageSystem(ExtensibleManagedObject):
-    valid_attrs = set(['fileSystemVolumeInfo', 'multipathStateInfo', 'storageDeviceInfo', 'systemFile'])
+    _valid_attrs = set(['fileSystemVolumeInfo', 'multipathStateInfo', 'storageDeviceInfo', 'systemFile'])
     def __init__(self, mo_ref, client):
         ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ExtensibleManagedObject._valid_attrs)
     @cached_property
     def fileSystemVolumeInfo(self):
        return self._get_dataobject("fileSystemVolumeInfo", False)
@@ -754,10 +754,10 @@ class HostStorageSystem(ExtensibleManagedObject):
 
 
 class HostSystem(ManagedEntity):
-    valid_attrs = set(['capability', 'config', 'configManager', 'datastore', 'datastoreBrowser', 'hardware', 'network', 'runtime', 'summary', 'systemResources', 'vm'])
+    _valid_attrs = set(['capability', 'config', 'configManager', 'datastore', 'datastoreBrowser', 'hardware', 'network', 'runtime', 'summary', 'systemResources', 'vm'])
     def __init__(self, mo_ref, client):
         ManagedEntity.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedEntity.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedEntity._valid_attrs)
     @cached_property
     def capability(self):
        return self._get_dataobject("capability", False)
@@ -794,20 +794,20 @@ class HostSystem(ManagedEntity):
 
 
 class HostVirtualNicManager(ExtensibleManagedObject):
-    valid_attrs = set(['info'])
+    _valid_attrs = set(['info'])
     def __init__(self, mo_ref, client):
         ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ExtensibleManagedObject._valid_attrs)
     @cached_property
     def info(self):
        return self._get_dataobject("info", False)
 
 
 class HostVMotionSystem(ExtensibleManagedObject):
-    valid_attrs = set(['ipConfig', 'netConfig'])
+    _valid_attrs = set(['ipConfig', 'netConfig'])
     def __init__(self, mo_ref, client):
         ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ExtensibleManagedObject._valid_attrs)
     @cached_property
     def ipConfig(self):
        return self._get_dataobject("ipConfig", False)
@@ -817,10 +817,10 @@ class HostVMotionSystem(ExtensibleManagedObject):
 
 
 class HttpNfcLease(ManagedObject):
-    valid_attrs = set(['error', 'info', 'initializeProgress', 'state'])
+    _valid_attrs = set(['error', 'info', 'initializeProgress', 'state'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def error(self):
        return self._get_dataobject("error", False)
@@ -836,31 +836,31 @@ class HttpNfcLease(ManagedObject):
 
 
 class InventoryView(ManagedObjectView):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObjectView.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObjectView.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObjectView._valid_attrs)
 
 
 class IpPoolManager(ManagedObject):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
 
 
 class LicenseAssignmentManager(ManagedObject):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
 
 
 class LicenseManager(ManagedObject):
-    valid_attrs = set(['diagnostics', 'evaluation', 'featureInfo', 'licenseAssignmentManager', 'licensedEdition', 'licenses', 'source', 'sourceAvailable'])
+    _valid_attrs = set(['diagnostics', 'evaluation', 'featureInfo', 'licenseAssignmentManager', 'licensedEdition', 'licenses', 'source', 'sourceAvailable'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def diagnostics(self):
        return self._get_dataobject("diagnostics", False)
@@ -888,27 +888,27 @@ class LicenseManager(ManagedObject):
 
 
 class ListView(ManagedObjectView):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObjectView.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObjectView.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObjectView._valid_attrs)
 
 
 class LocalizationManager(ManagedObject):
-    valid_attrs = set(['catalog'])
+    _valid_attrs = set(['catalog'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def catalog(self):
        return self._get_dataobject("catalog", True)
 
 
 class OptionManager(ManagedObject):
-    valid_attrs = set(['setting', 'supportedOption'])
+    _valid_attrs = set(['setting', 'supportedOption'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def setting(self):
        return self._get_dataobject("setting", True)
@@ -918,17 +918,17 @@ class OptionManager(ManagedObject):
 
 
 class OvfManager(ManagedObject):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
 
 
 class PerformanceManager(ManagedObject):
-    valid_attrs = set(['description', 'historicalInterval', 'perfCounter'])
+    _valid_attrs = set(['description', 'historicalInterval', 'perfCounter'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def description(self):
        return self._get_dataobject("description", False)
@@ -941,27 +941,27 @@ class PerformanceManager(ManagedObject):
 
 
 class ProfileComplianceManager(ManagedObject):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
 
 
 class PropertyCollector(ManagedObject):
-    valid_attrs = set(['filter'])
+    _valid_attrs = set(['filter'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def filter(self):
        return self._get_mor("filter", True)
 
 
 class PropertyFilter(ManagedObject):
-    valid_attrs = set(['partialUpdates', 'spec'])
+    _valid_attrs = set(['partialUpdates', 'spec'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def partialUpdates(self):
        return self._get_dataobject("partialUpdates", False)
@@ -971,17 +971,17 @@ class PropertyFilter(ManagedObject):
 
 
 class ResourcePlanningManager(ManagedObject):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
 
 
 class ResourcePool(ManagedEntity):
-    valid_attrs = set(['childConfiguration', 'config', 'owner', 'resourcePool', 'runtime', 'summary', 'vm'])
+    _valid_attrs = set(['childConfiguration', 'config', 'owner', 'resourcePool', 'runtime', 'summary', 'vm'])
     def __init__(self, mo_ref, client):
         ManagedEntity.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedEntity.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedEntity._valid_attrs)
     @cached_property
     def childConfiguration(self):
        return self._get_dataobject("childConfiguration", True)
@@ -1006,20 +1006,20 @@ class ResourcePool(ManagedEntity):
 
 
 class ScheduledTask(ExtensibleManagedObject):
-    valid_attrs = set(['info'])
+    _valid_attrs = set(['info'])
     def __init__(self, mo_ref, client):
         ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ExtensibleManagedObject._valid_attrs)
     @cached_property
     def info(self):
        return self._get_dataobject("info", False)
 
 
 class ScheduledTaskManager(ManagedObject):
-    valid_attrs = set(['description', 'scheduledTask'])
+    _valid_attrs = set(['description', 'scheduledTask'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def description(self):
        return self._get_dataobject("description", False)
@@ -1029,17 +1029,17 @@ class ScheduledTaskManager(ManagedObject):
 
 
 class SearchIndex(ManagedObject):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
 
 
 class ServiceInstance(ManagedObject):
-    valid_attrs = set(['capability', 'content', 'serverClock'])
+    _valid_attrs = set(['capability', 'content', 'serverClock'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def capability(self):
        return self._get_dataobject("capability", False)
@@ -1052,10 +1052,10 @@ class ServiceInstance(ManagedObject):
 
 
 class SessionManager(ManagedObject):
-    valid_attrs = set(['currentSession', 'defaultLocale', 'message', 'messageLocaleList', 'sessionList', 'supportedLocaleList'])
+    _valid_attrs = set(['currentSession', 'defaultLocale', 'message', 'messageLocaleList', 'sessionList', 'supportedLocaleList'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def currentSession(self):
        return self._get_dataobject("currentSession", False)
@@ -1077,37 +1077,37 @@ class SessionManager(ManagedObject):
 
 
 class StorageResourceManager(ManagedObject):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
 
 
 class Task(ExtensibleManagedObject):
-    valid_attrs = set(['info'])
+    _valid_attrs = set(['info'])
     def __init__(self, mo_ref, client):
         ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ExtensibleManagedObject._valid_attrs)
     @cached_property
     def info(self):
        return self._get_dataobject("info", False)
 
 
 class TaskHistoryCollector(HistoryCollector):
-    valid_attrs = set(['latestPage'])
+    _valid_attrs = set(['latestPage'])
     def __init__(self, mo_ref, client):
         HistoryCollector.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, HistoryCollector.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, HistoryCollector._valid_attrs)
     @cached_property
     def latestPage(self):
        return self._get_dataobject("latestPage", True)
 
 
 class TaskManager(ManagedObject):
-    valid_attrs = set(['description', 'maxCollector', 'recentTask'])
+    _valid_attrs = set(['description', 'maxCollector', 'recentTask'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def description(self):
        return self._get_dataobject("description", False)
@@ -1120,30 +1120,30 @@ class TaskManager(ManagedObject):
 
 
 class UserDirectory(ManagedObject):
-    valid_attrs = set(['domainList'])
+    _valid_attrs = set(['domainList'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def domainList(self):
        return self._get_dataobject("domainList", True)
 
 
 class ViewManager(ManagedObject):
-    valid_attrs = set(['viewList'])
+    _valid_attrs = set(['viewList'])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
     def viewList(self):
        return self._get_mor("viewList", True)
 
 
 class VirtualApp(ResourcePool):
-    valid_attrs = set(['childLink', 'datastore', 'network', 'parentFolder', 'parentVApp', 'vAppConfig'])
+    _valid_attrs = set(['childLink', 'datastore', 'network', 'parentFolder', 'parentVApp', 'vAppConfig'])
     def __init__(self, mo_ref, client):
         ResourcePool.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ResourcePool.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ResourcePool._valid_attrs)
     @cached_property
     def childLink(self):
        return self._get_dataobject("childLink", True)
@@ -1165,24 +1165,24 @@ class VirtualApp(ResourcePool):
 
 
 class VirtualDiskManager(ManagedObject):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
 
 
 class VirtualizationManager(ManagedObject):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
 
 
 class VirtualMachine(ManagedEntity):
-    valid_attrs = set(['capability', 'config', 'datastore', 'environmentBrowser', 'guest', 'guestHeartbeatStatus', 'layout', 'layoutEx', 'network', 'parentVApp', 'resourceConfig', 'resourcePool', 'rootSnapshot', 'runtime', 'snapshot', 'storage', 'summary'])
+    _valid_attrs = set(['capability', 'config', 'datastore', 'environmentBrowser', 'guest', 'guestHeartbeatStatus', 'layout', 'layoutEx', 'network', 'parentVApp', 'resourceConfig', 'resourcePool', 'rootSnapshot', 'runtime', 'snapshot', 'storage', 'summary'])
     def __init__(self, mo_ref, client):
         ManagedEntity.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedEntity.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedEntity._valid_attrs)
     @cached_property
     def capability(self):
        return self._get_dataobject("capability", False)
@@ -1237,24 +1237,24 @@ class VirtualMachine(ManagedEntity):
 
 
 class VirtualMachineCompatibilityChecker(ManagedObject):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
 
 
 class VirtualMachineProvisioningChecker(ManagedObject):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         ManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
 
 
 class VirtualMachineSnapshot(ExtensibleManagedObject):
-    valid_attrs = set(['childSnapshot', 'config'])
+    _valid_attrs = set(['childSnapshot', 'config'])
     def __init__(self, mo_ref, client):
         ExtensibleManagedObject.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, ExtensibleManagedObject.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, ExtensibleManagedObject._valid_attrs)
     @cached_property
     def childSnapshot(self):
        return self._get_mor("childSnapshot", True)
@@ -1264,10 +1264,10 @@ class VirtualMachineSnapshot(ExtensibleManagedObject):
 
 
 class VmwareDistributedVirtualSwitch(DistributedVirtualSwitch):
-    valid_attrs = set([])
+    _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         DistributedVirtualSwitch.__init__(self, mo_ref, client)
-        self.valid_attrs = set.union(self.valid_attrs, DistributedVirtualSwitch.valid_attrs)
+        self._valid_attrs = set.union(self._valid_attrs, DistributedVirtualSwitch._valid_attrs)
 
 
 classmap = dict((x.__name__, x) for x in (
