@@ -107,11 +107,20 @@ class ManagedObject(object):
         doesn't have a value in the cache."""
         logger.debug("Querying server for uncached MOR %s" % name)
         # This will retrieve the value and inject it into the cache
-        if multivalued is True:
-            self.update_view_data(properties=[name])
-            logger.debug("Getting views for MOR")
-            views = self._client.get_views(self._cache[name][0])
-            return views
+        logger.debug("Getting view for MOR")
+        self.update(properties=[name])
+        return self._cache[name][0]
+        
+#        return self._cache[name][0]
+#        if multivalued is True:
+#            logger.debug("Getting views for MOR")
+#            self.update(properties=[name])
+#            views = self._client.get_views(self._cache[name][0])
+#            return views
+#        else:
+#            logger.debug("Getting view for MOR")
+#            self.update(properties=[name])
+#            return self._cache[name][0]
 
     def flush_cache(self, properties=None):
         """Flushes the cache being held for this instance.
