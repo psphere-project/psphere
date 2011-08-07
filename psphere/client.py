@@ -28,53 +28,80 @@ The main module for accessing a vSphere server.
 import time
 import logging
 import suds
+import yaml
+import os
+import sys
 
-from psphere import config
 from psphere import soap
-from psphere.errors import TaskFailedError
-from psphere.managedobjects import *
+from psphere.errors import ObjectNotFoundError, TaskFailedError
+from psphere.managedobjects import ServiceInstance, Task, classmapper
 
 logger = logging.getLogger("psphere")
+
+PSPHERE_CONFIG = yaml.load(file(os.path.expanduser('~/.psphere/config.yml'),
+                                "r"))
 
 class Client(suds.client.Client):
     """A client for communicating with a VirtualCenter/ESX/ESXi server
 
     >>> from psphere.client import Client
-    >>> Client = Client(url="http//esx.foo.com/sdk")
+    >>> Client = Client(server="esx.foo.com", username="me", password="pass")
 
-    :param url: The url of the server. e.g. https://esx.foo.com/sdk
-    :type url: str
-    :param auto_populate: Whether to auto-populate all MOB properties.
-    :type auto_populate: bool
-    :param debug: Turn debug logging on.
-    :type debug: bool
+    :param server: The server of the server. e.g. https://esx.foo.com/sdk
+    :type server: str
+    :param username: The username to connect with
+    :type username: str
+    :param password: The password to connect with
+    :type password: str
 
     """
-    def __init__(self, url, auto_populate=True, debug=False):
-        super(self.__class__, self).__init__("%s/vimService.wsdl" % url)
-        self.set_options(location=url)
-        self.auto_populate = auto_populate
-        self.debug = debug
-        self.config = config.get_config()
-        # Setup logging
+    def _config_value(self, section, name, default):
+        if name in PSPHERE_CONFIG[section]:
+            default = PSPHERE_CONFIG[section][name]
+
+        value = getattr(self, name, default)
+        if value is None:
+            print("You must set a %s" % name)
+            sys.exit(1)
+
+        return value
+
+    def __init__(self, server=None, username=None, password=None):
         self._init_logging()
+        self.logged_in = False
+        self.server = self._config_value("general", "server", server)
+        self.username = self._config_value("general", "username", username)
+        self.password = self._config_value("general", "password", password)
+        url = "https://%s/sdk" % self.server
+        suds.client.Client.__init__(self, "file://%s/wsdl/vimService.wsdl" %
+                                os.path.abspath(os.path.dirname(__file__)))
+
+        self.set_options(location=url)
+        # Setup logging
         si_mo_ref = soap.ManagedObjectReference(_type='ServiceInstance',
                                                 value='ServiceInstance')
         self.si = ServiceInstance(si_mo_ref, self) 
         self.sc = self.si.RetrieveServiceContent()
+        if self.logged_in is False:
+            self.login(self.username, self.password)
 
     def _init_logging(self):
         """Initialize logging."""
-        if self.config["logging"]["destination"] == "CONSOLE":
+        log_destination = self._config_value("logging", "destination",
+                                             "CONSOLE")
+        if log_destination == "CONSOLE":
             lh = logging.StreamHandler()
         else:
-            lh = logging.FileHandler(self.config["logging"]["destination"])
-        lh.setLevel(self.config["logging"]["level"])
-        logger.setLevel(self.config["logging"]["level"])
+            lh = logging.FileHandler(os.path.expanduser(log_destination))
+
+        log_level = self._config_value("logging", "level", "INFO")
+        print("Logging to %s at %s level" % (log_destination, log_level))
+        lh.setLevel(getattr(logging, log_level))
+        logger.setLevel(getattr(logging, log_level))
         logger.addHandler(lh)
         # Initialise logging for the SOAP module
-        soap._init_logging(self.config["logging"]["level"], lh)
-        logger.debug("Initialised logging")
+        soap._init_logging(log_level, lh)
+        logger.info("Initialised logging")
 
     def login(self, username, password):
         """Login to a vSphere server.
@@ -89,10 +116,12 @@ class Client(suds.client.Client):
         """
         logger.debug("Logging into server")
         self.sc.sessionManager.Login(userName=username, password=password)
+        self.logged_in = True
 
     def logout(self):
         """Logout of a vSphere server."""
         self.sc.sessionManager.Logout()
+        self.logged_in = False
 
     def invoke(self, method, _this, **kwargs):
         """Invoke a method on the server.
@@ -232,12 +261,15 @@ class Client(suds.client.Client):
         property_spec = self.create('PropertySpec')
         # FIXME: Makes assumption about mo_refs being a list
         property_spec.type = str(mo_refs[0]._type)
-        if not properties and self.auto_populate:
-            property_spec.all = True
+        if properties is None:
+            properties = []
         else:
             # Only retrieve the requested properties
-            property_spec.all = False
-            property_spec.pathSet = properties
+            if properties == "all":
+                property_spec.all = True
+            else:
+                property_spec.all = False
+                property_spec.pathSet = properties
 
         object_specs = []
         for mo_ref in mo_refs:
