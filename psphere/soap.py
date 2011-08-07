@@ -36,11 +36,11 @@ class VimFault(Exception):
 
         Exception.__init__(self, "%s: %s" % (self.fault_type, self._fault_dict))
 
-def _init_logging(level=logging.INFO, handler=logging.StreamHandler):
+def _init_logging(level="INFO", handler=logging.StreamHandler):
     """Sets the logging level of underlying suds.client."""
     logger = logging.getLogger("suds.client")
     logger.addHandler(handler)
-    logger.setLevel(level)
+    logger.setLevel(getattr(logging, level))
     #logging.getLogger("suds.wsdl").setLevel(logging.DEBUG)
 
 
