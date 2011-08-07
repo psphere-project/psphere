@@ -17,14 +17,13 @@
 import time
 
 from psphere.scripting import BaseScript
-from psphere.managedobjects import Datacenter
+from psphere.client import Client
 
 
 class DatastoreFiles(BaseScript):
     def list_files(self):
-        for dc in Datacenter.find(self.client):
+        for dc in self.client.find_entity_views("Datacenter"):
             print("Datacenter: %s" % dc.name)
-            print(dc.datastore)
             for ds in dc.datastore:
                 print("Datastore: %s" % ds.info.name)
 
@@ -33,10 +32,9 @@ class DatastoreFiles(BaseScript):
                 root_folder = "[%s] /" % ds.info.name
                 task = ds.browser.SearchDatastoreSubFolders_Task(datastorePath=root_folder)
 
-                task.update_view_data()
                 while task.info.state == "running":
                     time.sleep(3)
-                    task.update_view_data()
+                    task.update()
 
                 for array_of_results in task.info.result:
                     # The first entry in this array is a type descriptor
@@ -51,8 +49,8 @@ class DatastoreFiles(BaseScript):
 
 
 def main():
-    dsf = DatastoreFiles()
-    dsf.login()
+    client = Client()
+    dsf = DatastoreFiles(client)
     dsf.list_files()
 
 
