@@ -25,21 +25,17 @@ The main module for accessing a vSphere server.
 # under the License.
 
 
-import time
 import logging
-import suds
-import yaml
 import os
-import sys
+import suds
+import time
 
 from psphere import soap
+from psphere.config import _config_value
 from psphere.errors import ObjectNotFoundError, TaskFailedError
 from psphere.managedobjects import ServiceInstance, Task, classmapper
 
 logger = logging.getLogger("psphere")
-
-PSPHERE_CONFIG = yaml.load(file(os.path.expanduser('~/.psphere/config.yml'),
-                                "r"))
 
 class Client(suds.client.Client):
     """A client for communicating with a VirtualCenter/ESX/ESXi server
@@ -55,23 +51,12 @@ class Client(suds.client.Client):
     :type password: str
 
     """
-    def _config_value(self, section, name, default):
-        if name in PSPHERE_CONFIG[section]:
-            default = PSPHERE_CONFIG[section][name]
-
-        value = getattr(self, name, default)
-        if value is None:
-            print("You must set a %s" % name)
-            sys.exit(1)
-
-        return value
-
     def __init__(self, server=None, username=None, password=None):
         self._init_logging()
         self.logged_in = False
-        self.server = self._config_value("general", "server", server)
-        self.username = self._config_value("general", "username", username)
-        self.password = self._config_value("general", "password", password)
+        self.server = _config_value("general", "server", server)
+        self.username = _config_value("general", "username", username)
+        self.password = _config_value("general", "password", password)
         url = "https://%s/sdk" % self.server
         suds.client.Client.__init__(self, "file://%s/wsdl/vimService.wsdl" %
                                 os.path.abspath(os.path.dirname(__file__)))
@@ -87,14 +72,14 @@ class Client(suds.client.Client):
 
     def _init_logging(self):
         """Initialize logging."""
-        log_destination = self._config_value("logging", "destination",
+        log_destination = _config_value("logging", "destination",
                                              "CONSOLE")
         if log_destination == "CONSOLE":
             lh = logging.StreamHandler()
         else:
             lh = logging.FileHandler(os.path.expanduser(log_destination))
 
-        log_level = self._config_value("logging", "level", "INFO")
+        log_level = _config_value("logging", "level", "INFO")
         print("Logging to %s at %s level" % (log_destination, log_level))
         lh.setLevel(getattr(logging, log_level))
         logger.setLevel(getattr(logging, log_level))
@@ -161,9 +146,19 @@ class Client(suds.client.Client):
         # Return the modified result to the caller
         return new_result
 
+    def convert_mor(self, mo_ref):
+        kls = classmapper(mo_ref._type)
+        new_object = kls(mo_ref, self)
+        return new_object
+
     def walk_and_convert_sudsobject(self, sudsobject):
         """Walks a sudsobject and converts MORs to psphere objects."""
         import suds
+        if not issubclass(sudsobject.__class__, suds.sudsobject.Object):
+            logger.debug("%s is not a sudsobject subclass, skipping" %
+                         sudsobject)
+            return sudsobject
+
         logger.debug("Processing:")
         logger.debug(sudsobject)
         logger.debug("...with keylist:")
@@ -172,14 +167,23 @@ class Client(suds.client.Client):
         # then create a class of that type and return it immediately
         if "_type" in sudsobject.__keylist__:
             logger.debug("sudsobject is a MOR, converting to psphere class")
-            kls = classmapper(sudsobject._type)
-            new_object = kls(sudsobject, self)
-            return new_object
+            return self.convert_mor(sudsobject)
 
         new_object = sudsobject.__class__()
         for obj in sudsobject:
+            logger.debug("Looking at %s of type %s" % (obj, type(obj)))
+
+            if isinstance(obj[1], list):
+                new_embedded_objs = []
+                for emb_obj in obj[1]:
+                    new_emb_obj = self.walk_and_convert_sudsobject(emb_obj)
+                    new_embedded_objs.append(new_emb_obj)
+                setattr(new_object, obj[0], new_embedded_objs)
+                continue
+
             if not issubclass(obj[1].__class__, suds.sudsobject.Object):
-                logger.debug("Not a sudsobject subclass, skipping")
+                logger.debug("%s is not a sudsobject subclass, skipping" %
+                             obj[1].__class__)
                 setattr(new_object, obj[0], obj[1])
                 continue
 
@@ -188,12 +192,14 @@ class Client(suds.client.Client):
                 logger.debug("Converting nested MOR to psphere class:")
                 logger.debug(obj[1])
                 kls = classmapper(obj[1]._type)
-                logger.debug("Setting %s.%s to %s" % (new_object.__class__.__name__, obj[0], obj[1]))
+                logger.debug("Setting %s.%s to %s" %
+                             (new_object.__class__.__name__, obj[0], obj[1]))
                 setattr(new_object, obj[0], kls(obj[1], self))
             else:
                 logger.debug("Didn't find _type in:")
                 logger.debug(obj[1])
-                setattr(new_object, obj[0], self.walk_and_convert_sudsobject(obj[1]))
+                setattr(new_object, obj[0],
+                        self.walk_and_convert_sudsobject(obj[1]))
 
         return new_object
 
@@ -258,18 +264,20 @@ class Client(suds.client.Client):
         :rtype: list of ManagedObject's
 
         """
-        property_spec = self.create('PropertySpec')
-        # FIXME: Makes assumption about mo_refs being a list
-        property_spec.type = str(mo_refs[0]._type)
-        if properties is None:
-            properties = []
-        else:
-            # Only retrieve the requested properties
-            if properties == "all":
-                property_spec.all = True
+        property_specs = []
+        for mo_ref in mo_refs:
+            property_spec = self.create('PropertySpec')
+            property_spec.type = str(mo_ref._type)
+            if properties is None:
+                properties = []
             else:
-                property_spec.all = False
-                property_spec.pathSet = properties
+                # Only retrieve the requested properties
+                if properties == "all":
+                    property_spec.all = True
+                else:
+                    property_spec.all = False
+                    property_spec.pathSet = properties
+            property_specs.append(property_spec)
 
         object_specs = []
         for mo_ref in mo_refs:
@@ -278,7 +286,7 @@ class Client(suds.client.Client):
             object_specs.append(object_spec)
 
         pfs = self.create('PropertyFilterSpec')
-        pfs.propSet = [property_spec]
+        pfs.propSet = property_specs
         pfs.objectSet = object_specs
 
         object_contents = self.sc.propertyCollector.RetrieveProperties(
@@ -431,7 +439,7 @@ class Client(suds.client.Client):
 
         # Start the search at the root folder if no begin_entity was given
         if not begin_entity:
-            begin_entity = self.sc.rootFolder.mo_ref
+            begin_entity = self.sc.rootFolder._mo_ref
 
         property_spec = self.create('PropertySpec')
         property_spec.type = view_type
@@ -476,8 +484,8 @@ class Client(suds.client.Client):
         kls = classmapper(view_type)
         # Start the search at the root folder if no begin_entity was given
         if not begin_entity:
-            begin_entity = self.sc.rootFolder.mo_ref
-            logger.debug("Using %s" % self.sc.rootFolder.mo_ref)
+            begin_entity = self.sc.rootFolder._mo_ref
+            logger.debug("Using %s" % self.sc.rootFolder._mo_ref)
 
         property_spec = self.create('PropertySpec')
         property_spec.type = view_type
@@ -529,7 +537,7 @@ class Client(suds.client.Client):
             raise ObjectNotFoundError("No matching objects for filter")
 
         logger.debug("Creating class in find_entity_view")
-        view = kls(filtered_obj_content.obj.mo_ref, self)
+        view = kls(filtered_obj_content.obj._mo_ref, self)
         logger.debug("Completed creating class in find_entity_view")
         #view.update_view_data(properties=properties)
         return view

@@ -113,6 +113,46 @@ class ManagedObject(object):
             views = self._client.get_views(self._cache[name][0])
             return views
 
+    def flush_cache(self, properties=None):
+        """Flushes the cache being held for this instance.
+
+        :param properties: The list of properties to flush from the cache.
+        :type properties: list or None (default). If None, flush entire cache.
+
+        """
+        if properties is None:
+            del(self._cache)
+        else:
+            for prop in properties:
+                if prop in self._cache:
+                    del(self._cache[prop])
+
+    def update(self, properties=None):
+        """Updates the properties being held for this instance.
+
+        :param properties: The list of properties to update.
+        :type properties: list or None (default). If None, update all
+        currently cached properties.
+
+        """
+        if properties is None:
+            try:
+                self.update_view_data(properties=self._cache.keys())
+            except AttributeError:
+                # We end up here and ignore it self._cache doesn't exist
+                pass
+        else:
+            self.update_view_data(properties=properties)
+
+    def _get_properties(self, properties=None):
+        """Retrieve the requested properties from the server.
+
+        :param properties: The list of properties to update.
+        :type properties: list or None (default).
+
+        """
+        pass
+
     def update_view_data(self, properties=None):
         """Update the local object from the server-side object.
         
@@ -215,44 +255,48 @@ class ManagedObject(object):
     def __getattr__(self, name):
         """Overridden so that SOAP methods can be proxied.
 
-        This is overridden for two reasons:
-        - To implement caching of ManagedObject properties
-        - To each SOAP method can be accessed through the object without having to explicitly define it.
-        
-        It is achieved by checking if the method exists in the SOAP service.
-        
-        If it doesn't then the exception is caught and the default
-        behaviour is executed.
-        
-        If it does, then a function is returned that will invoke
-        the method against the SOAP service with _this set to the
-        current objects managed object reference.
+        The magic contained here allows us to automatically access vSphere
+        SOAP methods through the Python object, like:
+        >>> client.si.content.rootFolder.CreateFolder(name="foo")
+
+        This is achieved by asking the underlying SOAP service if the
+        requested name is a valid method. If the method name is not valid
+        then we pass the attribute retrieval back to __getattribute__
+        which will use the default behaviour (i.e. just get the attribute).
+
+        TODO: There's no checking if the SOAP method is valid for the type
+        of object being called. e.g. You could do folder.Login() which would
+        be totally bogus.
         
         :param name: The name of the method to call.
         :param type: str
 
         """
-        logger.debug("Entering overridden built-in __getattribute__"
+        logger.debug("Entering overridden built-in __getattr__"
                      " with %s" % name)
         # Built-ins always use the default behaviour
-        if name.startswith("__"):
-            logger.debug("Returning built-in attribute %s" % name)
-            return object.__getattribute__(self, name)
+#        if name.startswith("__"):
+#            logger.debug("Returning built-in attribute %s" % name)
+#            return object.__getattribute__(self, name)
+
+        # Here we must access _client through __getattribute__, if we were
+        # to use "self._client" we'd call recursively through __getattr__
+        client = object.__getattribute__(self, "_client")
 
         try:
-            # Here we must manually get the client object so we
-            # don't get recursively called when the next method
-            # call looks for it
-            client = object.__getattribute__(self, "_client")
-            # TODO: This should probably be raised by Client.invoke
             getattr(client.service, name)
-            logger.debug("Constructing func for %s", name)
-            def func(**kwargs):
-                result = client.invoke(name, _this=self._mo_ref,
-                                            **kwargs)
-                logger.debug("Invoke returned %s" % result)
-                return result
-    
-            return func
         except MethodNotFound:
+            # It doesn't, so we let the object check if it's a standard
+            # attribute. This is cool because it 
             return object.__getattribute__(self, name)
+
+        # Caller has requested a valid SOAP reference
+        logger.debug("Constructing proxy method %s for a %s" %
+                     (name, self._mo_ref._type))
+        def func(**kwargs):
+            result = self._client.invoke(name, _this=self._mo_ref,
+                                        **kwargs)
+            logger.debug("Invoke returned %s" % result)
+            return result
+
+        return func

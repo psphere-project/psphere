@@ -14,9 +14,10 @@
 # under the License.
 
 from psphere.scripting import BaseScript
+from psphere.client import Client
 
 class Discovery(BaseScript):
-    def discovery(self, url=None, username=None, password=None):
+    def discovery(self):
         """An example that discovers hosts and VMs in the inventory.
 
         Parameters
@@ -29,10 +30,9 @@ class Discovery(BaseScript):
             The password to connect with.
 
         """
-        self.login()
         # Find the first ClusterComputeResource
         ccr = self.client.find_entity_view("ClusterComputeResource",
-                                    filter={'name': 'Application Engineering'},
+                                    filter={'name': 'Online Engineering'},
                                     properties=['name', 'host'])
         print('Cluster: %s (%s hosts)' % (ccr.name, len(ccr.host)))
 
@@ -43,7 +43,8 @@ class Discovery(BaseScript):
                 print('    VM: %s' % vm.name)
     
 def main():
-    vd = Discovery()
+    client = Client()
+    vd = Discovery(client)
     vd.discovery()
 
 if __name__ == '__main__':
