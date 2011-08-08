@@ -14,38 +14,43 @@
 # under the License.
 
 """Lists all files on all datastores attached to managed datacenters."""
-
-import sys
+import time
 
 from psphere.scripting import BaseScript
-from psphere.soap import VimFault
-from psphere.vim25 import ObjectNotFoundError
+from psphere.client import Client
 
 
 class DatastoreFiles(BaseScript):
     def list_files(self):
-        for o in self.vim.find_entity_list('Datacenter', properties=['name', 'datastore']):
-            print "Datacenter:", o.name
-            ds = self.vim.get_views(o.datastore, properties=['name', 'browser'])
-            for d in ds:
-                print "Datastore:", d.name
-                root_folder = "[%s] /" % d.name
-                task = self.vim.invoke_task('SearchDatastoreSubFolders_Task',
-                        _this=d.browser,
-                        datastorePath=root_folder)
+        for dc in self.client.find_entity_views("Datacenter"):
+            print("Datacenter: %s" % dc.name)
+            for ds in dc.datastore:
+                print("Datastore: %s" % ds.info.name)
+
+            for ds in dc.datastore:
+                print("Datastore: %s" % ds.info.name)
+                root_folder = "[%s] /" % ds.info.name
+                task = ds.browser.SearchDatastoreSubFolders_Task(datastorePath=root_folder)
+
+                while task.info.state == "running":
+                    time.sleep(3)
+                    task.update()
 
                 for array_of_results in task.info.result:
                     # The first entry in this array is a type descriptor
                     # not a data object, so skip over it
                     for result in array_of_results[1:]:
                         for r in result:
-                            for f in r.file:
-                                print "%s%s" % (r.folderPath, f.path)
+                            try:
+                                for f in r.file:
+                                    print("%s%s" % (r.folderPath, f.path))
+                            except AttributeError:
+                                pass
 
 
 def main():
-    dsf = DatastoreFiles()
-    dsf.login()
+    client = Client()
+    dsf = DatastoreFiles(client)
     dsf.list_files()
 
 

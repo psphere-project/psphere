@@ -14,9 +14,10 @@
 # under the License.
 
 from psphere.scripting import BaseScript
+from psphere.client import Client
 
-class VimDiscovery(BaseScript):
-    def discovery(self, url=None, username=None, password=None):
+class Discovery(BaseScript):
+    def discovery(self):
         """An example that discovers hosts and VMs in the inventory.
 
         Parameters
@@ -29,25 +30,21 @@ class VimDiscovery(BaseScript):
             The password to connect with.
 
         """
-        self.login()
         # Find the first ClusterComputeResource
-        ccs = self.vim.find_entity_view(view_type='ClusterComputeResource',
-                                filter={'name': 'Application Engineering'},
-                                        properties=['name', 'host'])
-        print('Cluster: %s (%s hosts)' % (ccs.name, len(ccs.host)))
+        ccr = self.client.find_entity_view("ClusterComputeResource",
+                                    filter={'name': 'Online Engineering'},
+                                    properties=['name', 'host'])
+        print('Cluster: %s (%s hosts)' % (ccr.name, len(ccr.host)))
 
-        # Get the host views in one fell swoop
-        hosts = self.vim.get_views(mo_refs=ccs.host,
-                                   properties=['name', 'vm'])
-        for host in hosts:
+        for host in ccr.host:
             print('  Host: %s (%s VMs)' % (host.name, len(host.vm)))
             # Get the vm views in one fell swoop
-            vms = self.vim.get_views(mo_refs=host.vm, properties=['name'])
-            for vm in vms:
+            for vm in host.vm:
                 print('    VM: %s' % vm.name)
     
 def main():
-    vd = VimDiscovery()
+    client = Client()
+    vd = Discovery(client)
     vd.discovery()
 
 if __name__ == '__main__':

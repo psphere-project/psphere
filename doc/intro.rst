@@ -2,21 +2,32 @@ Introduction
 ============
 
 This is the documentation for psphere, native Python bindings for the
-vSphere Web Services SDK and VMware Infrastructure SDK.
+vSphere Web Services SDK/VMware Infrastructure SDK.
 
-Prerequisites
--------------
+Notes
+-----
 
-All development is done against VMware ESX Server 3.5 which is VI SDK 2.5. I
-have not tested it against ESXi, vSphere 4, etc. although I fully intend to.
-
-psphere is developed with **Python 2.6**. My intention is to ensure
-psphere is compatible with **Python 2.4** so that it can run on CentOS/RHEL 5.
+psphere implements the following VMware SDKs:
+* VMware Infrastructure SDK 2.5
+* VMware vSphere Web Services SDK 4.0 and later
+See the vSphere Web Services SDK Documentation for further information on 
+VMware SDKs at http://www.vmware.com/support/developer/vc-sdk/.
 
 Installing psphere
 ------------------
 
     # pip install -U psphere
+    
+Or if you want to use the latest development branch:
+
+    $ hg clone https://jkinred@bitbucket.org/jkinred/psphere
+    $ cd psphere
+    $ sudo python setup.py install
+    $ ./examples/connect.py --url https://yourserver/sdk --username youruser --password yourpass
+    Successfully connected to https://yourserver/sdk
+    Server time is 2010-09-05 00:14:06.037575
+
+
 
 Usage
 -----

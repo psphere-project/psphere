@@ -8,14 +8,14 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(name='psphere',
-      version='0.1.4',
+      version='0.5.0',
       description='vSphere SDK for Python',
       long_description=read('README'),
       author='Jonathan Kinred',
       author_email='jonathan.kinred@gmail.com',
       url='http://bitbucket.org/jkinred/psphere',
       packages=['psphere'],
-      install_requires=['suds'],
+      install_requires=['suds', 'PyYAML'],
       keywords=['vsphere', 'vmware'],
       classifiers=[
         "Development Status :: 2 - Pre-Alpha",

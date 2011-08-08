@@ -12,6 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+
 from psphere.vim25 import Vim
 
 def get_datastore(self, host_view, disksize, datastore=None):

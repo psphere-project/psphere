@@ -13,6 +13,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from psphere.client import Client
 from psphere.scripting import BaseScript
 
 class Connect(BaseScript):
@@ -37,17 +38,14 @@ class Connect(BaseScript):
         Server time is 2010-08-26 23:53:38.003445
 
         """
-        self.login()
-        print('Successfully connected to %s' % self.options.url)
-        servertime = self.vim.invoke('CurrentTime',
-                                     _this=self.vim.service_instance)
-        print('Server time is %s' % servertime)
-        self.vim.logout()
+        print(self.client.si.CurrentTime())
+        self.client.logout()
 
 def main():
-    c = Connect()
+    client = Client()
+    print('Successfully connected to %s' % client.server)
+    c = Connect(client)
     c.connect()
 
 if __name__ == '__main__':
     main()
-

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:ns0="urn:vim25" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
+   <SOAP-ENV:Header/>
+   <ns1:Body>
+      <ns0:CreateVM_Task>
+         <ns0:_this type="Folder">group-v3</ns0:_this>
+         <ns0:config>
+            <ns0:name>sdi6as1app01</ns0:name>
+            <ns0:guestId>sles10_64Guest</ns0:guestId>
+            <ns0:annotation>Auto-provisioned by pSphere</ns0:annotation>
+            <ns0:files>
+               <ns0:vmPathName>[owen:storage2]</ns0:vmPathName>
+            </ns0:files>
+            <ns0:numCPUs>1</ns0:numCPUs>
+            <ns0:memoryMB>4096</ns0:memoryMB>
+            <ns0:deviceChange>
+               <ns0:operation>add</ns0:operation>
+               <ns0:device xsi:type="ns0:VirtualLsiLogicController">
+                  <ns0:key>0</ns0:key>
+                  <ns0:busNumber>0</ns0:busNumber>
+                  <ns0:device>0</ns0:device>
+                  <ns0:sharedBus>noSharing</ns0:sharedBus>
+               </ns0:device>
+            </ns0:deviceChange>
+            <ns0:deviceChange>
+               <ns0:operation>add</ns0:operation>
+               <ns0:fileOperation>create</ns0:fileOperation>
+               <ns0:device xsi:type="ns0:VirtualDisk">
+                  <ns0:key>0</ns0:key>
+                  <ns0:backing xsi:type="ns0:VirtualDiskFlatVer2BackingInfo">
+                     <ns0:fileName>[owen:storage2]</ns0:fileName>
+                     <ns0:diskMode>persistent</ns0:diskMode>
+                     <ns0:thinProvisioned>true</ns0:thinProvisioned>
+                  </ns0:backing>
+                  <ns0:controllerKey>0</ns0:controllerKey>
+                  <ns0:unitNumber>0</ns0:unitNumber>
+                  <ns0:capacityInKB>12582912</ns0:capacityInKB>
+               </ns0:device>
+            </ns0:deviceChange>
+            <ns0:deviceChange>
+               <ns0:operation>add</ns0:operation>
+               <ns0:device xsi:type="ns0:VirtualE1000">
+                  <ns0:key>2</ns0:key>
+                  <ns0:backing xsi:type="ns0:VirtualEthernetCardNetworkBackingInfo">
+                     <ns0:deviceName>AE_SDFDIE VLAN</ns0:deviceName>
+                     <ns0:network type="Network">network-18</ns0:network>
+                  </ns0:backing>
+                  <ns0:connectable>
+                     <ns0:startConnected>true</ns0:startConnected>
+                     <ns0:allowGuestControl>true</ns0:allowGuestControl>
+                     <ns0:connected>false</ns0:connected>
+                  </ns0:connectable>
+                  <ns0:unitNumber>1</ns0:unitNumber>
+                  <ns0:addressType>generated</ns0:addressType>
+               </ns0:device>
+            </ns0:deviceChange>
+         </ns0:config>
+         <ns0:pool type="ResourcePool">resgroup-392</ns0:pool>
+      </ns0:CreateVM_Task>
+   </ns1:Body>
+</SOAP-ENV:Envelope>

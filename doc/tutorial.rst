@@ -13,27 +13,21 @@ sections about the described task.
 Vendor documentation
 --------------------
 
-VMware provides very good documentation for the vSphere Web Services SDK. It is
+VMware provides very good documentation for the VMware vSphere API. It is
 suggested that you at least read the introductory documents to gain a conceptual
-understanding of the SDK.
+understanding of the API.
 
 Throughout this documentation there are links to the API reference documentation.
 
 |more| See :ref:`useful references <useful-references>`.
 
 
-The Vim object
---------------
+The Client object
+-----------------
 
-The Vim object is the entry point into psphere. Through it you can log into a
-vSphere server, find managed objects, obtain views of those managed objects
-and access information about them.
-
-A brief overview of the most common methods:
-
-* The **find_entity_view** method finds objects in the inventory
-* The **get_view** and **get_views** methods create local *views* of server-side objects
-* The **invoke** method sends SOAP calls to the vSphere web service
+The Client object is the entry point into psphere. Through it you can login to a
+vSphere server and obtain Python objects representing managed objects. You can
+then access information about and execute methods on those objects.
 
 |more| Read more about the :ref:`Vim attributes and methods <vim-reference>`.
 
@@ -41,90 +35,122 @@ A brief overview of the most common methods:
 Hello World in psphere
 ----------------------
 
-Not quite, but logging into the server and printing the current time is
-probably the equivalent::
+Not quite, but logging into the server and printing the current time is close::
 
-    >>> from psphere.vim25 import Vim
-    >>> vim = Vim('https://localhost/sdk')
-    >>> vim.login('Administrator', 'none')
-    >>> servertime = vim.invoke(method='CurrentTime', _this=vim.service_instance)
+    >>> from psphere.client import Client
+    >>> client = Client('https://localhost/sdk', 'Administrator', 'none')
+    >>> servertime = client.si.CurrentTime()
     >>> print(servertime)
     2010-09-04 18:35:12.062575
-    >>> vim.logout()
-
-All vSphere API methods are invoked with a **_this** parameter, which is
-the **ManagedObjectReference** that the method will be invoked for.
-
-In this case, we have invoked the **CurrentTime** method of the
-**ServiceInstance** managed object.
+    >>> client.logout()
 
 
 General programming pattern
 ---------------------------
 
-Create a new Vim instance::
+Create a new Client::
 
-    >>> from psphere.vim25 import Vim, Folder, Datacenter
-    >>> vim = Vim('https://localhost/sdk')
+    >>> from psphere.client import Client
+    >>> client = Client('https://localhost/sdk', 'Administrator', 'mypassword')
 
-...log into the server::
+...check out the rootFolder of the content attribute, it's a Python object::
 
-    >>> vim.login('Administrator', 'mypassword')
-
-...instantiate a *view* of a server-side managed object::
-
-    >>> root_folder = vim.get_view(mo_ref=vim.sc.rootFolder)
+    >>> root_folder = client.si.content.rootFolder
     >>> root_folder.__class__
-    <class 'psphere.vim25.Folder'>
+    <class 'psphere.managedobjects.Folder'>
 
-...access properties of the view::
+...access properties of a it::
 
     >>> print(root_folder.name)
     Datacenters
 
-...to follow vSphere best practise you can limit the properties retrieved to
-the attributes you intend to use::
-
-    >>> root_folder = vim.get_view(mo_ref=vim.sc.rootFolder,
-                                   properties=['childType'])
-    >>> type(root_folder.name)
-    <type 'NoneType'>
-    >>> print(root_folder.childType)
-    [Folder, Datacenter]
-
 ...invoke a method::
 
-    >>> new_folder_mor = vim.invoke('CreateFolder', _this=root_folder, name='New')
-    >>> new_folder = vim.get_view(mo_ref=new_folder_mor)
+    >>> new_folder = root_folder.CreateFolder(name='New')
     >>> print(new_folder.name)
     New
+    >>> task = new_folder.Destroy_Task()
+    >>> print(task.info.state)
+    success
 
 ...log out of the server::
 
-    >>> vim.logout()
+    >>> client.logout()
 
 
 Finding a ManagedEntity
 -----------------------
 
-Finding a **ManagedEntity** by name. Notice that we follow vSphere best
-practise by specifying the properties we're going to use in the **properties**
-parameter::
+Managed Object's which extend the **ManagedEntity** class are the most
+commonly used objects in the vSphere API. These include Managed Object's
+such as HostSystem's and VirtualMachine's.
 
-    >>> from psphere.vim25 import *
-    >>> vim = Vim('https://localhost/sdk')
-    >>> vim.login('Administrator', 'none')
-    >>> vm = vim.find_entity_view(view_type='VirtualMachine',
-                                  filter={'name': 'bennevis'},
-                                  properties=['name', 'summary', 'config'])
+psphere makes it easy to find Managed Entity's by providing a find_one()
+classmethod to find them::
+
+    >>> from psphere.client import Client
+    >>> from psphere.managedobjects import VirtualMachine
+    >>> client = Client('https://localhost/sdk', 'Administrator', 'none')
+    >>> vm = VirtualMachine.find_one(client=client, filter={'name': 'genesis'})
     >>> vm.__class__
-    <class 'psphere.vim25.VirtualMachine'>
+    <class 'psphere.managedobjects.VirtualMachine'>
     >>> vm.name
     bennevis
     >>> vm.summary.guest.ipAddress
     10.183.11.85
     >>> vm.config.hardware.memoryMB
     4096
+
+
+Some notes on attribute retrieval
+---------------------------------
+
+At this point we have to delve into a more complicated aspect of vSphere and
+how psphere handles it. You do not need to worry about this, psphere will just
+work for you -- albeit inefficiently in some cases.
+
+The vSphere SDK architecture provides abstract "views" of server side objects,
+some of these objects can be quite substantial, both in size and server
+resources required to collect them.
+
+For example a HostSystem has a xxx which has an xxx which has an xxx. If you
+inefficiently retrieve these attributes and you retrieve substantial objects
+then your scripts will be slow and you will generate load on your vSphere
+server.
+
+psphere deals with this using the following logic:
+
+When a Managed Object is instantiated, it will not retrieve properties from
+the server when it is instantiated. The property will be "lazily" retrieved
+from the
+server when it is accessed. Once accessed, it will be cached for future
+use. This works well if you are accessing only a few properties, but it
+requires a SOAP call for each property retrieval, so if you know ahead
+of time which properties you will be accessing, then you can retrieve
+those properties from the server with a single SOAP call by creating,
+or updating the Managed Object with the properties you will be using::
+
+    >>> vm = VirtualMachine.find_one(client=client, filter={"name": "genesis"}, properties=["name", "guest"])
+    >>> vm.name
+    genesis
+    >>> vm.guest.ipAddress
+    10.183.10.10
+    >>> vm.update(properties="all")
+    >>> vm.summary.overallStatus
+    green
+
+The vSphere API even allows you to do this extremely efficiently using
+a "sub" property specification::
+
+    >>> del(vm.config) # Deletes the cached property
+    >>> vm = VirtualMachine.find_one(client=client, filter={"name": "genesis"}, properties=["config.guestId"])
+    >>> print(vm.config.guestId)
+    rhel5guest
+
+The properties parameter is available in the Client.find_entity_view(),
+Client.find_entity_views() methods and is implemented in the find(),
+find_one() and update() methods of the ManagedObject class (which all
+Managed Object's derive from).
 
 
 .. |more| image:: more.png

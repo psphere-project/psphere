@@ -1,3 +1,9 @@
+
+"""
+Parse command line options, allow users to append their own options and
+read predefined configuration from the users .visdkrc file.
+"""
+
 # Copyright 2010 Jonathan Kinred
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -11,22 +17,14 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-"""
-Parse command line options, allow users to append their own options and
-read predefined configuration from the users .visdkrc file.
-"""
 
-import os, optparse
-from psphere.vim25 import Vim
+
+import optparse
 
 class BaseScript(object):
-    def __init__(self):
-        self.vim = None
+    def __init__(self, client):
+        self.client = client
         self.required_opts = []
-        # The vars that are valid in the .visdkrc file
-        self.config_vars = ['url', 'username', 'password']
-        # The file in which to find configurable vars
-        self.visdkrc = os.path.expanduser('~/.visdkrc')
 
         usage = ('usage: %prog --url https://<host>/sdk --username <username> '
                  '--password <password>')
@@ -37,27 +35,6 @@ class BaseScript(object):
                                help='the username to connnect with')
         self.parser.add_option('--password', dest='password',
                                help='the password to connect with')
-
-        self.required_opts.append('url')
-        self.required_opts.append('username')
-        self.required_opts.append('password')
-
-    def login(self, url=None, username=None, password=None):
-        self.options = self.get_options()
-        # The options passed to this method take precedence over everything
-        if url:
-            self.options.url = url
-        if username:
-            self.options.username = username
-        if password:
-            self.options.password = password
-
-        self.vim = Vim(self.options.url)
-        self.vim.login(self.options.username, self.options.password)
-
-    def read_visdk(self):
-        # Read the visdkrc file, use values that are in there or append
-        pass
 
     def add_option(self, opt, dest, help, required):
         self.parser.add_option(opt, dest=dest, help=help)

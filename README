@@ -9,10 +9,6 @@ as:
     * Query host systems, datastores and virtual machines
     * Provision new virtual machines
 
-This is a working but very incomplete version of psphere. You should follow
-the latest development efforts at http://bitbucket.org/jkinred/psphere2 for
-more complete (but potentially broken) bindings.
-
 Installation
 ------------
 
