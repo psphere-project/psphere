@@ -1,0 +1,7 @@
+general:
+    server: your.esxserver.com
+    username: Administrator
+    password: strongpassword
+logging:
+    destination: ~/.psphere/psphere.log
+    level: DEBUG
