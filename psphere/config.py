@@ -1,7 +1,7 @@
 import os
 import yaml
 
-config_path = os.path.expanduser('~/.psphere/config.yml')
+config_path = os.path.expanduser('~/.psphere/config.yaml')
 try:
     config_file = open(config_path, "r")
     PSPHERE_CONFIG = yaml.load(config_file)

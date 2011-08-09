@@ -207,7 +207,7 @@ def main():
     #         "ssi4upeapp01"]
     client = Client()
     vmc = VMCreate(client)
-    vm_file = open("vm_info.yml")
+    vm_file = open("vm_info.yaml")
     vm_info = yaml.safe_load(vm_file)
     vm_file.close()
     nic = {"network_name": "AE_SDFDIE VLAN", "type": "VirtualE1000"}
