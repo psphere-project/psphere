@@ -1,0 +1,9 @@
+name: test
+compute_resource: Online Engineering
+datastore: nas03
+disksize: 12
+nics:
+- {network_name: AE_SDFDIE VLAN, type: VirtualE1000}
+memory: 1024
+num_cpus: 1
+guest_id: rhel5Guest
