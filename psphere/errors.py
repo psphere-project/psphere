@@ -13,6 +13,14 @@
 # under the License.
 
 
+class ConfigError(Exception):
+    pass
+
+
+class NotLoggedInError(Exception):
+    pass
+
+
 class ObjectNotFoundError(Exception):
     pass
 
