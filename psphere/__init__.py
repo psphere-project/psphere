@@ -244,7 +244,7 @@ class ManagedObject(object):
                 # This except allows us to pass over:
                 # TypeError: object of type 'datetime.datetime' has no len()
                 # It will be processed in the next code block
-                logger.error("%s of type %s has no len!" % (dynprop.name,
+                logger.info("%s of type %s has no len!" % (dynprop.name,
                                                             type(dynprop.val)))
                 pass
 
