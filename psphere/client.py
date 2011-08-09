@@ -28,11 +28,16 @@ The main module for accessing a vSphere server.
 import logging
 import os
 import suds
+import sys
 import time
+
+from urllib2 import URLError
+from suds.transport import TransportError
 
 from psphere import soap
 from psphere.config import _config_value
-from psphere.errors import ObjectNotFoundError, TaskFailedError
+from psphere.errors import (ConfigError, ObjectNotFoundError, TaskFailedError,
+                            NotLoggedInError)
 from psphere.managedobjects import ServiceInstance, Task, classmapper
 
 logger = logging.getLogger("psphere")
@@ -49,25 +54,65 @@ class Client(suds.client.Client):
     :type username: str
     :param password: The password to connect with
     :type password: str
+    :param wsdl_location: Whether to use the provided WSDL or load the server WSDL
+    :type wsdl_location: The string "local" (default) or "remote"
+    :param timeout: The timeout to use when connecting to the server
+    :type timeout: int (default=30)
 
     """
-    def __init__(self, server=None, username=None, password=None):
+    def __init__(self, server=None, username=None, password=None,
+                 wsdl_location="local", timeout=30):
         self._init_logging()
-        self.logged_in = False
-        self.server = _config_value("general", "server", server)
-        self.username = _config_value("general", "username", username)
-        self.password = _config_value("general", "password", password)
+        self._logged_in = False
+        self.server = server
+        self.username = username
+        self.password = password
+        if self.server is None:
+            self.server = _config_value("general", "server")
+        if self.username is None:
+            self.username = _config_value("general", "username")
+        if self.password is None:
+            self.password = _config_value("general", "password")
+        if self.server is None:
+            raise ConfigError("server must be set in config file or Client()")
+        if self.username is None:
+            raise ConfigError("username must be set in config file or Client()")
+        if self.password is None:
+            raise ConfigError("password must be set in config file or Client()")
         url = "https://%s/sdk" % self.server
-        suds.client.Client.__init__(self, "file://%s/wsdl/vimService.wsdl" %
-                                os.path.abspath(os.path.dirname(__file__)))
-
+        if wsdl_location == "local":
+            wsdl_uri = ("file://%s/wsdl/vimService.wsdl" %
+            os.path.abspath(os.path.dirname(__file__)))
+        elif wsdl_location == "remote":
+            wsdl_uri = url + "/vimService.wsdl"
+        else:
+            print("FATAL: wsdl_location must be \"local\" or \"remote\"")
+            sys.exit(1)
+        # Init the base class
+        try:
+            suds.client.Client.__init__(self, wsdl_uri)
+        except URLError:
+            logger.critical("Failed to connect to %s" % self.server)
+            raise
+        except IOError:
+            logger.critical("Failed to load the local WSDL from %s" % wsdl_uri)
+            raise
+        except TransportError:
+            logger.critical("Failed to load the remote WSDL from %s" % wsdl_uri)
+            raise
+        self.options.transport.options.timeout = timeout
         self.set_options(location=url)
-        # Setup logging
         si_mo_ref = soap.ManagedObjectReference(_type='ServiceInstance',
                                                 value='ServiceInstance')
         self.si = ServiceInstance(si_mo_ref, self) 
-        self.sc = self.si.RetrieveServiceContent()
-        if self.logged_in is False:
+        try:
+            self.sc = self.si.RetrieveServiceContent()
+        except URLError, e:
+            print("Failed to connect to %s" % self.server)
+            print("urllib2 said: %s" % e.reason) 
+            sys.exit(1)
+
+        if self._logged_in is False:
             self.login(self.username, self.password)
 
     def _init_logging(self):
@@ -79,7 +124,7 @@ class Client(suds.client.Client):
         else:
             lh = logging.FileHandler(os.path.expanduser(log_destination))
 
-        log_level = _config_value("logging", "level", "INFO")
+        log_level = _config_value("logging", "level", "WARNING")
         print("Logging to %s at %s level" % (log_destination, log_level))
         lh.setLevel(getattr(logging, log_level))
         logger.setLevel(getattr(logging, log_level))
@@ -88,7 +133,7 @@ class Client(suds.client.Client):
         soap._init_logging(log_level, lh)
         logger.info("Initialised logging")
 
-    def login(self, username, password):
+    def login(self, username=None, password=None):
         """Login to a vSphere server.
 
         >>> client.login(username='Administrator', password='strongpass')
@@ -99,14 +144,19 @@ class Client(suds.client.Client):
         :type password: str
 
         """
+        if username is None:
+            username = self.username
+        if password is None:
+            password = self.password
         logger.debug("Logging into server")
         self.sc.sessionManager.Login(userName=username, password=password)
-        self.logged_in = True
+        self._logged_in = True
 
     def logout(self):
         """Logout of a vSphere server."""
+        self.si.flush_cache()
         self.sc.sessionManager.Logout()
-        self.logged_in = False
+        self._logged_in = False
 
     def invoke(self, method, _this, **kwargs):
         """Invoke a method on the server.
@@ -123,6 +173,11 @@ class Client(suds.client.Client):
         :type kwargs: TODO
 
         """
+        if (self._logged_in is False and
+            method not in ["Login", "RetrieveServiceContent"]):
+            logger.critical("Cannot exec %s unless logged in" % method)
+            raise NotLoggedInError("Cannot exec %s unless logged in" % method)
+
         result = getattr(self.service, method)(_this=_this, **kwargs)
         if not hasattr(result, '__iter__'):
             logger.debug("Result is not iterable")
