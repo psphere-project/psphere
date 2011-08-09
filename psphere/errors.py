@@ -29,5 +29,9 @@ class TaskFailedError(Exception):
     pass
 
 
+class TemplateNotFoundError(Exception):
+    pass
+
+
 class NotImplementedError(Exception):
     pass
