@@ -99,7 +99,13 @@ class ManagedEntity(ExtensibleManagedObject):
     @cached_property
     def triggeredAlarmState(self):
        return self._get_dataobject("triggeredAlarmState", True)
-
+    def __cmp__(self, other):
+       if self.name == other.name:
+           return 0
+       if self.name < other.name:
+           return -1
+       if self.name > other.name:
+           return 1
 
 class ComputeResource(ManagedEntity):
     _valid_attrs = set(['configurationEx', 'datastore', 'environmentBrowser', 'host', 'network', 'resourcePool', 'summary'])
