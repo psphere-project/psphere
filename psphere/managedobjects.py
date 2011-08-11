@@ -99,6 +99,29 @@ class ManagedEntity(ExtensibleManagedObject):
     @cached_property
     def triggeredAlarmState(self):
        return self._get_dataobject("triggeredAlarmState", True)
+
+    @classmethod
+    def all(cls, client, properties=None):
+        if properties is None:
+            properties = []
+
+        return client.find_entity_views(cls.__name__)
+    
+    @classmethod
+    def get(cls, client, **kwargs):
+        if properties not in kwargs.keys():
+            properties = None
+        if properties is None:
+            properties = []
+        filter = {}
+        for key in kwargs.keys():
+            properties.append(key)
+            filter[key] = kwargs[key]
+
+        return client.find_entity_view(cls.__name__,
+                                       filter=filter,
+                                       properties=properties)
+
     def __cmp__(self, other):
        if self.name == other.name:
            return 0
