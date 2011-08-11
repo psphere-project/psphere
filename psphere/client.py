@@ -571,23 +571,29 @@ class Client(suds.client.Client):
             if not obj_content.propSet:
                 continue
 
+            matches = 0
             # Iterate through each property in the set
             for prop in obj_content.propSet:
-                # If the property name is in the defined filter
-                if prop.name in filter:
-                    # ...and it matches the value specified
-                    # TODO: Regex this?
-                    if prop.val == filter[prop.name]:
-                        # We've found a match
-                        filtered_obj_content = obj_content
-                        matched = True
-                        break
-
-            # If we've matched something at this point, finish the loop
-            if matched:
+                for key in filter.keys():
+                    # If the property name is in the defined filter
+                    if prop.name == key:
+                        # ...and it matches the value specified
+                        # TODO: Regex this?
+                        if prop.val == filter[prop.name]:
+                            # We've found a match
+                            matches += 1
+                        else:
+                            break
+                    else:
+                        continue
+            if matches == len(filter):
+                filtered_obj_content = obj_content
+                matched = True
                 break
+            else:
+                continue
 
-        if not matched:
+        if matched is not True:
             # There were no matches
             raise ObjectNotFoundError("No matching objects for filter")
 
