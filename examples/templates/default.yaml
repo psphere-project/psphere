@@ -1,0 +1,5 @@
+# Place values in here which you want all templates to inherit
+description: The default template which all templates implicitly inherit from
+memory: 1024
+compute_resource: <change>
+host: null

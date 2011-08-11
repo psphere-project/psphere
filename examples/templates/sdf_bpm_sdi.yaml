@@ -1,0 +1,4 @@
+# BPM servers run greedy Oracle software
+description: SDF SOE template for BPM servers in SDI
+extends: sdf_sdi
+memory: 8096M

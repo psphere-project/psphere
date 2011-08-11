@@ -1,0 +1,5 @@
+# Ensure these servers get the right VLAN
+description: SDF SOE VM in SDI VLAN
+extends: sdf
+nics:
+- {type: VirtualE1000, network_name: AE_SDFDIE VLAN}

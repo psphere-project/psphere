@@ -1,0 +1,9 @@
+description: General SDF SOE template
+extends: default
+nics:
+- {type: VirtualE1000, network_name: None}
+datastore: "nas03"
+disksize: 12GB
+memory: 4096MB
+num_cpus: 1
+guest_id: sles10_64Guest
