@@ -17,7 +17,8 @@ VMware provides very good documentation for the VMware vSphere API. It is
 suggested that you at least read the introductory documents to gain a conceptual
 understanding of the API.
 
-Throughout this documentation there are links to the API reference documentation.
+Throughout this documentation there are links to the API reference
+documentation.
 
 |more| See :ref:`useful references <useful-references>`.
 
@@ -38,7 +39,7 @@ Hello World in psphere
 Not quite, but logging into the server and printing the current time is close::
 
     >>> from psphere.client import Client
-    >>> client = Client('https://localhost/sdk', 'Administrator', 'none')
+    >>> client = Client("your.esxserver.com", "Administrator", "strongpass")
     >>> servertime = client.si.CurrentTime()
     >>> print(servertime)
     2010-09-04 18:35:12.062575
@@ -51,22 +52,21 @@ General programming pattern
 Create a new Client::
 
     >>> from psphere.client import Client
-    >>> client = Client('https://localhost/sdk', 'Administrator', 'mypassword')
+    >>> client = Client("your.esxserver.com", "Administrator", "strongpass")
 
 ...check out the rootFolder of the content attribute, it's a Python object::
 
-    >>> root_folder = client.si.content.rootFolder
-    >>> root_folder.__class__
+    >>> client.si.content.rootFolder.__class__
     <class 'psphere.managedobjects.Folder'>
 
-...access properties of a it::
+...access properties of it::
 
-    >>> print(root_folder.name)
+    >>> print(client.si.content.rootFolder.name)
     Datacenters
 
 ...invoke a method::
 
-    >>> new_folder = root_folder.CreateFolder(name='New')
+    >>> new_folder = client.si.config.rootFolder.CreateFolder(name="New")
     >>> print(new_folder.name)
     New
     >>> task = new_folder.Destroy_Task()
@@ -90,7 +90,7 @@ classmethod to find them::
 
     >>> from psphere.client import Client
     >>> from psphere.managedobjects import VirtualMachine
-    >>> client = Client('https://localhost/sdk', 'Administrator', 'none')
+    >>> client = Client("your.esxserver.com", "Administrator", "strongpass")
     >>> vm = VirtualMachine.find_one(client=client, filter={'name': 'genesis'})
     >>> vm.__class__
     <class 'psphere.managedobjects.VirtualMachine'>

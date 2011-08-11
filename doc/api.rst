@@ -1,7 +1,7 @@
 API Documentation
 =================
 
-This page documents the pSphere API.
+This page documents the psphere API.
 
-.. automodule:: psphere.server
+.. automodule:: psphere.client
    :members:
