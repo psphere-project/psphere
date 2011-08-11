@@ -109,13 +109,18 @@ class ManagedEntity(ExtensibleManagedObject):
     
     @classmethod
     def get(cls, client, **kwargs):
-        if properties not in kwargs.keys():
+        if "properties" in kwargs.keys():
+            properties = kwargs["properties"]
+            # Delete properties key so it doesn't get filtered
+            del kwargs["properties"]
+        else:
             properties = None
+
         if properties is None:
             properties = []
+
         filter = {}
         for key in kwargs.keys():
-            properties.append(key)
             filter[key] = kwargs[key]
 
         return client.find_entity_view(cls.__name__,
