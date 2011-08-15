@@ -221,6 +221,38 @@ class ManagedObject(object):
 
         self._set_view_data(object_content)
 
+    def preload(self, name, properties=None):
+        """Pre-loads the requested properties for each object in the "name"
+        attribute.
+
+        :param name: The name of the attribute containing the list to
+        preload.
+        :type name: str
+        :param properties: The properties to preload on the objects or the
+        string all to preload all properties.
+        :type properties: list or the string "all"
+        
+        """
+        if properties is None:
+            raise ValueError("You must specify some properties to preload. To"
+                             " preload all properties use the string \"all\".")
+        # Make sure it's a list
+        # Iterate over each item and collect the mo_ref
+        # Make sure the value is retrieved from the server
+        mo_refs = []
+        for item in getattr(self, name):
+            # Make sure the items are ManagedObjectReference's
+            if isinstance(item, ManagedObject) is False:
+                raise ValueError("Only ManagedObject's can be pre-loaded.")
+
+            mo_refs.append(item._mo_ref)
+            
+        # Send a single query to the server which gets views
+        views = self._client.get_views(mo_refs, properties)
+
+        # Populate the inst.attr item with the retrieved object/properties
+        self._cache[name] = (views, time.time())
+
     def _set_view_data(self, object_content):
         """Update the local object from the passed in object_content."""
         # A debugging convenience, allows inspection of the object_content
