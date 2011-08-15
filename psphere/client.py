@@ -34,7 +34,7 @@ import time
 from urllib2 import URLError
 from suds.transport import TransportError
 
-from psphere import soap
+from psphere import soap, ManagedObject
 from psphere.config import _config_value
 from psphere.errors import (ConfigError, ObjectNotFoundError, TaskFailedError,
                             NotLoggedInError)
@@ -102,9 +102,9 @@ class Client(suds.client.Client):
             raise
         self.options.transport.options.timeout = timeout
         self.set_options(location=url)
-        si_mo_ref = soap.ManagedObjectReference(_type='ServiceInstance',
-                                                value='ServiceInstance')
-        self.si = ServiceInstance(si_mo_ref, self) 
+        mo_ref = soap.ManagedObjectReference("ServiceInstance",
+                                             "ServiceInstance")
+        self.si = ServiceInstance(mo_ref, self) 
         try:
             self.sc = self.si.RetrieveServiceContent()
         except URLError, e:
@@ -178,9 +178,12 @@ class Client(suds.client.Client):
             logger.critical("Cannot exec %s unless logged in" % method)
             raise NotLoggedInError("Cannot exec %s unless logged in" % method)
 
+        for kwarg in kwargs:
+            kwargs[kwarg] = self._marshal(kwargs[kwarg])
+
         result = getattr(self.service, method)(_this=_this, **kwargs)
-        if not hasattr(result, '__iter__'):
-            logger.debug("Result is not iterable")
+        if hasattr(result, '__iter__') is False:
+            logger.debug("Returning non-iterable result")
             return result
 
         # We must traverse the result and convert any ManagedObjectReference
@@ -191,9 +194,9 @@ class Client(suds.client.Client):
         if type(result) == list:
             new_result = []
             for item in result:
-                new_result.append(self.walk_and_convert_sudsobject(item))
+                new_result.append(self._unmarshal(item))
         else:
-            new_result = self.walk_and_convert_sudsobject(result)
+            new_result = self._unmarshal(result)
             
         logger.debug("Finished in invoke.")
         #property = self.find_and_destroy(property)
@@ -201,60 +204,93 @@ class Client(suds.client.Client):
         # Return the modified result to the caller
         return new_result
 
-    def convert_mor(self, mo_ref):
+    def _mor_to_pobject(self, mo_ref):
+        """Converts a MOR to a psphere object."""
         kls = classmapper(mo_ref._type)
         new_object = kls(mo_ref, self)
         return new_object
 
-    def walk_and_convert_sudsobject(self, sudsobject):
-        """Walks a sudsobject and converts MORs to psphere objects."""
-        import suds
-        if not issubclass(sudsobject.__class__, suds.sudsobject.Object):
-            logger.debug("%s is not a sudsobject subclass, skipping" %
-                         sudsobject)
-            return sudsobject
+    def _marshal(self, obj):
+        """Walks an object and marshals any psphere object into MORs."""
+        logger.debug("Trying to marshal %s" % obj)
+        if obj is None:
+            return obj
+
+        if isinstance(obj, (str, int)):
+            return obj
+
+        if isinstance(obj, ManagedObject):
+            logger.debug("obj is a psphere object, converting to MOR")
+            return obj._mo_ref
+
+        if isinstance(obj, list):
+            new_list = []
+            for item in obj:
+                new_list.append(self._marshal(item))
+            return new_list
+                
+        if isinstance(obj, suds.sudsobject.Object) is False:
+            logger.debug("%s is not a sudsobject subclass, skipping" % obj)
+            return obj
+
+        if hasattr(obj, '__iter__') is True:
+            for (name, value) in obj:
+                setattr(obj, name, self._marshal(value))
+            return obj
+            
+        if "_type" in obj.__keylist__:
+            logger.debug("obj is already a MOR, returning it")
+            return obj
+
+        raise AttributeError("Shouldn't get here!")
+
+    def _unmarshal(self, obj):
+        """Walks an object and unmarshals any MORs into psphere objects."""
+        if isinstance(obj, suds.sudsobject.Object) is False:
+            logger.debug("%s is not a suds instance, skipping" % obj)
+            return obj
 
         logger.debug("Processing:")
-        logger.debug(sudsobject)
+        logger.debug(obj)
         logger.debug("...with keylist:")
-        logger.debug(sudsobject.__keylist__)
-        # If the sudsobject that we're looking at has a _type key
+        logger.debug(obj.__keylist__)
+        # If the obj that we're looking at has a _type key
         # then create a class of that type and return it immediately
-        if "_type" in sudsobject.__keylist__:
-            logger.debug("sudsobject is a MOR, converting to psphere class")
-            return self.convert_mor(sudsobject)
+        if "_type" in obj.__keylist__:
+            logger.debug("obj is a MOR, converting to psphere class")
+            return self._mor_to_pobject(obj)
 
-        new_object = sudsobject.__class__()
-        for obj in sudsobject:
-            logger.debug("Looking at %s of type %s" % (obj, type(obj)))
+        new_object = obj.__class__()
+        for sub_obj in obj:
+            logger.debug("Looking at %s of type %s" % (sub_obj, type(sub_obj)))
 
-            if isinstance(obj[1], list):
+            if isinstance(sub_obj[1], list):
                 new_embedded_objs = []
-                for emb_obj in obj[1]:
-                    new_emb_obj = self.walk_and_convert_sudsobject(emb_obj)
+                for emb_obj in sub_obj[1]:
+                    new_emb_obj = self._unmarshal(emb_obj)
                     new_embedded_objs.append(new_emb_obj)
-                setattr(new_object, obj[0], new_embedded_objs)
+                setattr(new_object, sub_obj[0], new_embedded_objs)
                 continue
 
-            if not issubclass(obj[1].__class__, suds.sudsobject.Object):
+            if not issubclass(sub_obj[1].__class__, suds.sudsobject.Object):
                 logger.debug("%s is not a sudsobject subclass, skipping" %
-                             obj[1].__class__)
-                setattr(new_object, obj[0], obj[1])
+                             sub_obj[1].__class__)
+                setattr(new_object, sub_obj[0], sub_obj[1])
                 continue
 
-            logger.debug("Obj keylist: %s" % obj[1].__keylist__)
-            if "_type" in obj[1].__keylist__:
+            logger.debug("Obj keylist: %s" % sub_obj[1].__keylist__)
+            if "_type" in sub_obj[1].__keylist__:
                 logger.debug("Converting nested MOR to psphere class:")
-                logger.debug(obj[1])
-                kls = classmapper(obj[1]._type)
+                logger.debug(sub_obj[1])
+                kls = classmapper(sub_obj[1]._type)
                 logger.debug("Setting %s.%s to %s" %
-                             (new_object.__class__.__name__, obj[0], obj[1]))
-                setattr(new_object, obj[0], kls(obj[1], self))
+                             (new_object.__class__.__name__, sub_obj[0],
+                              sub_obj[1]))
+                setattr(new_object, sub_obj[0], kls(sub_obj[1], self))
             else:
                 logger.debug("Didn't find _type in:")
-                logger.debug(obj[1])
-                setattr(new_object, obj[0],
-                        self.walk_and_convert_sudsobject(obj[1]))
+                logger.debug(sub_obj[1])
+                setattr(new_object, sub_obj[0], self._unmarshal(sub_obj[1]))
 
         return new_object
 
@@ -349,7 +385,7 @@ class Client(suds.client.Client):
         views = []
         for object_content in object_contents:
             # Update the instance with the data in object_content
-            #object_content.obj.set_view_data(object_content=object_content)
+            object_content.obj._set_view_data(object_content=object_content)
             views.append(object_content.obj)
 
         return views
