@@ -36,9 +36,11 @@ class Discovery(BaseScript):
                                     properties=['name', 'host'])
         print('Cluster: %s (%s hosts)' % (ccr.name, len(ccr.host)))
 
+        ccr.preload("host", properties=["name", "vm"])
         for host in ccr.host:
             print('  Host: %s (%s VMs)' % (host.name, len(host.vm)))
             # Get the vm views in one fell swoop
+            host.preload("vm", properties=["name"])
             for vm in host.vm:
                 print('    VM: %s' % vm.name)
     
