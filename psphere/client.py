@@ -229,7 +229,7 @@ class Client(suds.client.Client):
             return obj
 
         if hasattr(obj, '__iter__'):
-            logger.debug("obj is iterable, recursing it" % type(obj))
+            logger.debug("obj is iterable, recursing it")
             for (name, value) in obj:
                 setattr(obj, name, self._marshal(value))
             return obj
