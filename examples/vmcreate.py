@@ -17,7 +17,7 @@ import re
 import sys
 import time
 
-from psphere import template
+from psphere import config, template
 from psphere.client import Client
 from psphere.errors import TemplateNotFoundError
 from psphere.soap import VimFault
@@ -248,7 +248,7 @@ def create_disk(client, datastore, disksize_kb):
 
     return disk_spec
 
-def main(name, template_name):
+def main(name, options):
     """The main method for this script.
 
     :param name: The name of the VM to create.
@@ -258,22 +258,84 @@ def main(name, template_name):
     :type template_name: str
 
     """
-    client = Client()
-    try:
-        vm_template = template.load_template(template_name)
-    except TemplateNotFoundError:
-        vm_template = template.load_template("default")
-    except TemplateNotFoundError:
-        print("ERROR: You have not specified a template to use and do not"
-              " have a default template configured.")
-        sys.exit(1)
+    server = config._config_value("general", "server", options.server)
+    if server is None:
+        raise ValueError("server must be supplied on command line"
+                         " or in configuration file.")
+    username = config._config_value("general", "username", options.username)
+    if username is None:
+        raise ValueError("username must be supplied on command line"
+                         " or in configuration file.")
+    password = config._config_value("general", "password", options.password)
+    if password is None:
+        raise ValueError("password must be supplied on command line"
+                         " or in configuration file.")
 
-    create_vm(client, name, vm_template["compute_resource"],
-              vm_template["datastore"], vm_template["disksize"],
-              vm_template["nics"], vm_template["memory"],
-              vm_template["num_cpus"], vm_template["guest_id"],
-              host=vm_template["host"])
+    vm_template = None
+    if options.template is not None:
+        try:
+            vm_template = template.load_template(options.template)
+        except TemplateNotFoundError:
+            print("ERROR: Template \"%s\" could not be found." % options.template)
+            sys.exit(1)
+
+    expected_opts = ["compute_resource", "datastore", "disksize", "nics",
+                     "memory", "num_cpus", "guest_id", "host"]
+
+    vm_opts = {}
+    for opt in expected_opts:
+        vm_opts[opt] = getattr(options, opt)
+        if vm_opts[opt] is None:
+            if vm_template is None:
+                raise ValueError("%s not specified on the command line and"
+                                 " you have not specified any template to"
+                                 " inherit the value from." % opt)
+            try:
+                vm_opts[opt] = vm_template[opt]
+            except AttributeError:
+                raise ValueError("%s not specified on the command line and"
+                                 " no value is provided in the specified"
+                                 " template." % opt)
+
+    client = Client(server=server, username=username, password=password)
+    create_vm(client, name, vm_opts["compute_resource"], vm_opts["datastore"],
+              vm_opts["disksize"], vm_opts["nics"], vm_opts["memory"],
+              vm_opts["num_cpus"], vm_opts["guest_id"], host=vm_opts["host"])
     client.logout()
 
 if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2])
+    from optparse import OptionParser
+    usage = "Usage: %prog [options] name"
+    parser = OptionParser(usage=usage)
+    parser.add_option("--server", dest="server",
+                      help="The server to connect to for provisioning")
+    parser.add_option("--username", dest="username",
+                      help="The username used to connect to the server")
+    parser.add_option("--password", dest="password",
+                      help="The password used to connect to the server")
+    parser.add_option("--template", dest="template",
+                      help="The template used to create the VM")
+    parser.add_option("--compute_resource", dest="compute_resource",
+                      help="The ComputeResource in which to provision the VM")
+    parser.add_option("--datastore", dest="datastore",
+                      help="The datastore on which to provision the VM")
+    parser.add_option("--disksize", dest="disksize",
+                      help="The size of the VM disk")
+    parser.add_option("--nics", dest="nics",
+                      help="The nics for the VM")
+    parser.add_option("--memory", dest="memory",
+                      help="The amount of memory for the VM")
+    parser.add_option("--num_cpus", dest="num_cpus",
+                      help="The number of CPUs for the VM")
+    parser.add_option("--guest_id", dest="guest_id",
+                      help="The guest_id of the VM (see vSphere doco)")
+    parser.add_option("--host", dest="host",
+                      help="Specify this if you want to provision the VM on a"
+                      " specific host in the ComputeResource")
+
+    (options, args) = parser.parse_args()
+    if len(args) != 1:
+        parser.print_help()
+        sys.exit(1)
+
+    main(args[0], options)
