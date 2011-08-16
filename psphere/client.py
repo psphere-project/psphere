@@ -64,21 +64,21 @@ class Client(suds.client.Client):
                  wsdl_location="local", timeout=30):
         self._init_logging()
         self._logged_in = False
+        if server is None:
+            server = _config_value("general", "server")
+        if username is None:
+            username = _config_value("general", "username")
+        if password is None:
+            password = _config_value("general", "password")
+        if server is None:
+            raise ConfigError("server must be set in config file or Client()")
+        if username is None:
+            raise ConfigError("username must be set in config file or Client()")
+        if password is None:
+            raise ConfigError("password must be set in config file or Client()")
         self.server = server
         self.username = username
         self.password = password
-        if self.server is None:
-            self.server = _config_value("general", "server")
-        if self.username is None:
-            self.username = _config_value("general", "username")
-        if self.password is None:
-            self.password = _config_value("general", "password")
-        if self.server is None:
-            raise ConfigError("server must be set in config file or Client()")
-        if self.username is None:
-            raise ConfigError("username must be set in config file or Client()")
-        if self.password is None:
-            raise ConfigError("password must be set in config file or Client()")
         url = "https://%s/sdk" % self.server
         if wsdl_location == "local":
             wsdl_uri = ("file://%s/wsdl/vimService.wsdl" %
@@ -212,37 +212,31 @@ class Client(suds.client.Client):
 
     def _marshal(self, obj):
         """Walks an object and marshals any psphere object into MORs."""
-        logger.debug("Trying to marshal %s" % obj)
-        if obj is None:
-            return obj
-
-        if isinstance(obj, (str, int)):
-            return obj
-
+        logger.debug("Checking if %s needs to be marshalled" % obj)
         if isinstance(obj, ManagedObject):
             logger.debug("obj is a psphere object, converting to MOR")
             return obj._mo_ref
 
         if isinstance(obj, list):
+            logger.debug("obj is a list, recursing it")
             new_list = []
             for item in obj:
                 new_list.append(self._marshal(item))
             return new_list
                 
-        if isinstance(obj, suds.sudsobject.Object) is False:
+        if not isinstance(obj, suds.sudsobject.Object):
             logger.debug("%s is not a sudsobject subclass, skipping" % obj)
             return obj
 
-        if hasattr(obj, '__iter__') is True:
+        if hasattr(obj, '__iter__'):
+            logger.debug("obj is iterable, recursing it" % type(obj))
             for (name, value) in obj:
                 setattr(obj, name, self._marshal(value))
             return obj
             
-        if "_type" in obj.__keylist__:
-            logger.debug("obj is already a MOR, returning it")
-            return obj
-
-        raise AttributeError("Shouldn't get here!")
+        # The obj has nothing that we want to marshal or traverse, return it
+        logger.debug("obj doesn't need to be marshalled")
+        return obj
 
     def _unmarshal(self, obj):
         """Walks an object and unmarshals any MORs into psphere objects."""
