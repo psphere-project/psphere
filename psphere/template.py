@@ -34,7 +34,7 @@ def load_template(name=None):
     template (<template_dir>/default.yaml) if it exists.
     
     :param name: The name of the template to load.
-    :type name: str (default: default)
+    :type name: str or None (default)
 
     """
     if name is None:
