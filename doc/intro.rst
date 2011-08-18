@@ -7,10 +7,10 @@ vSphere Web Services SDK/VMware Infrastructure SDK.
 Notes
 -----
 
-psphere implements the following VMware SDKs::
+psphere implements the following VMware SDKs:
 
-* VMware Infrastructure SDK 2.5
-* VMware vSphere Web Services SDK 4.0 and later
+    * VMware Infrastructure SDK 2.5
+    * VMware vSphere Web Services SDK 4.0 and later
 
 I'm currently developing against vCenter 4.1 so please raise any bugs for
 other versions.
