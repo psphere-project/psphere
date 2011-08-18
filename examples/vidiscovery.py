@@ -13,27 +13,32 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import sys
+
 from psphere.scripting import BaseScript
 from psphere.client import Client
+from psphere.managedobjects import ComputeResource
+from psphere.errors import ObjectNotFoundError
 
 class Discovery(BaseScript):
-    def discovery(self):
-        """An example that discovers hosts and VMs in the inventory.
-
-        Parameters
-        ----------
-        url : str
-            The URL of the ESX or VIC server. e.g. (https://bennevis/sdk)
-        username : str
-            The username to connect with.
-        password : str
-            The password to connect with.
-
-        """
+    def discovery(self, compute_resource):
+        """An example that discovers hosts and VMs in the inventory."""
         # Find the first ClusterComputeResource
-        ccr = self.client.find_entity_view("ClusterComputeResource",
-                                    filter={'name': 'Online Engineering'},
-                                    properties=['name', 'host'])
+        if compute_resource is None:
+            cr_list = ComputeResource.all(self.client)
+            print("ERROR: You must specify a ComputeResource.")
+            print("Available ComputeResource's:")
+            for cr in cr_list:
+                print(cr.name)
+            sys.exit(1)
+
+        try:
+            ccr = ComputeResource.get(self.client, name=compute_resource)
+        except ObjectNotFoundError:
+            print("ERROR: Could not find ComputeResource with name %s" %
+                  compute_resource)
+            sys.exit(1)
+
         print('Cluster: %s (%s hosts)' % (ccr.name, len(ccr.host)))
 
         ccr.preload("host", properties=["name", "vm"])
@@ -47,7 +52,7 @@ class Discovery(BaseScript):
 def main():
     client = Client()
     vd = Discovery(client)
-    vd.discovery()
+    vd.discovery(sys.argv[1])
 
 if __name__ == '__main__':
     main()

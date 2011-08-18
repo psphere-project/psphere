@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 # Copyright 2010 Jonathan Kinred
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -18,34 +18,15 @@ from psphere.scripting import BaseScript
 
 class Connect(BaseScript):
     def connect(self):
-        """A simple connection test to login and print the server time.
-
-        Parameters
-        ----------
-        url : str
-            The URL of the ESX or VIC server. e.g. (https://bennevis/sdk)
-        username : str
-            The username to connect with.
-        password : str
-            The password to connect with.
-
-        Examples
-        --------
-        >>> from psphere.scripts import Connect
-        >>> c = Connect()
-        >>> c.connect()
-        Successfully connected to https://bennevis/sdk
-        Server time is 2010-08-26 23:53:38.003445
-
-        """
+        """A simple connection test to login and print the server time."""
         print(self.client.si.CurrentTime())
-        self.client.logout()
 
 def main():
     client = Client()
     print('Successfully connected to %s' % client.server)
     c = Connect(client)
     c.connect()
+    client.logout()
 
 if __name__ == '__main__':
     main()

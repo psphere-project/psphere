@@ -20,6 +20,7 @@ compute_resource = sys.argv[2]
 cr = client.find_entity_view("ComputeResource",
                              filter={"name": compute_resource})
 
+cr.resourcePool.preload("vm", properties=["name"])
 for vm in sorted(cr.resourcePool.vm):
     if p.match(vm.name) is None:
         continue
@@ -37,7 +38,7 @@ for vm in sorted(cr.resourcePool.vm):
     try:
         print("    fixed-address %s;" % vm.guest.ipAddress)
     except AttributeError:
-        print("    fixed-address ")
+        print("    fixed-address <manual_entry>;")
     print("}")
 
 client.logout()

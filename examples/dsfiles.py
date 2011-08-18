@@ -52,6 +52,7 @@ def main():
     client = Client()
     dsf = DatastoreFiles(client)
     dsf.list_files()
+    client.logout()
 
 
 if __name__ == '__main__':

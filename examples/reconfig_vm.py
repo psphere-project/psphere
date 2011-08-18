@@ -12,6 +12,8 @@ import time
 
 from psphere.client import Client
 from psphere.soap import VimFault
+from psphere.managedobjects import VirtualMachine
+from psphere.errors import ObjectNotFoundError
 
 vm_name = sys.argv[1]
 
@@ -19,8 +21,12 @@ client = Client()
 new_config = client.create("VirtualMachineConfigSpec")
 new_config.numCPUs = 2
 
+try:
+    vm = VirtualMachine.get(client, name=vm_name)
+except ObjectNotFoundError:
+    print("ERROR: No VM found with name %s" % vm_name)
+
 print("Reconfiguring %s" % vm_name)
-vm = client.find_entity_view("VirtualMachine", filter={"name": vm_name})
 if vm.config.hardware.numCPU == 2:
     print("Not reconfiguring %s as it already has 2 CPUs" % vm_name)
     sys.exit()
