@@ -19,8 +19,8 @@ from suds import MethodNotFound
 
 logger = logging.getLogger("psphere")
 
-__version__ = '0.5.0'
-__released__ = '0.5.0'
+__version__ = '0.5.1'
+__released__ = '0.5.1'
 
 class cached_property(object):
     """Decorator for read-only properties evaluated only once within TTL period.
