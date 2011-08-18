@@ -1,44 +1,39 @@
 Datastore examples
 ==================
 
+WARNING!!!! Not updated for new API!
+
 This page provides examples for working with datastores.
 
 
-Finding a datastore in a ComputeResource
------------------------------------------
+Finding a datastore
+-------------------
 
 You can find a datastore in a ComputeResource using the **find_datastore**
 convenience method::
 
-    >>> from psphere.vim25 import Vim
-    >>> vim = Vim('https://localhost/sdk')
-    >>> vim.login('Administrator', 'none')
-    >>> datastore = Datastore.find_one(name='nas03')
+    >>> from psphere.client import Client
+    >>> from psphere.managedobjects import Datastore
+    >>> client = Client("server.esx.com", "Administrator", "strongpass")
+    >>> datastore = Datastore.get(name="nas03")
     >>> print(datastore.summary.name)
     nas03
-    >>> print('%iGB' % (datastore.summary.freeSpace/1073741824))
+    >>> print("%iGB" % (datastore.summary.freeSpace/1073741824))
     13203GB
 
 
 Finding all VMs attached to a datastore
 ---------------------------------------
 
-It's quite easy to find all virtual machines attached to a **Datastore** by
-using the same **get_views** technique with an instances *vm* managed object
-reference array::
+Just look at the vm property of the Datastore managed object::
 
-    >>> from psphere.vim25 import Vim
-    >>> vim = Vim('https://localhost/sdk')
-    >>> vim.login('Administrator', 'none')
-    >>> datastore = Datastore.find_one(name='nas03')
-    >>> vm_list = vim.get_views(mo_refs=datastore.vm, properties=['name', 'summary'])
-    >>> for vm in vm_list:
+    >>> for vm in datastore.vm:
     >>>     try:
     >>>         print(vm.name)
     >>>         print(vm.summary.config.guestId)
     >>>     except AttributeError:
-    >>>         print('Unknown')
-    >>>     print('----------')
+    >>>         print("Unknown")
+    >>>     print("----------")
     sdi3extapp01
     sles10_64Guest
     ----------
@@ -54,33 +49,3 @@ reference array::
     sandbox5
     rhel5Guest
     ----------
-
-
-
-Finding and querying all datastores in a ComputeResource
---------------------------------------------------------
-
-You can find all datastores attached to a ComputeResource and iterate through
-them::
-
-    >>> from psphere.vim25 import Vim
-    >>> vim = Vim('https://localhost/sdk')
-    >>> vim.login('Administrator', 'none')
-    >>> datastores = vim.get_views(mo_refs=compute_resource.datastore, properties=['summary'])
-    >>> for datastore in datastores:
-    >>>     try:
-    >>>         print(datastore.summary.name)
-    >>>         print('%sGB' % (int(datastore.summary.freeSpace)/1073741824))
-    >>>     except AttributeError:
-    >>>         print('Unknown')
-    >>>     print('----------')
-    nas03
-    13203GB
-    -----------
-    sonder:storage1
-    128GB
-    -----------
-    bogong:storage2
-    237GB
-    -----------
-

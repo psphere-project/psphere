@@ -10,12 +10,12 @@ Finding a HostSystem
 Connect to the server and find the **HostSystem** view::
 
 
-    >>> from psphere.vim25 import Vim
-    >>> vim = Vim('https://localhost/sdk')
-    >>> vim.login('Administrator', 'none')
-    >>> host_system = vim.find_entity_view(view_type='HostSystem', filter={'name': 'k2.local'}, properties=['name', 'summary', 'vm'])
+    >>> from psphere.client import Client
+    >>> from psphere.managedobjects import HostSystem
+    >>> client = Client("server.esx.com", "Administrator", "strongpass")
+    >>> host_system = HostSystem.get(client, name="k2")
     >>> print(host_system.name)
-    k2.local
+    k2
     >>> print(host_system.summary.hardware.model)
     Sun Fire X4440
 
@@ -23,8 +23,7 @@ Connect to the server and find the **HostSystem** view::
 How many VirtualMachine's on a HostSystem?
 ----------------------------------------------
 
-Just count the number of **ManagedObjectReference**'s in the **HostSystem.vm**
-property::
+Just count the number of **VirtualMachine**'s objects in the vm property::
 
     >>> len(host_system.vm)
     40
@@ -33,18 +32,9 @@ property::
 Listing VirtualMachine's on a HostSystem
 ----------------------------------------
 
-The **HostSystem.vm** attribute contains a list of **VirtualMachine** MOR's.
-First we use this to create a list of **VirtualMachine** views using the
-**Vim.get_views** method, populating the views with *name* and *summary*
-using the *properties* parameter.
+The **HostSystem.vm** attribute contains a list of **VirtualMachine** objects.
 
-Then it's just a matter of using a for loop to iterate through them. Notice
-though, that we except AttributeError to catch any attributes that the server
-hasn't returned::
-
-    >>> host_system = vim.find_entity_view(view_type='HostSystem', filter={'name': 'k2.local'}, properties=['vm'])
-    >>> vms = vim.get_views(mo_refs=host_system.vm, properties=['name', 'summary'])
-    >>> for vm in vms:
+    >>> for vm in host_system.vm:
     >>>     try:
     >>>         print(vm.name)
     >>>         print(vm.summary.config.memorySizeMB)
@@ -69,5 +59,3 @@ hasn't returned::
     twynam
     1024
     ---------
-    <truncated>
-

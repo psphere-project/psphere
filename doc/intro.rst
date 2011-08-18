@@ -18,15 +18,14 @@ Installing psphere
 
     # pip install -U psphere
     
-Or if you want to use the latest development branch:
+Or if you want to use the latest development branch::
 
     $ hg clone https://jkinred@bitbucket.org/jkinred/psphere
     $ cd psphere
     $ sudo python setup.py install
-    $ ./examples/connect.py --url https://yourserver/sdk --username youruser --password yourpass
-    Successfully connected to https://yourserver/sdk
+    $ ./examples/connect.py --server yourserver.esx.com --username youruser --password yourpass
+    Successfully connected to https://yourserver.esx.com/sdk
     Server time is 2010-09-05 00:14:06.037575
-
 
 
 Usage

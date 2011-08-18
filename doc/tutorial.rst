@@ -91,7 +91,7 @@ classmethod to find them::
     >>> from psphere.client import Client
     >>> from psphere.managedobjects import VirtualMachine
     >>> client = Client("your.esxserver.com", "Administrator", "strongpass")
-    >>> vm = VirtualMachine.find_one(client=client, filter={'name': 'genesis'})
+    >>> vm = VirtualMachine.get(client, name="genesis")
     >>> vm.__class__
     <class 'psphere.managedobjects.VirtualMachine'>
     >>> vm.name
@@ -102,8 +102,8 @@ classmethod to find them::
     4096
 
 
-Some notes on attribute retrieval
----------------------------------
+Lazy loading of properties and pre-loading properties
+-----------------------------------------------------
 
 At this point we have to delve into a more complicated aspect of vSphere and
 how psphere handles it. You do not need to worry about this, psphere will just
@@ -113,44 +113,45 @@ The vSphere SDK architecture provides abstract "views" of server side objects,
 some of these objects can be quite substantial, both in size and server
 resources required to collect them.
 
-For example a HostSystem has a xxx which has an xxx which has an xxx. If you
-inefficiently retrieve these attributes and you retrieve substantial objects
-then your scripts will be slow and you will generate load on your vSphere
-server.
+If you retrieve substantial objects then your scripts will be slow and you
+will generate load on your vSphere server.
 
-psphere deals with this using the following logic:
+psphere deals with this by lazily loading objects on access. In most cases
+this is fine, but you can achieve substantial speed-ups -- especially for
+lists of managed objects -- by pre-loading objects you know that you are
+going to access.
 
-When a Managed Object is instantiated, it will not retrieve properties from
-the server when it is instantiated. The property will be "lazily" retrieved
-from the
-server when it is accessed. Once accessed, it will be cached for future
-use. This works well if you are accessing only a few properties, but it
-requires a SOAP call for each property retrieval, so if you know ahead
-of time which properties you will be accessing, then you can retrieve
-those properties from the server with a single SOAP call by creating,
-or updating the Managed Object with the properties you will be using::
+For example, a HostSystem has a "vm" property which is a list of
+VirtualMachine objects on that host. If you know you are going to loop
+over all those VM's and print their name, you can preload the name property
+using the preload method::
 
-    >>> vm = VirtualMachine.find_one(client=client, filter={"name": "genesis"}, properties=["name", "guest"])
-    >>> vm.name
-    genesis
-    >>> vm.guest.ipAddress
-    10.183.10.10
-    >>> vm.update(properties="all")
-    >>> vm.summary.overallStatus
-    green
+    >>> hs = HostSystem.get(client, name="myhost")
+    >>> hs.preload("vm", properties=["name"])
+    >>> for vm in hs.vm:
+    >>>     print(vm.name)
+    >>> ...
 
-The vSphere API even allows you to do this extremely efficiently using
-a "sub" property specification::
 
-    >>> del(vm.config) # Deletes the cached property
-    >>> vm = VirtualMachine.find_one(client=client, filter={"name": "genesis"}, properties=["config.guestId"])
-    >>> print(vm.config.guestId)
-    rhel5guest
+Caching
+-------
 
-The properties parameter is available in the Client.find_entity_view(),
-Client.find_entity_views() methods and is implemented in the find(),
-find_one() and update() methods of the ManagedObject class (which all
-Managed Object's derive from).
+Once lazily loaded or pre-loaded, attributes will be cached for a pre-defined
+time (5 minutes, which is not configurable but will be in the next release).
+
+To update the cache for a specific property of an object, use the update()
+method with the properties parameter::
+
+    >>> hs.update(properties=["name"])
+
+To update the cache for all cached properties of an object, use the update()
+method with no parameters::
+
+    >>> hs.update()
+
+To clear the property cache for an object, use the flush_cache() method::
+
+    >>> hs.flush_cache()
 
 
 .. |more| image:: more.png
