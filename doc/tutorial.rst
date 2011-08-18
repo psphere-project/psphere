@@ -85,7 +85,7 @@ Managed Object's which extend the **ManagedEntity** class are the most
 commonly used objects in the vSphere API. These include Managed Object's
 such as HostSystem's and VirtualMachine's.
 
-psphere makes it easy to find Managed Entity's by providing a find_one()
+psphere makes it easy to find Managed Entity's by providing a get()
 classmethod to find them::
 
     >>> from psphere.client import Client
@@ -101,6 +101,9 @@ classmethod to find them::
     >>> vm.config.hardware.memoryMB
     4096
 
+There is also the all() method to get all entities of that type::
+
+    >>> vms = VirtualMachine.all(client)
 
 Lazy loading of properties and pre-loading properties
 -----------------------------------------------------
