@@ -539,7 +539,7 @@ class Client(suds.client.Client):
         views = []
         for obj_content in obj_contents:
             logger.debug("In find_entity_view with object of type %s" % obj_content.obj.__class__.__name__)
-            #obj_content.obj.update_view_data(properties=properties)
+            obj_content.obj.update_view_data(properties=properties)
             views.append(obj_content.obj)
 
         return views

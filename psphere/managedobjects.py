@@ -105,7 +105,10 @@ class ManagedEntity(ExtensibleManagedObject):
         if properties is None:
             properties = []
 
-        return client.find_entity_views(cls.__name__)
+        if "name" not in properties:
+            properties.append("name")
+
+        return client.find_entity_views(cls.__name__, properties=properties)
     
     @classmethod
     def get(cls, client, **kwargs):
@@ -118,6 +121,10 @@ class ManagedEntity(ExtensibleManagedObject):
 
         if properties is None:
             properties = []
+
+        # Automatically get the name property for every ManagedEntity
+        if "name" not in properties:
+            properties.append("name")
 
         filter = {}
         for key in kwargs.keys():
@@ -134,6 +141,10 @@ class ManagedEntity(ExtensibleManagedObject):
            return -1
        if self.name > other.name:
            return 1
+
+#    def __str__(self):
+#        return self.name
+
 
 class ComputeResource(ManagedEntity):
     _valid_attrs = set(['configurationEx', 'datastore', 'environmentBrowser', 'host', 'network', 'resourcePool', 'summary'])

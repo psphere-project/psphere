@@ -1,7 +1,9 @@
+# Copy this file into ~/.psphree/config.yaml and edit to your liking
 general:
     server: your.esxserver.com
     username: Administrator
     password: strongpassword
+    template_dir: ~/.psphere/templates/
 logging:
     destination: ~/.psphere/psphere.log
-    level: DEBUG
+    level: INFO # DEBUG, INFO, etc

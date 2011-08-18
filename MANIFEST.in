@@ -1,3 +1,8 @@
 include CHANGES
 include LICENSE
 include README
+include psphere/wsdl/*
+include examples/*.py
+include examples/sample_config.yaml
+include examples/templates/*
+recursive-include doc *
