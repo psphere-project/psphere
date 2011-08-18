@@ -66,7 +66,7 @@ Create a new Client::
 
 ...invoke a method::
 
-    >>> new_folder = client.si.config.rootFolder.CreateFolder(name="New")
+    >>> new_folder = client.si.content.rootFolder.CreateFolder(name="New")
     >>> print(new_folder.name)
     New
     >>> task = new_folder.Destroy_Task()
