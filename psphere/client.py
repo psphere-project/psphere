@@ -256,7 +256,7 @@ class Client(suds.client.Client):
 
         new_object = obj.__class__()
         for sub_obj in obj:
-            logger.debug("Looking at %s of type %s" % (sub_obj, type(sub_obj)))
+            logger.debug("Looking at %s of type %s" % (str(sub_obj), type(sub_obj)))
 
             if isinstance(sub_obj[1], list):
                 new_embedded_objs = []
