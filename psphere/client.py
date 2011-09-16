@@ -81,8 +81,13 @@ class Client(suds.client.Client):
         self.password = password
         url = "https://%s/sdk" % self.server
         if wsdl_location == "local":
-            wsdl_uri = ("file://%s/wsdl/vimService.wsdl" %
-            os.path.abspath(os.path.dirname(__file__)))
+            current_path = os.path.abspath(os.path.dirname(__file__))            
+            current_path = current_path.replace('\\', '/')
+            if not current_path.startswith('/') :
+                current_path = '/' + current_path
+            if current_path.endswith('/') :
+                current_path = current_path[:-1]
+            wsdl_uri = ("file://%s/wsdl/vimService.wsdl" % current_path)
         elif wsdl_location == "remote":
             wsdl_uri = url + "/vimService.wsdl"
         else:
