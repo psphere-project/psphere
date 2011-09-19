@@ -13,27 +13,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from psphere import config
 from psphere.client import Client
 
 def main(options):
     """A simple connection test to login and print the server time."""
-    server = config._config_value("general", "server", options.server)
-    if server is None:
-        raise ValueError("server must be supplied on command line"
-                         " or in configuration file.")
-    username = config._config_value("general", "username", options.username)
-    if username is None:
-        raise ValueError("username must be supplied on command line"
-                         " or in configuration file.")
-    password = config._config_value("general", "password", options.password)
-    if password is None:
-        raise ValueError("password must be supplied on command line"
-                         " or in configuration file.")
-
-    client = Client(server=server, username=username, password=password)
+        
+    client = Client(server=options.server, username=options.username, password=options.password)
     print('Successfully connected to %s' % client.server)
     print(client.si.CurrentTime())
+    
     client.logout()
 
 if __name__ == "__main__":
