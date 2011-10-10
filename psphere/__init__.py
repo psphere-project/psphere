@@ -65,7 +65,7 @@ class cached_property(object):
         try:
             # Get the value from the cache
             value, last_update = inst._cache[self.__name__]
-            logger.info("Found cached value for %s" % self.__name__)
+            logger.info("Found cached value for %s", self.__name__)
             # If the value in the cache exceeds the TTL then raise
             # AttributeError so that we retrieve the value again below
             if self.ttl > 0 and now - last_update > self.ttl:
@@ -75,7 +75,7 @@ class cached_property(object):
             # We end up here if the value hasn't been cached
             # or the value exceeds the TTL. We call the decorated
             # function to get the value.
-            logger.info("%s is not cached." % self.__name__)
+            logger.info("%s is not cached.", self.__name__)
             value = self.fget(inst)
             try:
                 # See if the instance has a cache attribute
@@ -103,14 +103,14 @@ class ManagedObject(object):
     _valid_attrs = set([])
     def __init__(self, mo_ref, client):
         self._cache = {}
-        logger.debug("===== Have been passed %s as mo_ref: " % mo_ref)
+        logger.debug("===== Have been passed %s as mo_ref: ", mo_ref)
         self._mo_ref = mo_ref
         self._client = client
 
     def _get_dataobject(self, name, multivalued):
         """This function only gets called if the decorated property
         doesn't have a value in the cache."""
-        logger.debug("Querying server for uncached data object %s" % name)
+        logger.debug("Querying server for uncached data object %s", name)
         # This will retrieve the value and inject it into the cache
         self.update_view_data(properties=[name])
         return self._cache[name][0]
@@ -118,7 +118,7 @@ class ManagedObject(object):
     def _get_mor(self, name, multivalued):
         """This function only gets called if the decorated property
         doesn't have a value in the cache."""
-        logger.debug("Querying server for uncached MOR %s" % name)
+        logger.debug("Querying server for uncached MOR %s", name)
         # This will retrieve the value and inject it into the cache
         logger.debug("Getting view for MOR")
         self.update(properties=[name])
@@ -190,7 +190,8 @@ class ManagedObject(object):
         """
         if properties is None:
             properties = []
-        logger.info("Updating view data for object of type %s" % self._mo_ref._type)
+        logger.info("Updating view data for object of type %s",
+                    self._mo_ref._type)
         property_spec = self._client.create('PropertySpec')
         property_spec.type = str(self._mo_ref._type)
         # Determine which properties to retrieve from the server
@@ -201,7 +202,7 @@ class ManagedObject(object):
                 logger.debug("Retrieving all properties")
                 property_spec.all = True
             else:
-                logger.debug("Retrieving %s properties" % len(properties))
+                logger.debug("Retrieving %s properties", len(properties))
                 property_spec.all = False
                 property_spec.pathSet = properties
 
@@ -257,7 +258,7 @@ class ManagedObject(object):
         """Update the local object from the passed in object_content."""
         # A debugging convenience, allows inspection of the object_content
         # that was used to create the object
-        logger.info("Setting view data for a %s" % self.__class__)
+        logger.info("Setting view data for a %s", self.__class__)
         self._object_content = object_content
 
         for dynprop in object_content.propSet:
@@ -270,14 +271,14 @@ class ManagedObject(object):
 
             try:
                 if not len(dynprop.val):
-                    logger.info("Server returned empty value for %s" %
+                    logger.info("Server returned empty value for %s",
                                 dynprop.name)
             except TypeError:
                 # This except allows us to pass over:
                 # TypeError: object of type 'datetime.datetime' has no len()
                 # It will be processed in the next code block
-                logger.info("%s of type %s has no len!" % (dynprop.name,
-                                                            type(dynprop.val)))
+                logger.info("%s of type %s has no len!",
+                            dynprop.name, type(dynprop.val))
                 pass
 
             try:
@@ -293,16 +294,15 @@ class ManagedObject(object):
                 # suds returns a list containing a single item, which
                 # is another list. Use the first item which is the real list
                 logger.info("Setting value of an Array* property")
-                logger.debug("%s being set to %s" % (dynprop.name,
-                                                     dynprop.val[0]))
+                logger.debug("%s being set to %s",
+                             dynprop.name, dynprop.val[0])
                 now = time.time()
                 cache[dynprop.name] = (dynprop.val[0], now)
             else:
                 logger.info("Setting value of a single-valued property")
-                logger.debug("DynamicProperty value is a %s: " %
+                logger.debug("DynamicProperty value is a %s: ",
                              dynprop.val.__class__.__name__)
-                logger.debug("%s being set to %s" % (dynprop.name,
-                                                     dynprop.val))
+                logger.debug("%s being set to %s", dynprop.name, dynprop.val)
                 now = time.time()
                 cache[dynprop.name] = (dynprop.val, now)
 
@@ -330,7 +330,7 @@ class ManagedObject(object):
                      " with %s" % name)
         # Built-ins always use the default behaviour
 #        if name.startswith("__"):
-#            logger.debug("Returning built-in attribute %s" % name)
+#            logger.debug("Returning built-in attribute %s", name)
 #            return object.__getattribute__(self, name)
 
         # Here we must access _client through __getattribute__, if we were
@@ -345,12 +345,12 @@ class ManagedObject(object):
             return object.__getattribute__(self, name)
 
         # Caller has requested a valid SOAP reference
-        logger.debug("Constructing proxy method %s for a %s" %
-                     (name, self._mo_ref._type))
+        logger.debug("Constructing proxy method %s for a %s",
+                     name, self._mo_ref._type)
         def func(**kwargs):
             result = self._client.invoke(name, _this=self._mo_ref,
                                         **kwargs)
-            logger.debug("Invoke returned %s" % result)
+            logger.debug("Invoke returned %s", result)
             return result
 
         return func

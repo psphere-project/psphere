@@ -6,7 +6,7 @@ import logging
 from psphere import config
 from psphere.errors import TemplateNotFoundError
 
-logger = logging.getLogger("psphere")
+logger = logging.getLogger(__name__)
 
 template_path = os.path.expanduser(config._config_value("general",
                                                         "template_dir"))
@@ -40,7 +40,7 @@ def load_template(name=None):
     if name is None:
         name = "default"
 
-    logger.info("Loading template with name %s" % name)
+    logger.info("Loading template with name %s", name)
     try:
         template_file = open("%s/%s.yaml" % (template_path, name))
     except IOError:
@@ -49,7 +49,7 @@ def load_template(name=None):
     template = yaml.safe_load(template_file)
     template_file.close()
     if "extends" in template:
-        logger.debug("Merging %s with %s" % (name, template["extends"]))
+        logger.debug("Merging %s with %s", name, template["extends"])
         template = _merge(load_template(template["extends"]), template)
 
     return template

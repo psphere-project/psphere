@@ -40,7 +40,7 @@ from psphere.errors import (ConfigError, ObjectNotFoundError, TaskFailedError,
                             NotLoggedInError)
 from psphere.managedobjects import ServiceInstance, Task, classmapper
 
-logger = logging.getLogger("psphere")
+logger = logging.getLogger(__name__)
 
 class Client(suds.client.Client):
     """A client for communicating with a VirtualCenter/ESX/ESXi server
@@ -62,7 +62,6 @@ class Client(suds.client.Client):
     """
     def __init__(self, server=None, username=None, password=None,
                  wsdl_location="local", timeout=30):
-        self._init_logging()
         self._logged_in = False
         if server is None:
             server = _config_value("general", "server")
@@ -97,13 +96,13 @@ class Client(suds.client.Client):
         try:
             suds.client.Client.__init__(self, wsdl_uri)
         except URLError:
-            logger.critical("Failed to connect to %s" % self.server)
+            logger.critical("Failed to connect to %s", self.server)
             raise
         except IOError:
-            logger.critical("Failed to load the local WSDL from %s" % wsdl_uri)
+            logger.critical("Failed to load the local WSDL from %s", wsdl_uri)
             raise
         except TransportError:
-            logger.critical("Failed to load the remote WSDL from %s" % wsdl_uri)
+            logger.critical("Failed to load the remote WSDL from %s", wsdl_uri)
             raise
         self.options.transport.options.timeout = timeout
         self.set_options(location=url)
@@ -180,7 +179,7 @@ class Client(suds.client.Client):
         """
         if (self._logged_in is False and
             method not in ["Login", "RetrieveServiceContent"]):
-            logger.critical("Cannot exec %s unless logged in" % method)
+            logger.critical("Cannot exec %s unless logged in", method)
             raise NotLoggedInError("Cannot exec %s unless logged in" % method)
 
         for kwarg in kwargs:
@@ -194,8 +193,8 @@ class Client(suds.client.Client):
         # We must traverse the result and convert any ManagedObjectReference
         # to a psphere class, this will then be lazy initialised on use
         logger.debug(result.__class__)
-        logger.debug("Result: %s" % result)
-        logger.debug("Length: %s" % len(result))
+        logger.debug("Result: %s", result)
+        logger.debug("Length: %s", len(result))
         if type(result) == list:
             new_result = []
             for item in result:
@@ -217,7 +216,7 @@ class Client(suds.client.Client):
 
     def _marshal(self, obj):
         """Walks an object and marshals any psphere object into MORs."""
-        logger.debug("Checking if %s needs to be marshalled" % obj)
+        logger.debug("Checking if %s needs to be marshalled", obj)
         if isinstance(obj, ManagedObject):
             logger.debug("obj is a psphere object, converting to MOR")
             return obj._mo_ref
@@ -230,7 +229,7 @@ class Client(suds.client.Client):
             return new_list
                 
         if not isinstance(obj, suds.sudsobject.Object):
-            logger.debug("%s is not a sudsobject subclass, skipping" % obj)
+            logger.debug("%s is not a sudsobject subclass, skipping", obj)
             return obj
 
         if hasattr(obj, '__iter__'):
@@ -246,7 +245,7 @@ class Client(suds.client.Client):
     def _unmarshal(self, obj):
         """Walks an object and unmarshals any MORs into psphere objects."""
         if isinstance(obj, suds.sudsobject.Object) is False:
-            logger.debug("%s is not a suds instance, skipping" % obj)
+            logger.debug("%s is not a suds instance, skipping", obj)
             return obj
 
         logger.debug("Processing:")
@@ -261,7 +260,7 @@ class Client(suds.client.Client):
 
         new_object = obj.__class__()
         for sub_obj in obj:
-            logger.debug("Looking at %s of type %s" % (str(sub_obj), type(sub_obj)))
+            logger.debug("Looking at %s of type %s", sub_obj, type(sub_obj))
 
             if isinstance(sub_obj[1], list):
                 new_embedded_objs = []
@@ -272,19 +271,20 @@ class Client(suds.client.Client):
                 continue
 
             if not issubclass(sub_obj[1].__class__, suds.sudsobject.Object):
-                logger.debug("%s is not a sudsobject subclass, skipping" %
+                logger.debug("%s is not a sudsobject subclass, skipping",
                              sub_obj[1].__class__)
                 setattr(new_object, sub_obj[0], sub_obj[1])
                 continue
 
-            logger.debug("Obj keylist: %s" % sub_obj[1].__keylist__)
+            logger.debug("Obj keylist: %s", sub_obj[1].__keylist__)
             if "_type" in sub_obj[1].__keylist__:
                 logger.debug("Converting nested MOR to psphere class:")
                 logger.debug(sub_obj[1])
                 kls = classmapper(sub_obj[1]._type)
-                logger.debug("Setting %s.%s to %s" %
-                             (new_object.__class__.__name__, sub_obj[0],
-                              sub_obj[1]))
+                logger.debug("Setting %s.%s to %s",
+                             new_object.__class__.__name__,
+                             sub_obj[0],
+                             sub_obj[1])
                 setattr(new_object, sub_obj[0], kls(sub_obj[1], self))
             else:
                 logger.debug("Didn't find _type in:")
@@ -543,7 +543,8 @@ class Client(suds.client.Client):
 
         views = []
         for obj_content in obj_contents:
-            logger.debug("In find_entity_view with object of type %s" % obj_content.obj.__class__.__name__)
+            logger.debug("In find_entity_view with object of type %s",
+                         obj_content.obj.__class__.__name__)
             obj_content.obj.update_view_data(properties=properties)
             views.append(obj_content.obj)
 
@@ -575,7 +576,7 @@ class Client(suds.client.Client):
         # Start the search at the root folder if no begin_entity was given
         if not begin_entity:
             begin_entity = self.sc.rootFolder._mo_ref
-            logger.debug("Using %s" % self.sc.rootFolder._mo_ref)
+            logger.debug("Using %s", self.sc.rootFolder._mo_ref)
 
         property_spec = self.create('PropertySpec')
         property_spec.type = view_type

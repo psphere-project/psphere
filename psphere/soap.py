@@ -24,7 +24,7 @@ import suds
 
 from pprint import pprint
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 class VimFault(Exception):
     def __init__(self, fault):
@@ -35,13 +35,6 @@ class VimFault(Exception):
             self._fault_dict[attr[0]] = attr[1]
 
         Exception.__init__(self, "%s: %s" % (self.fault_type, self._fault_dict))
-
-def _init_logging(level="INFO", handler=logging.StreamHandler):
-    """Sets the logging level of underlying suds.client."""
-    logger = logging.getLogger("suds.client")
-    logger.addHandler(handler)
-    logger.setLevel(getattr(logging, level))
-    #logging.getLogger("suds.wsdl").setLevel(logging.DEBUG)
 
 
 def get_client(url):
@@ -64,18 +57,18 @@ def invoke(client, method, **kwargs):
         # Proxy the method to the suds service
         result = getattr(client.service, method)(**kwargs)
     except AttributeError, e:
-        log.critical("Unknown method: %s" % method)
+        logger.critical("Unknown method: %s", method)
         sys.exit()
     except urllib2.URLError, e:
-        logging.debug(pprint(e))
-        logging.debug("A URL related error occurred while invoking the '%s' "
+        logger.debug(pprint(e))
+        logger.debug("A URL related error occurred while invoking the '%s' "
               "method on the VIM server, this can be caused by "
-              "name resolution or connection problems." % method)
-        logging.debug("The underlying error is: %s" % e.reason[1])
+              "name resolution or connection problems.", method)
+        logger.debug("The underlying error is: %s", e.reason[1])
         sys.exit()
     except suds.client.TransportError, e:
-        logging.debug(pprint(e))
-        logging.debug("TransportError: %s" % e)
+        logger.debug(pprint(e))
+        logger.debug("TransportError: %s", e)
     except suds.WebFault, e:
         # Get the type of fault
         print("Fault: %s" % e.fault.faultstring)
