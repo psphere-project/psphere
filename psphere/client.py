@@ -1,6 +1,6 @@
 """
 :mod:`psphere.client` - A client for communicating with a vSphere server
-=============================================
+========================================================================
 
 .. module:: client
 
