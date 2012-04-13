@@ -90,8 +90,7 @@ class Client(suds.client.Client):
         elif wsdl_location == "remote":
             wsdl_uri = url + "/vimService.wsdl"
         else:
-            print("FATAL: wsdl_location must be \"local\" or \"remote\"")
-            sys.exit(1)
+            raise ValueError("wsdl_location must be \"local\" or \"remote\"")
         # Init the base class
         try:
             suds.client.Client.__init__(self, wsdl_uri)
@@ -114,7 +113,7 @@ class Client(suds.client.Client):
         except URLError, e:
             print("Failed to connect to %s" % self.server)
             print("urllib2 said: %s" % e.reason) 
-            sys.exit(1)
+            raise
 
         if self._logged_in is False:
             self.login(self.username, self.password)

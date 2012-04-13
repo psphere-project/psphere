@@ -58,14 +58,14 @@ def invoke(client, method, **kwargs):
         result = getattr(client.service, method)(**kwargs)
     except AttributeError, e:
         logger.critical("Unknown method: %s", method)
-        sys.exit()
+        raise
     except urllib2.URLError, e:
         logger.debug(pprint(e))
         logger.debug("A URL related error occurred while invoking the '%s' "
               "method on the VIM server, this can be caused by "
               "name resolution or connection problems.", method)
         logger.debug("The underlying error is: %s", e.reason[1])
-        sys.exit()
+        raise
     except suds.client.TransportError, e:
         logger.debug(pprint(e))
         logger.debug("TransportError: %s", e)
