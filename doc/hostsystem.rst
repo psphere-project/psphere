@@ -4,8 +4,8 @@ HostSystem examples
 This page provides examples for working with **HostSystem** views. The
 examples accumulate as they go so make sure you reference the previous examples.
 
-Finding a HostSystem
---------------------
+Finding a single HostSystem by name
+-----------------------------------
 
 Connect to the server and find the **HostSystem** view::
 
@@ -13,11 +13,27 @@ Connect to the server and find the **HostSystem** view::
     >>> from psphere.client import Client
     >>> from psphere.managedobjects import HostSystem
     >>> client = Client("server.esx.com", "Administrator", "strongpass")
-    >>> host_system = HostSystem.get(client, name="k2")
-    >>> print(host_system.name)
+    >>> hs = HostSystem.get(client, name="k2")
+    >>> print(hs.name)
     k2
-    >>> print(host_system.summary.hardware.model)
+    >>> print(hs.summary.hardware.model)
     Sun Fire X4440
+
+
+Finding all HostSystem's
+------------------------
+
+Use the .all() method which can be found on all objects extending
+ManagedEntity::
+
+    >>> hs_list = HostSystem.all(client)
+    >>> len(hs_list)
+    3
+    >>> for hs in hs_list:
+    >>>     print(hs.name)
+    host1
+    host2
+    host3
 
 
 How many VirtualMachine's on a HostSystem?
