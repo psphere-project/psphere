@@ -237,10 +237,12 @@ class ManagedObject(object):
         if properties is None:
             raise ValueError("You must specify some properties to preload. To"
                              " preload all properties use the string \"all\".")
-        # Make sure it's a list
-        # Iterate over each item and collect the mo_ref
-        # Make sure the value is retrieved from the server
+        # Don't do anything if the attribute contains an empty list
+        if not getattr(self, name):
+            return
+
         mo_refs = []
+        # Iterate over each item and collect the mo_ref
         for item in getattr(self, name):
             # Make sure the items are ManagedObjectReference's
             if isinstance(item, ManagedObject) is False:
