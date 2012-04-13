@@ -7,8 +7,8 @@ try:
     PSPHERE_CONFIG = yaml.load(config_file)
     config_file.close()
 except IOError:
-    print("WARNING: Configuration file %s could not be opened, perhaps you"
-          " haven't created one?" % config_path)
+    logger.warning("Configuration file %s could not be opened, perhaps you"
+                   " haven't created one?" % config_path)
     PSPHERE_CONFIG = {"general": {}, "logging": {}}
     pass
 

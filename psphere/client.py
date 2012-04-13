@@ -111,8 +111,8 @@ class Client(suds.client.Client):
         try:
             self.sc = self.si.RetrieveServiceContent()
         except URLError, e:
-            print("Failed to connect to %s" % self.server)
-            print("urllib2 said: %s" % e.reason) 
+            logger.critical("Failed to connect to %s" % self.server)
+            logger.critical("urllib2 said: %s" % e.reason) 
             raise
 
         if self._logged_in is False:
@@ -491,7 +491,7 @@ class Client(suds.client.Client):
         """
         # Don't execute methods which don't return a Task object
         if not method.endswith('_Task'):
-            print('ERROR: invoke_task can only be used for methods which '
+            logger.error('invoke_task can only be used for methods which '
                   'return a ManagedObjectReference to a Task.')
             return None
 
@@ -590,7 +590,7 @@ class Client(suds.client.Client):
 
         # TODO: Implement filtering
         if not filter:
-            print('WARNING: No filter specified, returning first match.')
+            logger.warning('No filter specified, returning first match.')
             # If no filter is specified we just return the first item
             # in the list of returned objects
             logger.debug("Creating class in find_entity_view (filter)")

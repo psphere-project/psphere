@@ -71,7 +71,7 @@ def invoke(client, method, **kwargs):
         logger.debug("TransportError: %s", e)
     except suds.WebFault, e:
         # Get the type of fault
-        print("Fault: %s" % e.fault.faultstring)
+        logger.critical("SUDS Fault: %s" % e.fault.faultstring)
         if len(e.fault.faultstring) > 0:
             raise
 
