@@ -184,8 +184,8 @@ def create_nic(client, target, nic):
         if network.name == nic["network_name"]:
             net = network
             break
-        else:
-            continue
+    else:
+        return None
 
     # Success! Create a nic attached to this network
     backing = client.create("VirtualEthernetCardNetworkBackingInfo")
