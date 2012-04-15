@@ -12,8 +12,8 @@ your virtual infrastructure:
 * Query and configure clusters, host systems and datastores
 * Programatically configure ESXi hosts (i.e. for automation)
 
-
-Example::
+Usage
+=====
 
     >>> from psphere.client import Client
     >>> client = Client("your.esxserver.com", "Administrator", "strongpass")
