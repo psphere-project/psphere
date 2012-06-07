@@ -17,7 +17,7 @@ import time
 
 from suds import MethodNotFound
 
-logger = logging.getLogger("psphere")
+logger = logging.getLogger("__name__")
 
 __version__ = '0.5.2'
 __released__ = '0.5.2 (hg)'
@@ -142,12 +142,13 @@ class ManagedObject(object):
         :type properties: list or None (default). If None, flush entire cache.
 
         """
-        if properties is None:
-            del(self._cache)
-        else:
-            for prop in properties:
-                if prop in self._cache:
-                    del(self._cache[prop])
+        if hasattr(self, '_cache'):
+            if properties is None:
+                del(self._cache)
+            else:
+                for prop in properties:
+                    if prop in self._cache:
+                        del(self._cache[prop])
 
     def update(self, properties=None):
         """Updates the properties being held for this instance.

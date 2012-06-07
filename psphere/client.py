@@ -157,9 +157,10 @@ class Client(suds.client.Client):
 
     def logout(self):
         """Logout of a vSphere server."""
-        self.si.flush_cache()
-        self.sc.sessionManager.Logout()
-        self._logged_in = False
+        if self._logged_in is True:
+            self.si.flush_cache()
+            self.sc.sessionManager.Logout()
+            self._logged_in = False
 
     def invoke(self, method, _this, **kwargs):
         """Invoke a method on the server.

@@ -1,6 +1,8 @@
 import os
 import yaml
+import logging
 
+logger = logging.getLogger(__name__)
 config_path = os.path.expanduser('~/.psphere/config.yaml')
 try:
     config_file = open(config_path, "r")
