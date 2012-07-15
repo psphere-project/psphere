@@ -17,7 +17,7 @@ import time
 
 from suds import MethodNotFound
 
-logger = logging.getLogger("__name__")
+logger = logging.getLogger(__name__)
 
 __version__ = '0.5.2'
 __released__ = '0.5.2 (hg)'
