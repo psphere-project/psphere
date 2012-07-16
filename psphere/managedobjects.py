@@ -509,6 +509,11 @@ class Folder(ManagedEntity):
     def childType(self):
        return self._get_dataobject("childType", True)
 
+class GuestOperationsManager(ManagedObject):
+    _valid_attrs = set([])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
 
 class HostAuthenticationStore(ManagedObject):
     _valid_attrs = set(['info'])
