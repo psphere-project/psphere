@@ -1,6 +1,6 @@
 include CHANGES
 include LICENSE
-include README
+include README.rst
 include psphere/wsdl/*
 include examples/*.py
 include examples/sample_config.yaml

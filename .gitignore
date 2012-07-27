@@ -1,0 +1,11 @@
+.*\.pyc
+.*\.egg
+.*\.so
+build/
+dist/
+psphere.egg-info/
+doc/_build/
+.project
+.pydevproject
+.*.swp
+project.vim
