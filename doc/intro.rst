@@ -22,10 +22,12 @@ Installing psphere
 ------------------
 
     # pip install -U psphere
-    
-Or if you want to use the latest development branch::
 
-    $ hg clone https://jkinred@bitbucket.org/jkinred/psphere
+Developing psphere
+------------------
+If you want to use the latest development branch::
+
+    $ git clone https://github.com/jkinred/psphere
     $ cd psphere
     $ sudo python setup.py install
     $ ./examples/connect.py --server yourserver.esx.com --username youruser --password yourpass
