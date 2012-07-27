@@ -32,6 +32,7 @@ import sys
 import time
 
 from urllib2 import URLError
+from suds.plugin import MessagePlugin
 from suds.transport import TransportError
 
 from psphere import soap, ManagedObject
@@ -58,10 +59,13 @@ class Client(suds.client.Client):
     :type wsdl_location: The string "local" (default) or "remote"
     :param timeout: The timeout to use when connecting to the server
     :type timeout: int (default=30)
-
+    :param plugins: The plugins classes that will be used to process messages
+                    before send them to the web service
+    :type plugins: list of classes
     """
     def __init__(self, server=None, username=None, password=None,
-                 wsdl_location="local", timeout=30):
+                 wsdl_location="local", timeout=30, plugins=[]):
+        self._init_logging()
         self._logged_in = False
         if server is None:
             server = _config_value("general", "server")
@@ -93,7 +97,9 @@ class Client(suds.client.Client):
             raise ValueError("wsdl_location must be \"local\" or \"remote\"")
         # Init the base class
         try:
-            suds.client.Client.__init__(self, wsdl_uri)
+            # Add ExtraConfigPlugin to the plugins
+            plugins.append(ExtraConfigPlugin())
+            suds.client.Client.__init__(self, wsdl_uri, plugins=plugins)
         except URLError:
             logger.critical("Failed to connect to %s", self.server)
             raise
@@ -128,12 +134,11 @@ class Client(suds.client.Client):
             lh = logging.FileHandler(os.path.expanduser(log_destination))
 
         log_level = _config_value("logging", "level", "WARNING")
-        print("Logging to %s at %s level" % (log_destination, log_level))
+        logger.info("Logging to %s at %s level" % (log_destination, log_level))
         lh.setLevel(getattr(logging, log_level))
         logger.setLevel(getattr(logging, log_level))
         logger.addHandler(lh)
         # Initialise logging for the SOAP module
-        soap._init_logging(log_level, lh)
         logger.info("Initialised logging")
 
     def login(self, username=None, password=None):
@@ -145,7 +150,6 @@ class Client(suds.client.Client):
         :type username: str
         :param password: The password to authenticate with.
         :type password: str
-
         """
         if username is None:
             username = self.username
@@ -638,3 +642,10 @@ class Client(suds.client.Client):
         logger.debug("Completed creating class in find_entity_view")
         #view.update_view_data(properties=properties)
         return view
+
+class ExtraConfigPlugin(MessagePlugin):
+    def addAttributeForValue(self, node):
+        if node.parent.name == 'extraConfig' and node.name == 'value':
+            node.set('xsi:type', 'xsd:string')
+    def marshalled(self, context):
+        context.envelope.walk(self.addAttributeForValue)
