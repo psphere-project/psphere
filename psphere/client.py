@@ -65,7 +65,6 @@ class Client(suds.client.Client):
     """
     def __init__(self, server=None, username=None, password=None,
                  wsdl_location="local", timeout=30, plugins=[]):
-        self._init_logging()
         self._logged_in = False
         if server is None:
             server = _config_value("general", "server")
@@ -123,23 +122,6 @@ class Client(suds.client.Client):
 
         if self._logged_in is False:
             self.login(self.username, self.password)
-
-    def _init_logging(self):
-        """Initialize logging."""
-        log_destination = _config_value("logging", "destination",
-                                             "CONSOLE")
-        if log_destination == "CONSOLE":
-            lh = logging.StreamHandler()
-        else:
-            lh = logging.FileHandler(os.path.expanduser(log_destination))
-
-        log_level = _config_value("logging", "level", "WARNING")
-        logger.info("Logging to %s at %s level" % (log_destination, log_level))
-        lh.setLevel(getattr(logging, log_level))
-        logger.setLevel(getattr(logging, log_level))
-        logger.addHandler(lh)
-        # Initialise logging for the SOAP module
-        logger.info("Initialised logging")
 
     def login(self, username=None, password=None):
         """Login to a vSphere server.
