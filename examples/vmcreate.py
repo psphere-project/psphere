@@ -47,7 +47,7 @@ def create_vm(client, name, compute_resource, datastore, disksize, nics,
     :type num_cpus: int
     :param guest_id: The vSphere string of the VM guest you are creating. \
             The list of VMs can be found at \
-        http://www.vmware.com/support/developer/vc-sdk/visdk41pubs/ApiReference/index.html
+        http://pubs.vmware.com/vsphere-50/index.jsp?topic=/com.vmware.wssdk.apiref.doc_50/right-pane.html
     :type guest_id: str
     :param host: The name of the host (default: None), if you want to \
             provision the VM on a \ specific host.
