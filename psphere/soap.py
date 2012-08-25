@@ -18,7 +18,6 @@ A leaky wrapper for the underlying suds library.
 
 
 import logging
-import sys
 import urllib2
 import suds
 
