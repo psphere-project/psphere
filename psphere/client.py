@@ -109,8 +109,8 @@ class Client(suds.client.Client):
             raise
         self.options.transport.options.timeout = timeout
         self.set_options(location=url)
-        mo_ref = soap.ManagedObjectReference("ServiceInstance",
-                                             "ServiceInstance")
+        mo_ref = self.create('ManagedObjectReference', _type="ServiceInstance"
+                value="ServiceInstance")
         self.si = ServiceInstance(mo_ref, self) 
         try:
             self.sc = self.si.RetrieveServiceContent()

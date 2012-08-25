@@ -86,10 +86,3 @@ def invoke(client, method, **kwargs):
         raise VimFault(fault)
 
     return result
-
-
-class ManagedObjectReference(suds.sudsobject.Property):
-    """Custom class to replace the suds generated class, which lacks _type."""
-    def __init__(self, _type, value):
-        suds.sudsobject.Property.__init__(self, value)
-        self._type = _type
