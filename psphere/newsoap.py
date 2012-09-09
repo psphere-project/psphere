@@ -1,6 +1,6 @@
 from lxml import etree as ET
 import logging
-import urllib2
+import urllib2, cookielib
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -14,6 +14,38 @@ class SOAPClient(object):
           'xsd': 'http://www.w3.org/2001/XMLSchema'}
     def __init__(self, url, username=None, password=None):
         self.url = url
+        self._logged_in = False
+        if username is None:
+            raise Exception("Username is required in SOAPClient()")
+        if password is None:
+            raise Exception("Password is required in SOAPClient()")
+        self.username = username
+        self.password = password
+        self.cj = cookielib.LWPCookieJar()
+        self.opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(self.cj))
+        self.opener.addheaders = [
+            ('User-Agent', 'VI Python'),
+            ('SOAPAction', 'urn:vim25/5.0'),
+            ('Content-Type', 'text/xml'),
+        ]
+        urllib2.install_opener(self.opener)
+
+        if self._logged_in == False:
+            self.login(self.username, self.password)
+
+    def login(self, username, password):
+        """
+        Login to vCenter
+        """
+        creds = { 'userName': username, 'password': password }
+        mo_ref = { '_type': 'SessionManager', 'value': 'SessionManager' }
+
+        try:
+            response = self.make_request('Login',
+                            mo_ref=mo_ref, **creds)
+            self._logged_in = True
+        except:
+            raise Exception("Unable to Login")
 
     def make_request(self, method, mo_ref, **kwargs):
         """Constructs and sends a SOAP request"""
@@ -23,6 +55,12 @@ class SOAPClient(object):
         oper = ET.SubElement(body, method, nsmap={None: 'urn:vim25'})
         mor = ET.SubElement(oper, '_this', type=mo_ref['_type'])
         mor.text = mo_ref['value']
+
+        if kwargs:
+            for key in kwargs:
+                val = ET.SubElement(oper, key)
+                val.text = kwargs[key]
+
         logger.debug("SENDING SOAP REQUEST:")
         logger.debug(ET.tostring(req))
         logger.debug("--------------------")
@@ -30,10 +68,6 @@ class SOAPClient(object):
         xml = ET.tostring(req, encoding='UTF-8', xml_declaration=True)
         # Create a request object
         request = urllib2.Request(self.url)
-
-        # Set the headers
-        request.add_header('SOAPAction', 'urn:vim25/5.0')
-        request.add_header('Content-Type', 'text/xml')
 
         # Put the XML into the request
         request.add_data(xml)
@@ -66,7 +100,7 @@ class SOAPClient(object):
 
 
 if __name__ == '__main__':
-    client = SOAPClient(url='https://wsapp4565.ae.sda.corp.telstra.com/sdk')
+    client = SOAPClient(url='https://wsapp4565.ae.sda.corp.telstra.com/sdk", username="------", password="------")
     respxml = client.make_request('RetrieveServiceContent',
             mo_ref={'_type': 'ServiceInstance', 'value': 'ServiceInstance'})
     print("Received: %s" % respxml)
