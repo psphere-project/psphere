@@ -100,7 +100,7 @@ class SOAPClient(object):
 
 
 if __name__ == '__main__':
-    client = SOAPClient(url='https://wsapp4565.ae.sda.corp.telstra.com/sdk", username="------", password="------")
+    client = SOAPClient(url='https://wsapp4565.ae.sda.corp.telstra.com/sdk', username='------', password='------')
     respxml = client.make_request('RetrieveServiceContent',
             mo_ref={'_type': 'ServiceInstance', 'value': 'ServiceInstance'})
     print("Received: %s" % respxml)
