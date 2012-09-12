@@ -13,7 +13,7 @@ class SOAPClient(object):
           'xsi': 'http://www.w3.org/2001/XMLSchema-instance',
           'xsd': 'http://www.w3.org/2001/XMLSchema'}
     def __init__(self, url, username=None, password=None):
-        self.url = url
+        self.url = "https://%s/sdk" % url
         self._logged_in = False
         if username is None:
             raise Exception("Username is required in SOAPClient()")
@@ -33,10 +33,15 @@ class SOAPClient(object):
         if self._logged_in == False:
             self.login(self.username, self.password)
 
-    def login(self, username, password):
+    def login(self, username=None, password=None):
         """
         Login to vCenter
         """
+        if username is None:
+            username = self.username
+        if password is None:
+            password = self.password
+
         creds = { 'userName': username, 'password': password }
         mo_ref = { '_type': 'SessionManager', 'value': 'SessionManager' }
 
@@ -47,8 +52,26 @@ class SOAPClient(object):
         except:
             raise Exception("Unable to Login")
 
+    def logout(self):
+        """
+        Logout of vCenter
+        """
+        mo_ref = { '_type': 'SessionManager', 'value': 'SessionManager' }
+
+        try:
+            response = self.make_request('Logout',
+                            mo_ref=mo_ref)
+            self._logged_in = False
+        except:
+            raise Exception("Unable to logout")
+
     def make_request(self, method, mo_ref, **kwargs):
         """Constructs and sends a SOAP request"""
+
+        if (self._logged_in is False and
+                method not in ["Login", "RetrieveServiceContent"]):
+            raise Exception("Cannot exec %s unless logged in", method)
+
         req = ET.Element('{%s}Envelope' % self.ns['soapenv'],
                 nsmap=self.ns)
         body = ET.SubElement(req, ET.QName(self.ns['soapenv'], 'Body'))
