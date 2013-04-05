@@ -1,7 +1,27 @@
+Version 0.5.2
+-------------
+
+(bugfix release, released on April 5th 2013)
+
+- Add an example showing how to list VMs on a host
+- Add a new example of powering on many VMs at once
+- Fix regression that calls _init_logging() and remove the function for good.
+- Update references from bitbucket to github
+- Merge bitbucket pull request: Pierre-Yves D Fixed error when setting extraOptions on VM creation
+- Merge bitbucket pull request: Saju M 3cbdf636d068 Adding example get_filesize_by_path
+- MANIFEST.in: s/README/README.rst
+- Updated managed objects to include new objects in sphere 5.0
+- When pre-loading objects, don't try and pre-load them when the requested attributed contains an empty list. fixes #7
+- Replace print calls with logging calls. fixes issue 8
+- Remove use of sys.exit and raise exceptions instead. fixes issue 8
+- Use *args to pass log strings (efficiency, as log mesages won't be string formatted unless they're actually logged). Remove _init_logging to mak
+- Convert Windows path to WSDL file to URI format
+- Documentation updates
+
 Version 0.5.1
 -------------
 
-(bugfix release, release date to be announced)
+(bugfix release, released on August 19th 2011)
 
 Version 0.5.0
 -------------
