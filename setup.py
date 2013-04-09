@@ -5,7 +5,7 @@ import os.path
 import subprocess
 
 from setuptools import setup
-from distutils.command.sdist import sdist as _sdist
+from setuptools.command.sdist import sdist as _sdist
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
