@@ -1153,12 +1153,16 @@ class ServiceInstance(ManagedObject):
     @cached_property
     def capability(self):
        return self._get_dataobject("capability", False)
+
+
+class ServiceManager(ManagedObject):
+    _valid_attrs = set(['service'])
+    def __init__(self, mo_ref, client):
+        ManagedObject.__init__(self, mo_ref, client)
+        self._valid_attrs = set.union(self._valid_attrs, ManagedObject._valid_attrs)
     @cached_property
-    def content(self):
-       return self._get_dataobject("content", False)
-    @cached_property
-    def serverClock(self):
-       return self._get_dataobject("serverClock", False)
+    def service(self):
+       return self._get_dataobject("service", False)
 
 
 class SessionManager(ManagedObject):
@@ -1479,6 +1483,7 @@ classmap = dict((x.__name__, x) for x in (
     ScheduledTaskManager,
     SearchIndex,
     ServiceInstance,
+    ServiceManager,
     SessionManager,
     StoragePod,
     StorageResourceManager,
