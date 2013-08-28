@@ -31,6 +31,9 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-,root,root)
 
 %changelog
+* Wed Aug 28 2013 Ian McLeod <imcleod@redhat.com> - 0.5.2-1
+- rebase with upstream 0.5.2
+
 * Thu Mar 15 2012 Ian McLeod <imcleod@redhat.com> - 0.1-5
 - Remove Vendor field from SPEC file
 
