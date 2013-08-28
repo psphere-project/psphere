@@ -3,6 +3,7 @@
 import os
 import os.path
 import subprocess
+import time
 
 from setuptools import setup
 from setuptools.command.sdist import sdist as _sdist
@@ -10,39 +11,43 @@ from setuptools.command.sdist import sdist as _sdist
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-def subprocess_check_output(*popenargs, **kwargs):
-    if 'stdout' in kwargs:
-        raise ValueError('stdout argument not allowed, it will be overridden.')
-
-    process = subprocess.Popen(stdout=subprocess.PIPE, stderr=subprocess.STDOUT, *popenargs, **kwargs)
-    stdout, stderr = process.communicate()
-    retcode = process.poll()
-    if retcode:
-        cmd = ' '.join(*popenargs)
-        raise Exception("'%s' failed(%d): %s" % (cmd, retcode, stderr))
-    return (stdout, stderr, retcode)
-
-try:
-    command = '/usr/bin/git describe --tags | tr - _'
-    print command
-    (pkg_version, ignore, ignore) = subprocess_check_output(command, shell=True)
-    pkg_version = pkg_version.rstrip('\n')
-except:
-    pkg_version = 9999
-
-def modify_specfile():
-    cmd = (' sed -e "s/@VERSION@/%s/g" < python-psphere.spec.in ' % pkg_version) + " > python-psphere.spec"
-    print cmd
-    os.system(cmd)
+VERSION = '0.5.2'
+RELEASE = '1'
 
 class sdist(_sdist):
-    """ custom sdist command to prepare python-psphere.spec file """
+    """ custom sdist command, to prep python-psphere.spec file """
+
     def run(self):
-        modify_specfile()
+        global VERSION
+        global RELEASE
+
+        # Create a development release string for later use
+        git_head = subprocess.Popen("git log -1 --pretty=format:%h",
+                                    shell=True,
+                                    stdout=subprocess.PIPE).communicate()[0].strip()
+        date = time.strftime("%Y%m%d%H%M%S", time.gmtime())
+        git_release = "%sgit%s" % (date, git_head)
+
+        # Expand macros in python-psphere.spec.in
+        spec_in = open('python-psphere.spec.in', 'r')
+        spec = open('python-psphere.spec', 'w')
+        for line in spec_in.xreadlines():
+            if "@VERSION@" in line:
+                line = line.replace("@VERSION@", VERSION)
+            elif "@RELEASE@" in line:
+                # If development release, include date+githash in %{release}
+                if RELEASE.startswith('0'):
+                    RELEASE += '.' + git_release
+                line = line.replace("@RELEASE@", RELEASE)
+            spec.write(line)
+        spec_in.close()
+        spec.close()
+
+        # Run parent constructor
         _sdist.run(self)
 
 setup(name="python-psphere",
-      version=pkg_version,
+      version=VERSION,
       description="vSphere SDK for Python",
       long_description=read("README.rst"),
       author="Jonathan Kinred",
