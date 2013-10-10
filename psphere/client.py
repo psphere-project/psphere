@@ -33,6 +33,10 @@ import time
 from urllib2 import URLError
 from suds.plugin import MessagePlugin
 from suds.transport import TransportError
+from suds.options import Options 
+from suds.properties import Unskin
+from suds.client import ServiceSelector
+from suds.servicedefinition import ServiceDefinition
 
 from psphere import soap, ManagedObject
 from psphere.config import _config_value
@@ -121,6 +125,30 @@ class Client(suds.client.Client):
 
         if self._logged_in is False:
             self.login(self.username, self.password)
+
+        def clone(self):
+            clone = super(Client, self).clone()
+            class UninitializedClient(Client):
+                def __init__(self):
+                    pass
+            clone = UninitializedClient()
+            clone._logged_in = self._logged_in
+            clone.options = Options()
+            cp = Unskin(clone.options)
+            mp = Unskin(self.options)
+            cp.update(deepcopy(mp))
+            clone.wsdl = self.wsdl
+            clone.factory = self.factory
+            clone.service = ServiceSelector(clone, clone.wsdl.services)
+            clone.sd = self.sd
+            clone.messages = dict(tx=None, rx=None)
+            ticket = self.sc.sessionManager.AcquireCloneTicket()
+            mo_ref = soap.ManagedObjectReference("ServiceInstance",
+                                             "ServiceInstance")
+            clone.si = ServiceInstance(mo_ref, clone)
+            clone.sc = clone.si.RetrieveServiceContent()
+            clone.sc.sessionManager.CloneSession(cloneTicket=ticket)
+            return clone
 
     def login(self, username=None, password=None):
         """Login to a vSphere server.
