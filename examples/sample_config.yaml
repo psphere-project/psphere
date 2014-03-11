@@ -1,4 +1,4 @@
-# Copy this file into ~/.psphree/config.yaml and edit to your liking
+# Copy this file into ~/.psphere/config.yaml and edit to your liking
 general:
     server: your.esxserver.com
     username: Administrator
