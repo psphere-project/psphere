@@ -6,6 +6,7 @@ import subprocess
 
 from setuptools import setup
 from setuptools.command.sdist import sdist as _sdist
+from setuptools import package_index as _package_index
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
@@ -23,7 +24,7 @@ def subprocess_check_output(*popenargs, **kwargs):
     return (stdout, stderr, retcode)
 
 try:
-    command = '/usr/bin/git describe --tags | tr - _'
+    command = '/usr/bin/git describe --tags  | tr - .'
     print command
     (pkg_version, ignore, ignore) = subprocess_check_output(command, shell=True)
     pkg_version = pkg_version.rstrip('\n')
@@ -41,6 +42,7 @@ class sdist(_sdist):
         modify_specfile()
         _sdist.run(self)
 
+print("Pkg-Version: ",pkg_version)
 setup(name="python-psphere",
       version=pkg_version,
       description="vSphere SDK for Python",
