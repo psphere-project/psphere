@@ -23,13 +23,21 @@ def subprocess_check_output(*popenargs, **kwargs):
         raise Exception("'%s' failed(%d): %s" % (cmd, retcode, stderr))
     return (stdout, stderr, retcode)
 
-try:
-    command = '/usr/bin/git describe --tags  | tr - .'
-    print command
-    (pkg_version, ignore, ignore) = subprocess_check_output(command, shell=True)
-    pkg_version = pkg_version.rstrip('\n')
-except:
-    pkg_version = 9999
+if os.path.isfile("PKG-INFO"):
+    f=open("PKG-INFO")
+    for line in f:
+        if line.startswith("Version:"):
+            pkg_version=line.split(":")[1].rsplit()[0]
+            break
+    f.close()
+else:
+    try:
+        """ open file """
+        f=open("version.txt")
+        pkg_version=f.readline().rstrip()
+        f.close()
+    except:
+        pkg_version="999999"
 
 def modify_specfile():
     cmd = (' sed -e "s/@VERSION@/%s/g" < python-psphere.spec.in ' % pkg_version) + " > python-psphere.spec"
