@@ -1,17 +1,17 @@
 version:
 	git describe --tags > version.txt
-	perl -p -i -e 's/-/_/g' version.txt
+	perl -p -i -e 's/-/./g' version.txt
 
-sdist:
+sdist: version
 	python setup.py sdist
 
-signed-rpm: sdist version
+signed-rpm: sdist
 	rpmbuild -ba python-psphere.spec --sign --define "_sourcedir `pwd`/dist"
 
-rpm: sdist version
+rpm: sdist
 	rpmbuild -ba python-psphere.spec --define "_sourcedir `pwd`/dist"
 
-srpm: sdist version
+srpm: sdist
 	rpmbuild -bs python-psphere.spec --define "_sourcedir `pwd`/dist"
 
 pylint:
