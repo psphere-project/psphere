@@ -580,7 +580,7 @@ class Client(suds.client.Client):
             # If no filter is specified we just return the first item
             # in the list of returned objects
             logger.debug("Creating class in find_entity_view (filter)")
-            view = kls(obj_contents[0].obj, self)
+            view = kls(obj_contents[0].obj._mo_ref, self)
             logger.debug("Completed creating class in find_entity_view (filter)")
             #view.update_view_data(properties)
             return view
