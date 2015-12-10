@@ -397,7 +397,8 @@ class Client(suds.client.Client):
                       'datacenter_vm_traversal_spec',
                       'compute_resource_rp_traversal_spec',
                       'compute_resource_host_traversal_spec',
-                      'host_vm_traversal_spec']
+                      'host_vm_traversal_spec',
+                      'datacenter_datastore_traversal_spec']
 
         # Create a selection spec for each of the strings specified above
         selection_specs = [
@@ -435,6 +436,12 @@ class Client(suds.client.Client):
         dhts.path = 'hostFolder'
         dhts.selectSet = [selection_specs[2]]
 
+        dsts = self.create('TraversalSpec')
+        dsts.name = 'datacenter_datastore_traversal_spec'
+        dsts.type = 'Datacenter'
+        dsts.path = 'datastoreFolder'
+        dsts.selectSet = [selection_specs[2]]
+
         dvts = self.create('TraversalSpec')
         dvts.name = 'datacenter_vm_traversal_spec'
         dvts.type = 'Datacenter'
@@ -454,12 +461,12 @@ class Client(suds.client.Client):
         fts.selectSet = [selection_specs[2], selection_specs[3],
                           selection_specs[4], selection_specs[5],
                           selection_specs[6], selection_specs[7],
-                          selection_specs[1]]
+                          selection_specs[1], selection_specs[8]]
 
         obj_spec = self.create('ObjectSpec')
         obj_spec.obj = begin_entity
         obj_spec.selectSet = [fts, dvts, dhts, crhts, crrts,
-                               rpts, hvts, rpvts]
+                               rpts, hvts, rpvts, dsts]
 
         pfs = self.create('PropertyFilterSpec')
         pfs.propSet = [property_spec]
