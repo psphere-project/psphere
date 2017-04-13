@@ -30,17 +30,51 @@ import os
 import suds
 import time
 
-from urllib2 import URLError
+from urllib2 import URLError, httplib, socket, HTTPSHandler, build_opener
 from suds.plugin import MessagePlugin
-from suds.transport import TransportError
-
 from psphere import soap, ManagedObject
 from psphere.config import _config_value
 from psphere.errors import (ConfigError, ObjectNotFoundError, TaskFailedError,
                             NotLoggedInError)
 from psphere.managedobjects import ServiceInstance, Task, classmapper
+from suds.transport.http import HttpTransport, Reply, TransportError
 
 logger = logging.getLogger(__name__)
+
+
+class HTTPSClientAuthHandler(HTTPSHandler):
+    def __init__(self, context):
+        HTTPSHandler.__init__(self)
+        self.context = context
+
+    def https_open(self, req):
+        return self.do_open(self.getConnection, req)
+
+    def getConnection(self, host, timeout=300):
+        return httplib.HTTPSConnection(host, context=self.context)
+
+
+class HTTPSClientContextTransport(HttpTransport):
+    def __init__(self, context, *args, **kwargs):
+        HttpTransport.__init__(self, *args, **kwargs)
+        self.context = context
+
+    def u2open(self, u2request):
+        """
+        Open a connection.
+        @param u2request: A urllib2 request.
+        @type u2request: urllib2.Requet.
+        @return: The opened file-like urllib2 object.
+        @rtype: fp
+        """
+        tm = self.options.timeout
+        url = build_opener(HTTPSClientAuthHandler(self.context))
+        if self.u2ver() < 2.6:
+            socket.setdefaulttimeout(tm)
+            return url.open(u2request)
+        else:
+            return url.open(u2request, timeout=tm)
+
 
 class Client(suds.client.Client):
     """A client for communicating with a VirtualCenter/ESX/ESXi server
@@ -63,7 +97,7 @@ class Client(suds.client.Client):
     :type plugins: list of classes
     """
     def __init__(self, server=None, username=None, password=None,
-                 wsdl_location="local", timeout=30, plugins=[]):
+                 wsdl_location="local", timeout=30, plugins=[], sslcontext=None):
         self._logged_in = False
         if server is None:
             server = _config_value("general", "server")
@@ -77,6 +111,10 @@ class Client(suds.client.Client):
             raise ConfigError("username must be set in config file or Client()")
         if password is None:
             raise ConfigError("password must be set in config file or Client()")
+        if sslcontext is not None:
+            self.transport = HTTPSClientContextTransport(sslcontext)
+        else:
+            self.transport = HttpTransport()
         self.server = server
         self.username = username
         self.password = password
@@ -97,7 +135,7 @@ class Client(suds.client.Client):
         try:
             # Add ExtraConfigPlugin to the plugins
             plugins.append(ExtraConfigPlugin())
-            suds.client.Client.__init__(self, wsdl_uri, plugins=plugins)
+            suds.client.Client.__init__(self, wsdl_uri, plugins=plugins, transport=self.transport)
         except URLError:
             logger.critical("Failed to connect to %s", self.server)
             raise
@@ -108,7 +146,7 @@ class Client(suds.client.Client):
             logger.critical("Failed to load the remote WSDL from %s", wsdl_uri)
             raise
         self.options.transport.options.timeout = timeout
-        self.set_options(location=url)
+        self.set_options(location=url, transport=self.transport)
         mo_ref = soap.ManagedObjectReference("ServiceInstance",
                                              "ServiceInstance")
         self.si = ServiceInstance(mo_ref, self) 
@@ -137,6 +175,7 @@ class Client(suds.client.Client):
         if password is None:
             password = self.password
         logger.debug("Logging into server")
+        print("Login")
         self.sc.sessionManager.Login(userName=username, password=password)
         self._logged_in = True
 
