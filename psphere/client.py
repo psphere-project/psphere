@@ -175,7 +175,6 @@ class Client(suds.client.Client):
         if password is None:
             password = self.password
         logger.debug("Logging into server")
-        print("Login")
         self.sc.sessionManager.Login(userName=username, password=password)
         self._logged_in = True
 
