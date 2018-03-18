@@ -1,3 +1,15 @@
+Sunset Notice
+=============
+
+This project is no longer under development.
+
+We recommend that you start your VMware Python journey with the official `VMware pyvmomi`_ library.
+
+psphere was created when no other client was available. It was a privilege to create something that was useful to others.
+
+*"Death is only the end if you assume the story is about you."*
+*― The Nightvale Podcast*
+
 Introduction
 ============
 
@@ -34,6 +46,7 @@ Community
 
 Discussion and support can be found on the `psphere Google Group`_.
 
+.. _VMware pyvmomi: https://github.com/vmware/pyvmomi
 .. _psphere Google Group: https://groups.google.com/group/psphere
 
 .. _VMware vSphere Web Services SDK: http://pubs.vmware.com/vsphere-50/index.jsp?topic=/com.vmware.wssdk.apiref.doc_50/right-pane.html
