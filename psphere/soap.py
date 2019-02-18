@@ -57,7 +57,7 @@ def invoke(client, method, **kwargs):
     try:
         # Proxy the method to the suds service
         result = getattr(client.service, method)(**kwargs)
-    except AttributeError as e:
+    except AttributeError:
         logger.critical("Unknown method: %s", method)
         raise
     except urllib2.URLError as e:

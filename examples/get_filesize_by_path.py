@@ -1,6 +1,5 @@
 from __future__ import absolute_import, division, print_function
 
-import psphere
 from psphere.client import Client
 from psphere.managedobjects import HostSystem
 
@@ -30,4 +29,4 @@ result = info.result
 files = result.file
 
 for file in files:
-	print("FileName:%s, FileSize:%s" %(file.path, file.fileSize))
+    print("FileName:%s, FileSize:%s" %(file.path, file.fileSize))

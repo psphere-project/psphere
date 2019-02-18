@@ -34,7 +34,7 @@ from urllib2 import HTTPSHandler, URLError, build_opener, httplib, socket
 
 import suds
 from suds.plugin import MessagePlugin
-from suds.transport.http import HttpTransport, Reply, TransportError
+from suds.transport.http import HttpTransport, TransportError
 
 from psphere import ManagedObject, soap
 from psphere.config import _config_value
