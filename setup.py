@@ -14,7 +14,7 @@ setup(
     author_email="jonathan.kinred@gmail.com",
     maintainer="Thomas Grainger",
     maintainer_email="psphere@graingert.co.uk",
-    url="https://github.com/graingert/psphere",
+    url="https://github.com/psphere-project/psphere",
     packages=["psphere"],
     package_data={"psphere": ["wsdl/*"]},
     install_requires=["six", "suds-jurko", "PyYAML"],
