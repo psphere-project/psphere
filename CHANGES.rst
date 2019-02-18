@@ -1,3 +1,8 @@
+0.6.0 (unreleased)
+------------------
+
+- Nothing changed yet.
+
 Version 0.5.2
 -------------
 
