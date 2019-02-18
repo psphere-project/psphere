@@ -19,8 +19,6 @@ from suds import MethodNotFound
 
 logger = logging.getLogger(__name__)
 
-__version__ = '0.5.3'
-__released__ = '0.5.3 (dev)'
 
 class cached_property(object):
     """Decorator for read-only properties evaluated only once within TTL period.

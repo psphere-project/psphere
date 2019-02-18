@@ -37,3 +37,27 @@ Discussion and support can be found on the `psphere Google Group`_.
 .. _psphere Google Group: https://groups.google.com/group/psphere
 
 .. _VMware vSphere Web Services SDK: http://pubs.vmware.com/vsphere-50/index.jsp?topic=/com.vmware.wssdk.apiref.doc_50/right-pane.html
+
+
+Releasing
+---------
+
+To perform a release, you will need to be an admin for the project on
+GitHub and on PyPI. Contact the maintainers if you need that access.
+
+You will need to have a `~/.pypirc` with your PyPI credentials and
+also the following settings::
+
+    [zest.releaser]
+    create-wheels = yes
+
+To perform a release, run the following::
+
+    python3.7 -m venv ~/.virtualenvs/dist
+    workon dist
+    pip install -U pip setuptools wheel
+    pip install -U tox zest.releaser
+    fullrelease  # follow prompts, use semver ish with versions.
+
+The releaser will handle updating version data on the package and in
+CHANGES.rst along with tagging the repo and uploading to PyPI.
