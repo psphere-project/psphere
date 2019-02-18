@@ -1,5 +1,5 @@
-0.6.0 (unreleased)
-------------------
+0.6.0a (2019-02-18)
+-------------------
 
 - support HTTPS by passing an ssl.SSLContext
 - use more secure suds-jurko
