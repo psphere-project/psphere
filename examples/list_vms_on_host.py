@@ -18,10 +18,13 @@
 # Example usage:
 # python ./examples/list_vms_on_host.py --server <server> --username <user> --password <pass> --hostsystem <hostsystem>
 
+from __future__ import absolute_import, division, print_function
+
 import sys
 
 from psphere.client import Client
 from psphere.managedobjects import HostSystem
+
 
 def main(options):
     client = Client(server=options.server, username=options.username,

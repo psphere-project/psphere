@@ -12,6 +12,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from __future__ import absolute_import, division, print_function
+
 import logging
 import time
 
@@ -19,8 +21,6 @@ from suds import MethodNotFound
 
 logger = logging.getLogger(__name__)
 
-__version__ = '0.5.3'
-__released__ = '0.5.3 (dev)'
 
 class cached_property(object):
     """Decorator for read-only properties evaluated only once within TTL period.
@@ -160,7 +160,7 @@ class ManagedObject(object):
         """
         if properties is None:
             try:
-                self.update_view_data(properties=self._cache.keys())
+                self.update_view_data(properties=list(self._cache.keys()))
             except AttributeError:
                 # We end up here and ignore it self._cache doesn't exist
                 pass

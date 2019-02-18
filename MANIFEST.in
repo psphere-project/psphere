@@ -1,8 +1,4 @@
-include CHANGES
+include CHANGES.rst
 include LICENSE
 include README.rst
 include psphere/wsdl/*
-include examples/*.py
-include examples/sample_config.yaml
-include examples/templates/*
-recursive-include doc *

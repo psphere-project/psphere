@@ -19,7 +19,7 @@ Handling exceptions
 
     >>> try:
     >>>     operation()
-    >>> except VimFault, e:
+    >>> except VimFault as e:
     >>>     e.fault_code
     InvalidProperty
     >>>     e.fault.name

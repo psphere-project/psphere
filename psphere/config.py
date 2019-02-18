@@ -1,6 +1,9 @@
-import os
-import yaml
+from __future__ import absolute_import, division, print_function
+
 import logging
+import os
+
+import yaml
 
 logger = logging.getLogger(__name__)
 config_path = os.path.expanduser('~/.psphere/config.yaml')

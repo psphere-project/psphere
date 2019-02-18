@@ -1,4 +1,7 @@
+from __future__ import absolute_import, division, print_function
+
 from psphere import ManagedObject, cached_property
+
 
 class ExtensibleManagedObject(ManagedObject):
     _valid_attrs = set(['availableField', 'value'])
@@ -112,13 +115,7 @@ class ManagedEntity(ExtensibleManagedObject):
     
     @classmethod
     def get(cls, client, **kwargs):
-        if "properties" in kwargs.keys():
-            properties = kwargs["properties"]
-            # Delete properties key so it doesn't get filtered
-            del kwargs["properties"]
-        else:
-            properties = None
-
+        properties = kwargs.pop("properties", None)
         if properties is None:
             properties = []
 

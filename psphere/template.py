@@ -1,7 +1,10 @@
+from __future__ import absolute_import, division, print_function
+
 import glob
-import os
-import yaml
 import logging
+import os
+
+import yaml
 
 from psphere import config
 from psphere.errors import TemplateNotFoundError
@@ -10,6 +13,14 @@ logger = logging.getLogger(__name__)
 
 template_path = os.path.expanduser(config._config_value("general",
                                                         "template_dir"))
+
+
+def _assign(target, *sources):
+    for source in sources:
+        target.update(sources)
+
+    return target
+
 
 def _merge(first, second):
     """Merge a list of templates.
@@ -21,7 +32,7 @@ def _merge(first, second):
     :type templates: list
 
     """
-    return dict(first.items() + second.items())
+    return _assign({}, first, second)
 
 
 def load_template(name=None):

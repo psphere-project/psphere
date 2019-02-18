@@ -13,6 +13,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from __future__ import absolute_import, division, print_function
+
 import re
 import sys
 import time
@@ -21,6 +23,7 @@ from psphere import config, template
 from psphere.client import Client
 from psphere.errors import TemplateNotFoundError
 from psphere.soap import VimFault
+
 
 def create_vm(client, name, compute_resource, datastore, disksize, nics,
               memory, num_cpus, guest_id, host=None):
@@ -152,7 +155,7 @@ def create_vm(client, name, compute_resource, datastore, disksize, nics,
     try:
         task = datacenter.vmFolder.CreateVM_Task(config=vm_config_spec,
                                                  pool=resource_pool)
-    except VimFault, e:
+    except VimFault as e:
         print("Failed to create %s: " % e)
         sys.exit()
 

@@ -17,11 +17,14 @@ A leaky wrapper for the underlying suds library.
 # under the License.
 
 
-import logging
-import urllib2
-import suds
+from __future__ import absolute_import, division, print_function
 
+import logging
 from pprint import pprint
+
+import suds.client
+import suds.sudsobject
+from six.moves.urllib.error import URLError
 
 logger = logging.getLogger(__name__)
 
@@ -55,20 +58,20 @@ def invoke(client, method, **kwargs):
     try:
         # Proxy the method to the suds service
         result = getattr(client.service, method)(**kwargs)
-    except AttributeError, e:
+    except AttributeError:
         logger.critical("Unknown method: %s", method)
         raise
-    except urllib2.URLError, e:
+    except URLError as e:
         logger.debug(pprint(e))
         logger.debug("A URL related error occurred while invoking the '%s' "
               "method on the VIM server, this can be caused by "
               "name resolution or connection problems.", method)
         logger.debug("The underlying error is: %s", e.reason[1])
         raise
-    except suds.client.TransportError, e:
+    except suds.client.TransportError as e:
         logger.debug(pprint(e))
         logger.debug("TransportError: %s", e)
-    except suds.WebFault, e:
+    except suds.WebFault as e:
         # Get the type of fault
         logger.critical("SUDS Fault: %s" % e.fault.faultstring)
         if len(e.fault.faultstring) > 0:
