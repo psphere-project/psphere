@@ -22,7 +22,8 @@ from __future__ import absolute_import, division, print_function
 import logging
 from pprint import pprint
 
-import suds
+import suds.client
+import suds.sudsobject
 from six.moves.urllib.error import URLError
 
 logger = logging.getLogger(__name__)

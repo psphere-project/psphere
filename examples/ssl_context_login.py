@@ -4,8 +4,9 @@ from ssl import CERT_NONE, PROTOCOL_SSLv23, SSLContext
 
 from psphere.client import Client
 
-context = SSLContext(PROTOCOL_SSLv23)
-context.verify_mode = CERT_NONE
-test_client = Client("192.168.0.14", "root", "password", sslcontext=context)
-print(test_client.si.CurrentTime())
-test_client.logout()
+if __name__ == '__main__':
+    context = SSLContext(PROTOCOL_SSLv23)
+    context.verify_mode = CERT_NONE
+    test_client = Client('localhost:8989', 'user', 'pass', sslcontext=context)
+    print(test_client.si.CurrentTime())
+    test_client.logout()

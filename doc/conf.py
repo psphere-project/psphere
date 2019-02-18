@@ -21,6 +21,8 @@
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 
+import pkg_resources
+
 import psphere
 
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.todo',
@@ -47,7 +49,10 @@ copyright = u'2010, Jonathan Kinred'
 # built documents.
 #
 # The short X.Y version.
-version = psphere.__released__
+try:
+    version = pkg_resources.get_distribution('psphere').version
+except pkg_resources.DistributionNotFound:
+    version = 'dev'
 # The full version, including alpha/beta/rc tags.
 release = version
 

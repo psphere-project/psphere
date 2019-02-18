@@ -14,18 +14,19 @@ import sys
 from psphere.client import Client
 from psphere.managedobjects import ComputeResource
 
-client = Client()
+if __name__ == '__main__':
+    client = Client()
 
-vm_regex = sys.argv[1]
-p = re.compile(vm_regex)
-compute_resource = sys.argv[2]
+    vm_regex = sys.argv[1]
+    p = re.compile(vm_regex)
+    compute_resource = sys.argv[2]
 
-cr = ComputeResource.get(client, name=compute_resource)
+    cr = ComputeResource.get(client, name=compute_resource)
 
-cr.resourcePool.preload("vm", properties=["name"])
-for vm in sorted(cr.resourcePool.vm):
-    if p.match(vm.name) is None:
-        continue
-    print(vm.name)
+    cr.resourcePool.preload("vm", properties=["name"])
+    for vm in sorted(cr.resourcePool.vm):
+        if p.match(vm.name) is None:
+            continue
+        print(vm.name)
 
-client.logout()
+    client.logout()
