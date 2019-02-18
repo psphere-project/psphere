@@ -1,7 +1,10 @@
 0.6.0 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- support HTTPS by passing an ssl.SSLContext
+- use more secure suds-jurko
+- use `except Exception as e` syntax
+- switch to zest.releaser
 
 Version 0.5.2
 -------------
