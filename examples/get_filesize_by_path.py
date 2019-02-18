@@ -30,4 +30,4 @@ result = info.result
 files = result.file
 
 for file in files:
-	print "FileName:%s, FileSize:%s" %(file.path, file.fileSize)
+	print("FileName:%s, FileSize:%s" %(file.path, file.fileSize))
