@@ -29,10 +29,13 @@ from __future__ import absolute_import, division, print_function
 
 import logging
 import os
+import socket
 import time
-from urllib2 import HTTPSHandler, URLError, build_opener, httplib, socket
 
 import suds
+from six.moves import http_client
+from six.moves.urllib.error import URLError
+from six.moves.urllib.request import HTTPSHandler, build_opener
 from suds.plugin import MessagePlugin
 from suds.transport.http import HttpTransport, TransportError
 
@@ -55,7 +58,7 @@ class HTTPSClientAuthHandler(HTTPSHandler):
         return self.do_open(self.getConnection, req)
 
     def getConnection(self, host, timeout=300):
-        return httplib.HTTPSConnection(host, context=self.context)
+        return http_client.HTTPSConnection(host, context=self.context)
 
 
 class HTTPSClientContextTransport(HttpTransport):
@@ -615,7 +618,7 @@ class Client(suds.client.Client):
         property_spec = self.create('PropertySpec')
         property_spec.type = view_type
         property_spec.all = False
-        property_spec.pathSet = filter.keys()
+        property_spec.pathSet = list(filter.keys())
 
         pfs = self.get_search_filter_spec(begin_entity, property_spec)
 

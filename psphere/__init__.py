@@ -160,7 +160,7 @@ class ManagedObject(object):
         """
         if properties is None:
             try:
-                self.update_view_data(properties=self._cache.keys())
+                self.update_view_data(properties=list(self._cache.keys()))
             except AttributeError:
                 # We end up here and ignore it self._cache doesn't exist
                 pass
