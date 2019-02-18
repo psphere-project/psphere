@@ -19,7 +19,7 @@ Version 0.5.2
 - When pre-loading objects, don't try and pre-load them when the requested attributed contains an empty list. fixes #7
 - Replace print calls with logging calls. fixes issue 8
 - Remove use of sys.exit and raise exceptions instead. fixes issue 8
-- Use *args to pass log strings (efficiency, as log mesages won't be string formatted unless they're actually logged). Remove _init_logging to mak
+- Use `*args` to pass log strings (efficiency, as log mesages won't be string formatted unless they're actually logged). Remove _init_logging to mak
 - Convert Windows path to WSDL file to URI format
 - Documentation updates
 
