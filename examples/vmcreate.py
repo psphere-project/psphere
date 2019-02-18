@@ -155,7 +155,7 @@ def create_vm(client, name, compute_resource, datastore, disksize, nics,
     try:
         task = datacenter.vmFolder.CreateVM_Task(config=vm_config_spec,
                                                  pool=resource_pool)
-    except VimFault, e:
+    except VimFault as e:
         print("Failed to create %s: " % e)
         sys.exit()
 

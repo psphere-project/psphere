@@ -156,7 +156,7 @@ class Client(suds.client.Client):
         self.si = ServiceInstance(mo_ref, self) 
         try:
             self.sc = self.si.RetrieveServiceContent()
-        except URLError, e:
+        except URLError as e:
             logger.critical("Failed to connect to %s" % self.server)
             logger.critical("urllib2 said: %s" % e.reason) 
             raise

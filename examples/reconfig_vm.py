@@ -35,7 +35,7 @@ if vm.config.hardware.numCPU == 2:
 
 try:
     task = vm.ReconfigVM_Task(spec=new_config)
-except VimFault, e:
+except VimFault as e:
     print("Failed to reconfigure %s: " % e)
     sys.exit()
 
