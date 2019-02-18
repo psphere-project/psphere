@@ -14,10 +14,12 @@
 # under the License.
 
 """Lists all files on all datastores attached to managed datacenters."""
+from __future__ import absolute_import, division, print_function
+
 import time
 
-from psphere.scripting import BaseScript
 from psphere.client import Client
+from psphere.scripting import BaseScript
 
 
 class DatastoreFiles(BaseScript):

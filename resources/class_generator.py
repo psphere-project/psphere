@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function
+
 import yaml
 
 managed_objects = yaml.safe_load(open("managed_object_graph.yaml"))

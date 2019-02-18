@@ -6,6 +6,8 @@ e.g.
     find_vms_by_regex.py 'ssi2+' 'Online Engineering'
 """
 
+from __future__ import absolute_import, division, print_function
+
 import re
 import sys
 

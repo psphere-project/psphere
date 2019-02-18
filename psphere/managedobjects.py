@@ -1,4 +1,7 @@
+from __future__ import absolute_import, division, print_function
+
 from psphere import ManagedObject, cached_property
+
 
 class ExtensibleManagedObject(ManagedObject):
     _valid_attrs = set(['availableField', 'value'])

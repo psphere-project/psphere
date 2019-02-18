@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+from __future__ import absolute_import, division, print_function
+
 import sys
 
 from psphere.client import Client

@@ -13,12 +13,15 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from __future__ import absolute_import, division, print_function
+
 import sys
 
-from psphere.scripting import BaseScript
 from psphere.client import Client
-from psphere.managedobjects import ComputeResource
 from psphere.errors import ObjectNotFoundError
+from psphere.managedobjects import ComputeResource
+from psphere.scripting import BaseScript
+
 
 class Discovery(BaseScript):
     def discovery(self, compute_resource):

@@ -1,7 +1,9 @@
 #!/usr/bin/python
 
-import time
+from __future__ import absolute_import, division, print_function
+
 import sys
+import time
 
 from psphere.client import Client
 from psphere.managedobjects import VirtualMachine

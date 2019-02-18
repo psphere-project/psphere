@@ -1,4 +1,7 @@
-from ssl import SSLContext, PROTOCOL_SSLv23, CERT_NONE
+from __future__ import absolute_import, division, print_function
+
+from ssl import CERT_NONE, PROTOCOL_SSLv23, SSLContext
+
 from psphere.client import Client
 
 context = SSLContext(PROTOCOL_SSLv23)

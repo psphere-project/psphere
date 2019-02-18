@@ -25,19 +25,23 @@ The main module for accessing a vSphere server.
 # under the License.
 
 
+from __future__ import absolute_import, division, print_function
+
 import logging
 import os
-import suds
 import time
+from urllib2 import HTTPSHandler, URLError, build_opener, httplib, socket
 
-from urllib2 import URLError, httplib, socket, HTTPSHandler, build_opener
+import suds
 from suds.plugin import MessagePlugin
-from psphere import soap, ManagedObject
-from psphere.config import _config_value
-from psphere.errors import (ConfigError, ObjectNotFoundError, TaskFailedError,
-                            NotLoggedInError)
-from psphere.managedobjects import ServiceInstance, Task, classmapper
 from suds.transport.http import HttpTransport, Reply, TransportError
+
+from psphere import ManagedObject, soap
+from psphere.config import _config_value
+from psphere.errors import (
+    ConfigError, NotLoggedInError, ObjectNotFoundError, TaskFailedError,
+)
+from psphere.managedobjects import ServiceInstance, Task, classmapper
 
 logger = logging.getLogger(__name__)
 

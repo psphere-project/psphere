@@ -17,11 +17,13 @@ A leaky wrapper for the underlying suds library.
 # under the License.
 
 
+from __future__ import absolute_import, division, print_function
+
 import logging
 import urllib2
-import suds
-
 from pprint import pprint
+
+import suds
 
 logger = logging.getLogger(__name__)
 

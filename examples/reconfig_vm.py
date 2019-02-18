@@ -7,13 +7,15 @@ e.g.
 
 """
 
+from __future__ import absolute_import, division, print_function
+
 import sys
 import time
 
 from psphere.client import Client
-from psphere.soap import VimFault
-from psphere.managedobjects import VirtualMachine
 from psphere.errors import ObjectNotFoundError
+from psphere.managedobjects import VirtualMachine
+from psphere.soap import VimFault
 
 vm_name = sys.argv[1]
 

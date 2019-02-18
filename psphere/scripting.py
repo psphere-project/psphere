@@ -19,7 +19,10 @@ read predefined configuration from the users .visdkrc file.
 # under the License.
 
 
+from __future__ import absolute_import, division, print_function
+
 import optparse
+
 
 class BaseScript(object):
     def __init__(self, client):
@@ -103,4 +106,3 @@ class BaseScript(object):
             visdkrc_opts['password'] = parsed_opts['VI_PASSWORD']
 
         return visdkrc_opts
-

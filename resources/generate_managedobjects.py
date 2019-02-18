@@ -7,8 +7,11 @@ is quite kludgy so I expect that it is highly version dependent.
 """
 # Copyright 2010 Jonathan Kinred
 
-from BeautifulSoup import BeautifulSoup
+from __future__ import absolute_import, division, print_function
+
 import yaml
+
+from BeautifulSoup import BeautifulSoup
 
 # This file is the starting point for managed objects
 f = open("index-mo_types.html")

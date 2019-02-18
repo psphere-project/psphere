@@ -6,6 +6,8 @@ e.g.
     gen_dhcpconf.py 'ssi2+' 'Online Engineering'
 """
 
+from __future__ import absolute_import, division, print_function
+
 import re
 import sys
 

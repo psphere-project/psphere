@@ -1,7 +1,10 @@
+from __future__ import absolute_import, division, print_function
+
 import glob
-import os
-import yaml
 import logging
+import os
+
+import yaml
 
 from psphere import config
 from psphere.errors import TemplateNotFoundError
