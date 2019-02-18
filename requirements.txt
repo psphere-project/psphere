@@ -1,3 +1,0 @@
-suds
-PyYAML
-pytest
