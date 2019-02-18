@@ -20,10 +20,10 @@ A leaky wrapper for the underlying suds library.
 from __future__ import absolute_import, division, print_function
 
 import logging
-import urllib2
 from pprint import pprint
 
 import suds
+from six.moves.urllib.error import URLError
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ def invoke(client, method, **kwargs):
     except AttributeError:
         logger.critical("Unknown method: %s", method)
         raise
-    except urllib2.URLError as e:
+    except URLError as e:
         logger.debug(pprint(e))
         logger.debug("A URL related error occurred while invoking the '%s' "
               "method on the VIM server, this can be caused by "

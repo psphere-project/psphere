@@ -17,7 +17,7 @@ setup(
     url="https://github.com/graingert/psphere",
     packages=["psphere"],
     package_data={"psphere": ["wsdl/*"]},
-    install_requires=["suds-jurko", "PyYAML"],
+    install_requires=["six", "suds-jurko", "PyYAML"],
     keywords=["vsphere", "vmware"],
     classifiers=[
         "Development Status :: 4 - Beta",
