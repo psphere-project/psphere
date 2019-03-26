@@ -17,7 +17,7 @@ setup(
     url="https://github.com/psphere-project/psphere",
     packages=["psphere"],
     package_data={"psphere": ["wsdl/*"]},
-    install_requires=["six", "suds-jurko", "PyYAML"],
+    install_requires=["six", "suds-community", "PyYAML"],
     keywords=["vsphere", "vmware"],
     classifiers=[
         "Development Status :: 4 - Beta",
