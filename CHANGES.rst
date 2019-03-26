@@ -1,4 +1,4 @@
-0.6.0a1 (unreleased)
+0.6.0a1 (2019-03-26)
 --------------------
 
 - use maintained suds-community
