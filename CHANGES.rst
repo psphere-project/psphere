@@ -1,7 +1,7 @@
 0.6.0a2 (unreleased)
 --------------------
 
-- Nothing changed yet.
+- Upgrade setup.py to setup.cfg
 
 
 0.6.0a1 (2019-03-26)
