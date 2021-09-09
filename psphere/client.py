@@ -46,9 +46,6 @@ from psphere.managedobjects import ServiceInstance, Task, classmapper
 # under the License.
 
 
-
-
-
 logger = logging.getLogger(__name__)
 
 

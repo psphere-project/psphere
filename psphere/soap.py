@@ -26,8 +26,6 @@ from six.moves.urllib.error import URLError
 # under the License.
 
 
-
-
 logger = logging.getLogger(__name__)
 
 class VimFault(Exception):

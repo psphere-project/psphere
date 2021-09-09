@@ -23,8 +23,6 @@ import optparse
 # under the License.
 
 
-
-
 class BaseScript(object):
     def __init__(self, client):
         self.client = client
