@@ -2,6 +2,15 @@
 A leaky wrapper for the underlying suds library.
 """
 
+from __future__ import absolute_import, division, print_function
+
+import logging
+from pprint import pprint
+
+import suds.client
+import suds.sudsobject
+from six.moves.urllib.error import URLError
+
 # Copyright 2010 Jonathan Kinred
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -17,14 +26,7 @@ A leaky wrapper for the underlying suds library.
 # under the License.
 
 
-from __future__ import absolute_import, division, print_function
 
-import logging
-from pprint import pprint
-
-import suds.client
-import suds.sudsobject
-from six.moves.urllib.error import URLError
 
 logger = logging.getLogger(__name__)
 

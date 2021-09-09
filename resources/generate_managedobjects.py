@@ -6,11 +6,9 @@ It expects to run from the SDK/doc/ReferenceGuide/ directory and
 is quite kludgy so I expect that it is highly version dependent.
 """
 # Copyright 2010 Jonathan Kinred
-
 from __future__ import absolute_import, division, print_function
 
 import yaml
-
 from bs4 import BeautifulSoup
 
 if __name__ == '__main__':

@@ -4,6 +4,10 @@ Parse command line options, allow users to append their own options and
 read predefined configuration from the users .visdkrc file.
 """
 
+from __future__ import absolute_import, division, print_function
+
+import optparse
+
 # Copyright 2010 Jonathan Kinred
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -19,9 +23,6 @@ read predefined configuration from the users .visdkrc file.
 # under the License.
 
 
-from __future__ import absolute_import, division, print_function
-
-import optparse
 
 
 class BaseScript(object):
